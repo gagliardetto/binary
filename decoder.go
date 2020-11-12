@@ -2,6 +2,7 @@ package bin
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
@@ -84,18 +85,31 @@ func (d *Decoder) DecodeActions(decode bool) {
 	d.decodeActions = decode
 }
 
-type DecodeOption = interface{}
+type DecodeOption struct {
+	optionalField bool
+	sizeOfSlice   *uint64
+}
 
-type optionalFieldType bool
+func (o *DecodeOption) isOptional() bool {
+	return o.optionalField
+}
+func (o *DecodeOption) hasSizeOfSlice() bool {
+	return o.sizeOfSlice != nil
+}
+func (o *DecodeOption) getSizeOfSlice() uint64 {
+	return *o.sizeOfSlice
+}
+func (o *DecodeOption) setSizeOfSlice(size uint64) {
+	o.sizeOfSlice = &size
+}
 
-const OptionalField optionalFieldType = true
+func (d *Decoder) Decode(v interface{}) (err error) {
+	return d.DecodeWithOption(v, nil)
+}
 
-func (d *Decoder) Decode(v interface{}, options ...DecodeOption) (err error) {
-	optionalField := false
-	for _, option := range options {
-		if _, isOptionalField := option.(optionalFieldType); isOptionalField {
-			optionalField = true
-		}
+func (d *Decoder) DecodeWithOption(v interface{}, option *DecodeOption) (err error) {
+	if option == nil {
+		option = &DecodeOption{}
 	}
 
 	rv := reflect.Indirect(reflect.ValueOf(v))
@@ -105,10 +119,10 @@ func (d *Decoder) Decode(v interface{}, options ...DecodeOption) (err error) {
 	t := rv.Type()
 
 	if traceEnabled {
-		zlog.Debug("decode type", typeField("type", v), zap.Bool("optional", optionalField))
+		zlog.Debug("decode type", typeField("type", v), zap.Bool("optional", option.isOptional()))
 	}
 
-	if optionalField {
+	if option.isOptional() {
 		isPresent, e := d.ReadByte()
 		if e != nil {
 			err = fmt.Errorf("decode: %t isPresent, %s", v, e)
@@ -277,8 +291,8 @@ func (d *Decoder) Decode(v interface{}, options ...DecodeOption) (err error) {
 			zlog.Debug("reading array")
 		}
 		len := t.Len()
-		for i := 0; i < int(len); i++ {
-			if err = d.Decode(rv.Index(i).Addr().Interface()); err != nil {
+		for i := 0; i < len; i++ {
+			if err = d.DecodeWithOption(rv.Index(i).Addr().Interface(), nil); err != nil {
 				return
 			}
 		}
@@ -286,15 +300,19 @@ func (d *Decoder) Decode(v interface{}, options ...DecodeOption) (err error) {
 
 	case reflect.Slice:
 		var l uint64
-		if l, err = d.ReadUvarint64(); err != nil {
-			return
+		if option.hasSizeOfSlice() {
+			l = option.getSizeOfSlice()
+		} else {
+			if l, err = d.ReadUvarint64(); err != nil {
+				return
+			}
 		}
 		if traceEnabled {
 			zlog.Debug("reading slice", zap.Uint64("len", l), typeField("type", v))
 		}
 		rv.Set(reflect.MakeSlice(t, int(l), int(l)))
 		for i := 0; i < int(l); i++ {
-			if err = d.Decode(rv.Index(i).Addr().Interface()); err != nil {
+			if err = d.DecodeWithOption(rv.Index(i).Addr().Interface(), nil); err != nil {
 				return
 			}
 		}
@@ -316,8 +334,10 @@ func (d *Decoder) Decode(v interface{}, options ...DecodeOption) (err error) {
 func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) (err error) {
 	l := rv.NumField()
 
+	sizeOfMap := map[string]uint64{}
 	seenBinaryExtensionField := false
 	for i := 0; i < l; i++ {
+		option := &DecodeOption{}
 		structField := t.Field(i)
 		tag := structField.Tag.Get("eos")
 		if tag == "-" {
@@ -343,10 +363,13 @@ func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) 
 			}
 		}
 
+		if s, ok := sizeOfMap["sizeof="+structField.Name]; ok {
+			option.setSizeOfSlice(s)
+		}
+
 		if v := rv.Field(i); v.CanSet() && structField.Name != "_" {
-			var options []DecodeOption
 			if tag == "optional" {
-				options = append(options, OptionalField)
+				option.optionalField = true
 			}
 
 			value := v.Addr().Interface()
@@ -355,12 +378,41 @@ func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) 
 				zlog.Debug("struct field", typeField(structField.Name, value), zap.String("tag", tag))
 			}
 
-			if err = d.Decode(value, options...); err != nil {
+			if err = d.DecodeWithOption(value, option); err != nil {
 				return
+			}
+
+			tag = structField.Tag.Get("bin")
+			if strings.HasPrefix(tag, "sizeof=") {
+				size := sizeof(structField.Type, value)
+				if traceEnabled {
+					zlog.Debug("setting size of", zap.String("tag", tag), zap.Uint64("size", size))
+				}
+				sizeOfMap[tag] = size
 			}
 		}
 	}
 	return
+}
+
+func sizeof(t reflect.Type, v interface{}) uint64 {
+
+	switch t.Kind() {
+	case reflect.Uint32:
+		v := v.(*uint32)
+		return uint64(*v)
+	//case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+	//	// allocating a new int here has fewer side effects (doesn't update the original struct)
+	//	// but it's a wasteful allocation
+	//	// the old method might work if we just cast the temporary int/uint to the target type
+	//	v = reflect.New(t).Elem()
+	//	v.SetInt(int64(length))
+	//case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	//	v = reflect.New(v.Type()).Elem()
+	//	v.SetUint(uint64(length))
+	default:
+		panic(fmt.Sprintf("sizeof field is not int or uint type"))
+	}
 }
 
 var ErrVarIntBufferSize = errors.New("varint: invalid buffer size")
@@ -442,7 +494,7 @@ func (d *Decoder) ReadByte() (out byte, err error) {
 	out = d.data[d.pos]
 	d.pos++
 	if traceEnabled {
-		zlog.Debug("read byte", zap.Uint8("byte", out))
+		zlog.Debug("read byte", zap.Uint8("byte", out), zap.String("hex", hex.EncodeToString([]byte{out})))
 	}
 	return
 }

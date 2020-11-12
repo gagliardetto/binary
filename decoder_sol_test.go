@@ -61,7 +61,7 @@ type Orderbook struct {
 	AccountFlags uint64
 	// SLAB_LAYOUT
 	// SLAB_HEADER_LAYOUT
-	BumpIndex    uint32
+	BumpIndex    uint32  `bin:"sizeof=Nodes"`
 	ZeroPaddingA [4]byte `json:"-"`
 	FreeListLen  uint32
 	ZeroPaddingB [4]byte `json:"-"`
@@ -71,7 +71,7 @@ type Orderbook struct {
 	ZeroPaddingC [4]byte `json:"-"`
 
 	// SLAB_NODE_LAYOUT
-	Nodes []*Slab
+	Nodes []*Slab `bin: ""`
 }
 
 func TestDecoder_DecodeSol(t *testing.T) {

@@ -221,7 +221,6 @@ func (d *Decoder) DecodeWithOption(v interface{}, option *DecodeOption) (err err
 		if err == nil {
 			rv.Set(reflect.ValueOf((Uint64)(n)))
 		}
-
 		return
 	case *Uint64:
 		var n uint64
@@ -263,6 +262,21 @@ func (d *Decoder) DecodeWithOption(v interface{}, option *DecodeOption) (err err
 		n, err = d.ReadUint64()
 		rv.SetUint(n)
 		return
+	case *Varint16:
+		var r int16
+		r, err = d.ReadVarint16()
+		rv.SetInt(int64(r))
+		return
+	case *Varint32:
+		var r int64
+		r, err = d.ReadVarint64()
+		rv.SetInt(r)
+		return
+	case *Varuint16:
+		var r uint16
+		r, err = d.ReadUvarint16()
+		rv.SetUint(uint64(r))
+		return
 	case *Varuint32:
 		var r uint64
 		r, err = d.ReadUvarint64()
@@ -303,7 +317,7 @@ func (d *Decoder) DecodeWithOption(v interface{}, option *DecodeOption) (err err
 		if option.hasSizeOfSlice() {
 			l = option.getSizeOfSlice()
 		} else {
-			length, err := d.ReadUvarint64();
+			length, err := d.ReadUvarint64()
 			if err != nil {
 				return err
 			}
@@ -334,7 +348,7 @@ func (d *Decoder) DecodeWithOption(v interface{}, option *DecodeOption) (err err
 }
 
 // rv is the instance of the structure
-// t is the type of the structurwe
+// t is the type of the structure
 func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) (err error) {
 	l := rv.NumField()
 
@@ -467,6 +481,30 @@ func (d *Decoder) ReadUvarint32() (out uint32, err error) {
 	out = uint32(n)
 	if traceEnabled {
 		zlog.Debug("read uvarint32", zap.Uint32("val", out))
+	}
+	return
+}
+func (d *Decoder) ReadVarint16() (out int16, err error) {
+	n, err := d.ReadVarint64()
+	if err != nil {
+		return out, err
+	}
+	out = int16(n)
+	if traceEnabled {
+		zlog.Debug("read varint16", zap.Int16("val", out))
+	}
+	return
+}
+
+func (d *Decoder) ReadUvarint16() (out uint16, err error) {
+
+	n, err := d.ReadUvarint64()
+	if err != nil {
+		return out, err
+	}
+	out = uint16(n)
+	if traceEnabled {
+		zlog.Debug("read uvarint16", zap.Uint16("val", out))
 	}
 	return
 }

@@ -99,6 +99,8 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *EncodeOption) (err err
 		return e.writeFloat32(cv)
 	case float64:
 		return e.writeFloat64(cv)
+	case Varint16:
+		return e.writeVarInt(int(cv))
 	case Varint32:
 		return e.writeVarInt(int(cv))
 	case Uint128:
@@ -107,6 +109,8 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *EncodeOption) (err err
 		return e.writeUint128(Uint128(cv))
 	case Float128:
 		return e.writeUint128(Uint128(cv))
+	case Varuint16:
+		return e.writeUVarInt(int(cv))
 	case Varuint32:
 		return e.writeUVarInt(int(cv))
 	case bool:

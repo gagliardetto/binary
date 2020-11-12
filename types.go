@@ -66,6 +66,8 @@ func (t HexBytes) String() string {
 	return hex.EncodeToString(t)
 }
 
+type Varint16 int16
+type Varuint16 uint16
 type Varuint32 uint32
 type Varint32 int32
 

@@ -87,7 +87,7 @@ func (d *Decoder) DecodeActions(decode bool) {
 
 type DecodeOption struct {
 	optionalField bool
-	sizeOfSlice   *uint64
+	sizeOfSlice   *int
 }
 
 func (o *DecodeOption) isOptional() bool {
@@ -96,10 +96,10 @@ func (o *DecodeOption) isOptional() bool {
 func (o *DecodeOption) hasSizeOfSlice() bool {
 	return o.sizeOfSlice != nil
 }
-func (o *DecodeOption) getSizeOfSlice() uint64 {
+func (o *DecodeOption) getSizeOfSlice() int {
 	return *o.sizeOfSlice
 }
-func (o *DecodeOption) setSizeOfSlice(size uint64) {
+func (o *DecodeOption) setSizeOfSlice(size int) {
 	o.sizeOfSlice = &size
 }
 
@@ -299,16 +299,18 @@ func (d *Decoder) DecodeWithOption(v interface{}, option *DecodeOption) (err err
 		return
 
 	case reflect.Slice:
-		var l uint64
+		var l int
 		if option.hasSizeOfSlice() {
 			l = option.getSizeOfSlice()
 		} else {
-			if l, err = d.ReadUvarint64(); err != nil {
-				return
+			length, err := d.ReadUvarint64();
+			if err != nil {
+				return err
 			}
+			l = int(length)
 		}
 		if traceEnabled {
-			zlog.Debug("reading slice", zap.Uint64("len", l), typeField("type", v))
+			zlog.Debug("reading slice", zap.Int("len", l), typeField("type", v))
 		}
 		rv.Set(reflect.MakeSlice(t, int(l), int(l)))
 		for i := 0; i < int(l); i++ {
@@ -331,10 +333,12 @@ func (d *Decoder) DecodeWithOption(v interface{}, option *DecodeOption) (err err
 	return
 }
 
+// rv is the instance of the structure
+// t is the type of the structurwe
 func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) (err error) {
 	l := rv.NumField()
 
-	sizeOfMap := map[string]uint64{}
+	sizeOfMap := map[string]int{}
 	seenBinaryExtensionField := false
 	for i := 0; i < l; i++ {
 		option := &DecodeOption{}
@@ -368,10 +372,12 @@ func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) 
 		}
 
 		if v := rv.Field(i); v.CanSet() && structField.Name != "_" {
+			// v is Value of given field for said struct
 			if tag == "optional" {
 				option.optionalField = true
 			}
 
+			// creates a pointer to the value.....
 			value := v.Addr().Interface()
 
 			if traceEnabled {
@@ -384,9 +390,9 @@ func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) 
 
 			tag = structField.Tag.Get("bin")
 			if strings.HasPrefix(tag, "sizeof=") {
-				size := sizeof(structField.Type, value)
+				size := sizeof(structField.Type, v)
 				if traceEnabled {
-					zlog.Debug("setting size of", zap.String("tag", tag), zap.Uint64("size", size))
+					zlog.Debug("setting size of", zap.String("tag", tag), zap.Int("size", size))
 				}
 				sizeOfMap[tag] = size
 			}
@@ -395,23 +401,22 @@ func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) 
 	return
 }
 
-func sizeof(t reflect.Type, v interface{}) uint64 {
-
+func sizeof(t reflect.Type, v reflect.Value) int {
 	switch t.Kind() {
-	case reflect.Uint32:
-		v := v.(*uint32)
-		return uint64(*v)
-	//case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-	//	// allocating a new int here has fewer side effects (doesn't update the original struct)
-	//	// but it's a wasteful allocation
-	//	// the old method might work if we just cast the temporary int/uint to the target type
-	//	v = reflect.New(t).Elem()
-	//	v.SetInt(int64(length))
-	//case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-	//	v = reflect.New(v.Type()).Elem()
-	//	v.SetUint(uint64(length))
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return int(v.Int())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		n := int(v.Uint())
+		// all the builtin array length types are native int
+		// so this guards against weird truncation
+		if n < 0 {
+			return 0
+		}
+		return n
 	default:
-		panic(fmt.Sprintf("sizeof field is not int or uint type"))
+		//name := v.Type().FieldByIndex(index).Name
+		//panic(fmt.Sprintf("sizeof field %T.%s not an integer type", val.Interface(), name))
+		panic(fmt.Sprintf("sizeof field "))
 	}
 }
 

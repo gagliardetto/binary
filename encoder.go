@@ -45,10 +45,10 @@ func NewEncoder(w io.Writer) *Encoder {
 }
 
 type EncodeOption struct {
-	sizeOfSlice *uint64
+	sizeOfSlice *int
 }
 
-func (o *EncodeOption) setSizeOfSlice(size uint64) {
+func (o *EncodeOption) setSizeOfSlice(size int) {
 	o.sizeOfSlice = &size
 }
 
@@ -171,7 +171,7 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *EncodeOption) (err err
 				zlog = zlog.Named("struct")
 			}
 
-			sizeOfMap := map[string]uint64{}
+			sizeOfMap := map[string]int{}
 
 			for i := 0; i < l; i++ {
 				field := t.Field(i)
@@ -192,7 +192,7 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *EncodeOption) (err err
 				if v := rv.Field(i); t.Field(i).Name != "_" {
 					tag = field.Tag.Get("bin")
 					if strings.HasPrefix(tag, "sizeof=") {
-						sizeOfMap[tag] = sizeof(field.Type, v.Addr().Interface())
+						sizeOfMap[tag] = sizeof(field.Type, v)
 					}
 					if v.CanInterface() {
 						isPresent := true

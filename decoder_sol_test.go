@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
 type SlabUninitialized struct {
 	Padding [68]byte `json:"-"`
 }
@@ -23,9 +22,8 @@ type SlabInnerNode struct {
 	PrefixLen uint32
 	Key       Uint128
 	Children  [2]uint32
-	Padding [40]byte `json:"-"`
+	Padding   [40]byte `json:"-"`
 }
-
 
 type SlabLeafNode struct {
 	OwnerSlot     uint8
@@ -37,7 +35,7 @@ type SlabLeafNode struct {
 	ClientOrderId Uint64
 }
 type SlabFreeNode struct {
-	Next uint32
+	Next    uint32
 	Padding [64]byte `json:"-"`
 }
 
@@ -63,7 +61,7 @@ func (s *Slab) UnmarshalBinary(decoder *Decoder) error {
 	return s.BaseVariant.UnmarshalBinaryVariant(decoder, SlabFactoryImplDef)
 }
 func (s *Slab) MarshalBinary(encoder *Encoder) error {
-	err := encoder.writeUint32(s.TypeID)
+	err := encoder.WriteUint32(s.TypeID)
 	if err != nil {
 		return err
 	}
@@ -88,7 +86,6 @@ type Orderbook struct {
 	// SLAB_NODE_LAYOUT
 	Nodes []*Slab `bin: ""`
 }
-
 
 func TestDecoder_DecodeSol(t *testing.T) {
 	hexData, err := ioutil.ReadFile("./testdata/orderbook_lite.hex")
@@ -124,7 +121,6 @@ func TestDecoder_DecodeSol(t *testing.T) {
 	fmt.Println("actual  :", obHex)
 	require.Equal(t, cnt, buf.Bytes())
 }
-
 
 func TestDecoder_Slabs(t *testing.T) {
 

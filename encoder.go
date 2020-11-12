@@ -88,7 +88,7 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *EncodeOption) (err err
 	case int32:
 		return e.writeInt32(cv)
 	case uint32:
-		return e.writeUint32(cv)
+		return e.WriteUint32(cv)
 	case uint64:
 		return e.writeUint64(cv)
 	case Int64:
@@ -320,10 +320,10 @@ func (e *Encoder) writeInt32(i int32) (err error) {
 	if traceEnabled {
 		zlog.Debug("write int32", zap.Int32("val", i))
 	}
-	return e.writeUint32(uint32(i))
+	return e.WriteUint32(uint32(i))
 }
 
-func (e *Encoder) writeUint32(i uint32) (err error) {
+func (e *Encoder) WriteUint32(i uint32) (err error) {
 	if traceEnabled {
 		zlog.Debug("write uint32", zap.Uint32("val", i))
 	}

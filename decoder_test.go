@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"math"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDecoder_Remaining(t *testing.T) {
@@ -123,8 +124,8 @@ func TestDecoder_Uint32(t *testing.T) {
 
 	buf := new(bytes.Buffer)
 	enc := NewEncoder(buf)
-	enc.writeUint32(uint32(342))
-	enc.writeUint32(uint32(100))
+	enc.WriteUint32(uint32(342))
+	enc.WriteUint32(uint32(100))
 
 	d := NewDecoder(buf.Bytes())
 
@@ -334,34 +335,33 @@ func TestEncoder_Encode_struct_error(t *testing.T) {
 }
 
 type DecodeTestStruct struct {
-	F1 string
-	F2 int16
-	F3 uint16
-	F4 uint32
-	F5 []string
-	F6 [2]string
-	F7 byte
-	F8 uint64
-	F9 []byte
+	F1  string
+	F2  int16
+	F3  uint16
+	F4  uint32
+	F5  []string
+	F6  [2]string
+	F7  byte
+	F8  uint64
+	F9  []byte
 	F10 Varuint32
 	F11 bool
 }
-
 
 func TestDecoder_Decode(t *testing.T) {
 	//EnableDecoderLogging()
 	//EnableEncoderLogging()
 
 	s := &DecodeTestStruct{
-		F1: "abc",
-		F2: -75,
-		F3: 99,
-		F4: 999,
-		F5: []string{"def", "789"},
-		F6: [2]string{"foo", "bar"},
-		F7: byte(1),
-		F8: uint64(87),
-		F9: []byte{1, 2, 3, 4, 5},
+		F1:  "abc",
+		F2:  -75,
+		F3:  99,
+		F4:  999,
+		F5:  []string{"def", "789"},
+		F6:  [2]string{"foo", "bar"},
+		F7:  byte(1),
+		F8:  uint64(87),
+		F9:  []byte{1, 2, 3, 4, 5},
 		F10: Varuint32(999),
 		F11: true,
 	}

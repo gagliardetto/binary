@@ -24,10 +24,18 @@ type VariantType struct {
 }
 
 type VariantDefinition struct {
-	typeIDToType map[uint32]reflect.Type
-	typeIDToName map[uint32]string
-	typeNameToID map[string]uint32
+	typeIDToType   map[uint32]reflect.Type
+	typeIDToName   map[uint32]string
+	typeNameToID   map[string]uint32
+	typeIDEncoding TypeIDEncoding
 }
+
+type TypeIDEncoding uint32
+
+const (
+	Uvarint32TypeIDEncoding TypeIDEncoding = iota
+	Uint32TypeIDEncoding
+)
 
 // NewVariantDefinition creates a variant definition based on the *ordered* provided types.
 // It's the ordering that defines the binary variant value just like in native `nodeos` C++
@@ -36,16 +44,17 @@ type VariantDefinition struct {
 //
 // This variant definition can now be passed to functions of `BaseVariant` to implement
 // marshal/unmarshaling functionalities for binary & JSON.
-func NewVariantDefinition(types []VariantType) (out *VariantDefinition) {
+func NewVariantDefinition(typeIDEncoding TypeIDEncoding, types []VariantType) (out *VariantDefinition) {
 	if len(types) < 0 {
 		panic("it's not valid to create a variant definition without any types")
 	}
 
 	typeCount := len(types)
 	out = &VariantDefinition{
-		typeIDToType: make(map[uint32]reflect.Type, typeCount),
-		typeIDToName: make(map[uint32]string, typeCount),
-		typeNameToID: make(map[string]uint32, typeCount),
+		typeIDEncoding: typeIDEncoding,
+		typeIDToType:   make(map[uint32]reflect.Type, typeCount),
+		typeIDToName:   make(map[uint32]string, typeCount),
+		typeNameToID:   make(map[string]uint32, typeCount),
 	}
 
 	for i, typeDef := range types {
@@ -94,7 +103,7 @@ func (a *BaseVariant) Assign(typeID uint32, impl interface{}) {
 }
 
 func (a *BaseVariant) Obtain(def *VariantDefinition) (typeID uint32, typeName string, impl interface{}) {
-	return uint32(a.TypeID), def.typeIDToName[a.TypeID], a.Impl
+	return a.TypeID, def.typeIDToName[a.TypeID], a.Impl
 }
 
 func (a *BaseVariant) MarshalJSON(def *VariantDefinition) ([]byte, error) {
@@ -172,13 +181,23 @@ func ptr(v reflect.Value) reflect.Value {
 	return pv
 }
 
-func (a *BaseVariant) UnmarshalBinaryVariant(decoder *Decoder, def *VariantDefinition) error {
-	typeID, err := decoder.ReadUvarint32()
-	if err != nil {
-		return fmt.Errorf("unable to read variant type id: %s", err)
+func (a *BaseVariant) UnmarshalBinaryVariant(decoder *Decoder, def *VariantDefinition) (err error) {
+
+	var typeID uint32
+	switch def.typeIDEncoding {
+	case Uvarint32TypeIDEncoding:
+		typeID, err = decoder.ReadUvarint32()
+		if err != nil {
+			return fmt.Errorf("uvarint32: unable to read variant type id: %s", err)
+		}
+	case Uint32TypeIDEncoding:
+		typeID, err = decoder.ReadUint32()
+		if err != nil {
+			return fmt.Errorf("uint32: unable to read variant type id: %s", err)
+		}
 	}
 
-	a.TypeID = uint32(typeID)
+	a.TypeID = typeID
 	typeGo := def.typeIDToType[typeID]
 	if typeGo == nil {
 		return fmt.Errorf("no known type for type %d", typeID)

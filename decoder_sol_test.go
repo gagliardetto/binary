@@ -18,7 +18,7 @@ type SlabInnerNode struct {
 	//    seq(u32(), 2, 'children'),
 	PrefixLen uint32
 	Key       Uint128
-	Children  []uint32
+	Children  [2]uint32
 }
 
 type SlabLeafNode struct {

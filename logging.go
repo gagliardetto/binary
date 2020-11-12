@@ -3,13 +3,17 @@ package bin
 import (
 	"fmt"
 
+	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 )
 
-var loggingEnabled = false
+var zlog = zap.NewNop()
 
-var encoderLog = zap.NewNop()
-var decoderLog = zap.NewNop()
+func init() {
+	logging.Register("github.com/dfuse-io/binary", &zlog)
+}
+
+var traceEnabled = logging.IsTraceEnabled("binary", "github.com/dfuse-io/binary")
 
 type logStringerFunc func() string
 
@@ -19,24 +23,4 @@ func typeField(field string, v interface{}) zap.Field {
 	return zap.Stringer(field, logStringerFunc(func() string {
 		return fmt.Sprintf("%T", v)
 	}))
-}
-
-func newLogger(production bool) (l *zap.Logger) {
-	if production {
-		l, _ = zap.NewProduction()
-	} else {
-		l, _ = zap.NewDevelopment()
-	}
-	return
-}
-
-// NewLogger a wrap to newLogger
-func NewLogger(production bool) *zap.Logger {
-	return newLogger(production)
-}
-
-func EnableDebugLogging(l *zap.Logger) {
-	encoderLog = l
-	decoderLog = l
-	loggingEnabled = true
 }

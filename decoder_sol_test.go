@@ -1,6 +1,7 @@
 package bin
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -51,8 +52,15 @@ type Slab struct {
 	BaseVariant
 }
 
-func (d *Slab) UnmarshalBinary(decoder *Decoder) error {
-	return d.BaseVariant.UnmarshalBinaryVariant(decoder, SlabFactoryImplDef)
+func (s *Slab) UnmarshalBinary(decoder *Decoder) error {
+	return s.BaseVariant.UnmarshalBinaryVariant(decoder, SlabFactoryImplDef)
+}
+func (s *Slab) MarshalBinary(encoder *Encoder) error {
+	err := encoder.writeUint16(uint16(s.TypeID))
+	if err != nil {
+		return err
+	}
+	return encoder.Encode(s.Impl)
 }
 
 type Orderbook struct {
@@ -85,9 +93,18 @@ func TestDecoder_DecodeSol(t *testing.T) {
 	err = decoder.Decode(&ob)
 	require.NoError(t, err)
 
-	json, err := json.MarshalIndent(ob, "", "   ")
+	//json, err := json.MarshalIndent(ob, "", "   ")
+	//require.NoError(t, err)
+	//fmt.Println(string(json))
+
+	buf := new(bytes.Buffer)
+	encoder := NewEncoder(buf)
+	err = encoder.Encode(ob)
 	require.NoError(t, err)
-	fmt.Println(string(json))
+
+	obHex := hex.EncodeToString(buf.Bytes())
+	require.Equal(t, hexData, obHex)
+
 }
 
 func TestDecoder_Slabs(t *testing.T) {
@@ -114,6 +131,7 @@ func TestDecoder_Slabs(t *testing.T) {
 		require.NoError(t, err)
 		fmt.Println(string(json))
 
-		require.Equal(t, 0, decoder.remaining())
+		//require.Equal(t, 0, decoder.remaining())
+
 	}
 }

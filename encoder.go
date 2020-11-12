@@ -48,6 +48,7 @@ func (e *Encoder) Encode(v interface{}) (err error) {
 	case MarshalerBinary:
 		return cv.MarshalBinary(e)
 	case BaseVariant:
+
 		err = e.writeUVarInt(int(cv.TypeID))
 		if err != nil {
 			return

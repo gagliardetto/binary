@@ -10,7 +10,6 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type SafeString string
@@ -69,40 +68,6 @@ func (t HexBytes) String() string {
 
 type Varuint32 uint32
 type Varint32 int32
-
-// Tstamp
-type Tstamp struct {
-	time.Time
-}
-
-func (t Tstamp) MarshalJSON() ([]byte, error) {
-	return json.Marshal(fmt.Sprintf("%d", t.UnixNano()))
-}
-
-func (t *Tstamp) UnmarshalJSON(data []byte) (err error) {
-	var unixNano int64
-	if data[0] == '"' {
-		var s string
-		if err = json.Unmarshal(data, &s); err != nil {
-			return
-		}
-
-		unixNano, err = strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			return err
-		}
-
-	} else {
-		unixNano, err = strconv.ParseInt(string(data), 10, 64)
-		if err != nil {
-			return err
-		}
-	}
-
-	*t = Tstamp{time.Unix(0, unixNano)}
-
-	return nil
-}
 
 type JSONFloat64 float64
 

@@ -4,8 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"math"
 	"reflect"
 	"strings"
@@ -378,6 +376,7 @@ func (d *Decoder) ReadUvarint64() (uint64, error) {
 	d.pos += read
 	return l, nil
 }
+
 func (d *Decoder) ReadVarint64() (out int64, err error) {
 	l, read := binary.Varint(d.data[d.pos:])
 	if read <= 0 {
@@ -401,6 +400,7 @@ func (d *Decoder) ReadVarint32() (out int32, err error) {
 	}
 	return
 }
+
 func (d *Decoder) ReadUvarint32() (out uint32, err error) {
 
 	n, err := d.ReadUvarint64()
@@ -471,11 +471,6 @@ func (d *Decoder) ReadUint8() (out uint8, err error) {
 	return
 }
 
-// Deprecated: Use `ReadUint8` (with a lower case `i`) instead
-func (d *Decoder) ReadUInt8() (out uint8, err error) {
-	return d.ReadUint8()
-}
-
 func (d *Decoder) ReadInt8() (out int8, err error) {
 	b, err := d.ReadByte()
 	out = int8(b)
@@ -507,6 +502,7 @@ func (d *Decoder) ReadInt16() (out int16, err error) {
 	}
 	return
 }
+
 func (d *Decoder) ReadInt64() (out int64, err error) {
 	n, err := d.ReadUint64()
 	out = int64(n)
@@ -529,6 +525,7 @@ func (d *Decoder) ReadUint32() (out uint32, err error) {
 	}
 	return
 }
+
 func (d *Decoder) ReadInt32() (out int32, err error) {
 	n, err := d.ReadUint32()
 	out = int32(n)
@@ -624,12 +621,6 @@ func (d *Decoder) ReadFloat64() (out float64, err error) {
 	return
 }
 
-func fixUtf(r rune) rune {
-	if r == utf8.RuneError {
-		return '�'
-	}
-	return r
-}
 func (d *Decoder) SafeReadUTF8String() (out string, err error) {
 	data, err := d.ReadByteArray()
 	out = strings.Map(fixUtf, string(data))
@@ -656,15 +647,22 @@ func (d *Decoder) hasRemaining() bool {
 	return d.remaining() > 0
 }
 
-func UnmarshalBinaryReader(reader io.Reader, v interface{}) (err error) {
-	data, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return
-	}
-	return UnmarshalBinary(data, v)
-}
+//func UnmarshalBinaryReader(reader io.Reader, v interface{}) (err error) {
+//	data, err := ioutil.ReadAll(reader)
+//	if err != nil {
+//		return
+//	}
+//	return UnmarshalBinary(data, v)
+//}
+//
+//func UnmarshalBinary(data []byte, v interface{}) (err error) {
+//	decoder := NewDecoder(data)
+//	return decoder.Decode(v)
+//}
 
-func UnmarshalBinary(data []byte, v interface{}) (err error) {
-	decoder := NewDecoder(data)
-	return decoder.Decode(v)
+func fixUtf(r rune) rune {
+	if r == utf8.RuneError {
+		return '�'
+	}
+	return r
 }

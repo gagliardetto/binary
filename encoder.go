@@ -188,13 +188,12 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *EncodeOption) (err err
 					zlog.Debug("field", zap.String("field", field.Name))
 				}
 
-				tag := field.Tag.Get("eos")
+				tag := field.Tag.Get("bin")
 				if tag == "-" {
 					continue
 				}
 
 				if v := rv.Field(i); t.Field(i).Name != "_" {
-					tag = field.Tag.Get("bin")
 					if strings.HasPrefix(tag, "sizeof=") {
 						sizeOfMap[tag] = sizeof(field.Type, v)
 					}

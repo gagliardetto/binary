@@ -5,6 +5,6 @@ import (
 )
 
 func init() {
-	traceEnabled = true
+	//traceEnabled = true
 	zlog, _ = zap.NewDevelopment()
 }

@@ -3,10 +3,11 @@ package bin
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"math"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEncoder_Float64Inf(t *testing.T) {
@@ -69,7 +70,7 @@ func Test_OptionalPrimitiveType(t *testing.T) {
 
 func Test_OptionalPointerToPrimitiveType(t *testing.T) {
 	type test struct {
-		ID *Uint64 `eos:"optional"`
+		ID *Uint64 `bin:"optional"`
 	}
 
 	out, err := MarshalBinary(test{ID: nil})

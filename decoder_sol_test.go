@@ -114,6 +114,6 @@ func TestDecoder_Slabs(t *testing.T) {
 		require.NoError(t, err)
 		fmt.Println(string(json))
 
-		require.True(t, decoder.remaining() == 0)
+		require.Equal(t, 0, decoder.remaining())
 	}
 }

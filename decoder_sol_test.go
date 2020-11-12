@@ -5,12 +5,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 type SlabUninitialized struct {
+	Padding [4]byte `json:"-"`
 }
 
 type SlabInnerNode struct {
@@ -36,6 +38,8 @@ type SlabFreeNode struct {
 }
 
 type SlabLastFreeNode struct {
+	//Padding [68]byte `json:"-"`
+	Padding [4]byte `json:"-"`
 }
 
 type PublicKey [32]byte
@@ -56,7 +60,7 @@ func (s *Slab) UnmarshalBinary(decoder *Decoder) error {
 	return s.BaseVariant.UnmarshalBinaryVariant(decoder, SlabFactoryImplDef)
 }
 func (s *Slab) MarshalBinary(encoder *Encoder) error {
-	err := encoder.writeUint16(uint16(s.TypeID))
+	err := encoder.writeUint32(s.TypeID)
 	if err != nil {
 		return err
 	}
@@ -93,9 +97,14 @@ func TestDecoder_DecodeSol(t *testing.T) {
 	err = decoder.Decode(&ob)
 	require.NoError(t, err)
 
+	require.Equal(t, 0, decoder.remaining())
 	//json, err := json.MarshalIndent(ob, "", "   ")
 	//require.NoError(t, err)
 	//fmt.Println(string(json))
+
+	fmt.Println("-------------------------------------------------------")
+	fmt.Println("-------------------------------------------------------")
+	fmt.Println("-------------------------------------------------------")
 
 	buf := new(bytes.Buffer)
 	encoder := NewEncoder(buf)
@@ -103,7 +112,12 @@ func TestDecoder_DecodeSol(t *testing.T) {
 	require.NoError(t, err)
 
 	obHex := hex.EncodeToString(buf.Bytes())
-	require.Equal(t, hexData, obHex)
+
+	ioutil.WriteFile("/tmp/expected.hex", []byte(hexData), 775)
+	ioutil.WriteFile("/tmp/actual.hex", []byte(obHex), 775)
+	fmt.Println("expected:", hexData)
+	fmt.Println("actual  :", obHex)
+	require.Equal(t, cnt, buf.Bytes())
 
 }
 

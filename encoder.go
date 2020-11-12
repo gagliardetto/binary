@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"reflect"
+	"strings"
 
 	"go.uber.org/zap"
 )
@@ -43,7 +44,25 @@ func NewEncoder(w io.Writer) *Encoder {
 	}
 }
 
+type EncodeOption struct {
+	sizeOfSlice *uint64
+}
+
+func (o *EncodeOption) setSizeOfSlice(size uint64) {
+	o.sizeOfSlice = &size
+}
+
+func (o *EncodeOption) hasSizeOfSlice() bool {
+	return o.sizeOfSlice != nil
+}
 func (e *Encoder) Encode(v interface{}) (err error) {
+	return e.EncodeWithOption(v, nil)
+}
+func (e *Encoder) EncodeWithOption(v interface{}, option *EncodeOption) (err error) {
+	if option == nil {
+		option = &EncodeOption{}
+	}
+
 	switch cv := v.(type) {
 	case MarshalerBinary:
 		return cv.MarshalBinary(e)
@@ -121,9 +140,15 @@ func (e *Encoder) Encode(v interface{}) (err error) {
 				}
 			}
 		case reflect.Slice:
-			l := rv.Len()
-			if err = e.writeUVarInt(l); err != nil {
-				return
+
+			var l int
+			if option.hasSizeOfSlice() {
+				l = int(*option.sizeOfSlice)
+			} else {
+				l = rv.Len()
+				if err = e.writeUVarInt(l); err != nil {
+					return
+				}
 			}
 
 			if traceEnabled {
@@ -146,8 +171,15 @@ func (e *Encoder) Encode(v interface{}) (err error) {
 				zlog = zlog.Named("struct")
 			}
 
+			sizeOfMap := map[string]uint64{}
+
 			for i := 0; i < l; i++ {
 				field := t.Field(i)
+
+				if s, ok := sizeOfMap["sizeof="+field.Name]; ok {
+					option.setSizeOfSlice(s)
+				}
+
 				if traceEnabled {
 					zlog.Debug("field", zap.String("field", field.Name))
 				}
@@ -158,6 +190,10 @@ func (e *Encoder) Encode(v interface{}) (err error) {
 				}
 
 				if v := rv.Field(i); t.Field(i).Name != "_" {
+					tag = field.Tag.Get("bin")
+					if strings.HasPrefix(tag, "sizeof=") {
+						sizeOfMap[tag] = sizeof(field.Type, v.Addr().Interface())
+					}
 					if v.CanInterface() {
 						isPresent := true
 						if tag == "optional" {
@@ -166,7 +202,7 @@ func (e *Encoder) Encode(v interface{}) (err error) {
 						}
 
 						if isPresent {
-							if err = e.Encode(v.Interface()); err != nil {
+							if err = e.EncodeWithOption(v.Interface(), option); err != nil {
 								return
 							}
 						}

@@ -2,38 +2,56 @@ package bin
 
 import (
 	"encoding/binary"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_parseFieldTag(t *testing.T) {
-	tests := []struct{
-		name string
-		tag string
-		expectValue *filedTag
+	tests := []struct {
+		name        string
+		tag         string
+		expectValue *fieldTag
 	}{
 		{
 			name: "no tags",
-			tag: "",
-			expectValue: &filedTag{
-				Order:  binary.LittleEndian,
+			tag:  "",
+			expectValue: &fieldTag{
+				Order: binary.LittleEndian,
 			},
 		},
 		{
 			name: "with a skip",
-			tag: "-",
-			expectValue: &filedTag{
-				Order:  binary.LittleEndian,
-				Skip: true,
+			tag:  "-",
+			expectValue: &fieldTag{
+				Order: binary.LittleEndian,
+				Skip:  true,
 			},
 		},
 		{
 			name: "with a sizeof",
-			tag: `bin:"sizeof=Tokens"`,
-			expectValue: &filedTag{
+			tag:  `bin:"sizeof=Tokens"`,
+			expectValue: &fieldTag{
 				Order:  binary.LittleEndian,
-				Sizeof:  "Tokens",
+				Sizeof: "Tokens",
+			},
+		},
+		{
+			name: "with a optional",
+			tag:  `bin:"optional"`,
+			expectValue: &fieldTag{
+				Order:    binary.LittleEndian,
+				Optional: true,
+			},
+		},
+		{
+			name: "with a optional and size of",
+			tag:  `bin:"optional,sizeof=Nodes"`,
+			expectValue: &fieldTag{
+				Order:    binary.LittleEndian,
+				Optional: true,
+				Sizeof:   "Nodes",
 			},
 		},
 	}

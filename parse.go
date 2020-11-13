@@ -6,16 +6,16 @@ import (
 	"strings"
 )
 
-type filedTag struct {
-	Sizeof   string
-	Skip     bool
-	Order    binary.ByteOrder
-
+type fieldTag struct {
+	Sizeof          string
+	Skip            bool
+	Order           binary.ByteOrder
+	Optional        bool
+	BinaryExtension bool
 }
 
-
-func parseFieldTag(tag reflect.StructTag) *filedTag {
-	t := &filedTag{
+func parseFieldTag(tag reflect.StructTag) *fieldTag {
+	t := &fieldTag{
 		Order: binary.LittleEndian,
 	}
 	if tag == "-" {
@@ -31,6 +31,10 @@ func parseFieldTag(tag reflect.StructTag) *filedTag {
 			t.Order = binary.BigEndian
 		} else if s == "little" {
 			t.Order = binary.LittleEndian
+		} else if s == "optional" {
+			t.Optional = true
+		} else if s == "binary_extension" {
+			t.BinaryExtension = true
 		}
 	}
 	return t

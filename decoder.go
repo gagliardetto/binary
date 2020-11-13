@@ -301,20 +301,19 @@ func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) 
 	sizeOfMap := map[string]int{}
 	seenBinaryExtensionField := false
 	for i := 0; i < l; i++ {
-		option := &Option{}
 		structField := t.Field(i)
-		tag := structField.Tag.Get("eos")
-		if tag == "-" {
+
+		fieldTag := parseFieldTag(structField.Tag)
+		if fieldTag.Skip {
 			continue
 		}
 
-		if tag != "binary_extension" && seenBinaryExtensionField {
-			panic(fmt.Sprintf("the `eos: \"binary_extension\"` tags must be packed together at the end of struct fields, problematic field %s", structField.Name))
+		if !fieldTag.BinaryExtension && seenBinaryExtensionField {
+			panic(fmt.Sprintf("the `bin:\"binary_extension\"` tags must be packed together at the end of struct fields, problematic field %q", structField.Name))
 		}
 
-		if tag == "binary_extension" {
+		if fieldTag.BinaryExtension {
 			seenBinaryExtensionField = true
-
 			// FIXME: This works only if what is in `d.data` is the actual full data buffer that
 			//        needs to be decoded. If there is for example two structs in the buffer, this
 			//        will not work as we would continue into the next struct.
@@ -327,13 +326,15 @@ func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) 
 			}
 		}
 
-		if s, ok := sizeOfMap["sizeof="+structField.Name]; ok {
-			option.setSizeOfSlice(s)
-		}
-
 		if v := rv.Field(i); v.CanSet() && structField.Name != "_" {
+			option := &Option{}
+
+			if s, ok := sizeOfMap[structField.Name]; ok {
+				option.setSizeOfSlice(s)
+			}
+
 			// v is Value of given field for said struct
-			if tag == "optional" {
+			if fieldTag.Optional {
 				option.OptionalField = true
 			}
 
@@ -341,20 +342,25 @@ func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) 
 			value := v.Addr().Interface()
 
 			if traceEnabled {
-				zlog.Debug("struct field", typeField(structField.Name, value), zap.String("tag", tag))
+				zlog.Debug("struct field",
+					typeField(structField.Name, value),
+					zap.Reflect("field_tags", fieldTag),
+				)
 			}
 
 			if err = d.DecodeWithOption(value, option); err != nil {
 				return
 			}
 
-			tag = structField.Tag.Get("bin")
-			if strings.HasPrefix(tag, "sizeof=") {
+			if fieldTag.Sizeof != "" {
 				size := sizeof(structField.Type, v)
 				if traceEnabled {
-					zlog.Debug("setting size of", zap.String("tag", tag), zap.Int("size", size))
+					zlog.Debug("setting size of field",
+						zap.String("field_name", fieldTag.Sizeof),
+						zap.Int("size", size),
+					)
 				}
-				sizeOfMap[tag] = size
+				sizeOfMap[fieldTag.Sizeof] = size
 			}
 		}
 	}

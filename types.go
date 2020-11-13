@@ -89,7 +89,7 @@ func (o *HexBytes) UnmarshalBinary(decoder *Decoder) error {
 }
 
 func (o HexBytes) MarshalBinary(encoder *Encoder) error {
-	return encoder.writeByteArray([]byte(o), nil)
+	return encoder.writeByteArray([]byte(o), true)
 }
 
 type Varint16 int16

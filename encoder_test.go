@@ -189,12 +189,14 @@ func TestEncoder_ByteArray(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeByteArray([]byte{1, 2, 3}, nil)
-	enc.writeByteArray([]byte{4, 5, 6}, nil)
+	enc.writeByteArray([]byte{1, 2, 3}, true)
+	enc.writeByteArray([]byte{4, 5, 6}, true)
+	enc.writeByteArray([]byte{7, 8}, false)
 
 	assert.Equal(t, []byte{
 		0x03, 0x01, 0x02, 0x03,
 		0x03, 0x04, 0x05, 0x06,
+		0x07, 0x08,
 	}, buf.Bytes())
 }
 

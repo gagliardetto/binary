@@ -70,7 +70,11 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *Option) (err error) {
 	case bool:
 		return e.writeBool(cv)
 	case []byte:
-		return e.writeByteArray(cv, option)
+		// if the byte array has another filed
+		// that specifies it size we should not prefix
+		// the data with the length of the byte array
+		writeLength := !option.hasSizeOfSlice()
+		return e.writeByteArray(cv, writeLength)
 	case nil:
 	default:
 
@@ -213,11 +217,11 @@ func (e *Encoder) toWriter(bytes []byte) (err error) {
 	return
 }
 
-func (e *Encoder) writeByteArray(b []byte, option *Option) error {
+func (e *Encoder) writeByteArray(b []byte, writeLength bool) error {
 	if traceEnabled {
 		zlog.Debug("write byte array", zap.Int("len", len(b)))
 	}
-	if !option.hasSizeOfSlice() {
+	if writeLength {
 		if err := e.writeUVarInt(len(b)); err != nil {
 			return err
 		}
@@ -356,5 +360,5 @@ func (e *Encoder) writeString(s string) (err error) {
 	if traceEnabled {
 		zlog.Debug("write string", zap.String("val", s))
 	}
-	return e.writeByteArray([]byte(s), nil)
+	return e.writeByteArray([]byte(s), true)
 }

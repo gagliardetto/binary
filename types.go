@@ -93,7 +93,37 @@ func (o HexBytes) MarshalBinary(encoder *Encoder) error {
 }
 
 type Varint16 int16
+
+func (o *Varint16) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadVarint16()
+	if err != nil {
+		return fmt.Errorf("varint16: %s", err)
+	}
+
+	*o = Varint16(value)
+	return nil
+}
+
+func (o Varint16) MarshalBinary(encoder *Encoder) error {
+	return encoder.writeVarInt(int(o))
+}
+
 type Varuint16 uint16
+
+func (o *Varuint16) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadUvarint16()
+	if err != nil {
+		return fmt.Errorf("varuint16: %s", err)
+	}
+
+	*o = Varuint16(value)
+	return nil
+}
+
+func (o Varuint16) MarshalBinary(encoder *Encoder) error {
+	return encoder.writeUVarInt(int(o))
+}
+
 type Varuint32 uint32
 
 func (o *Varuint32) UnmarshalBinary(decoder *Decoder) error {

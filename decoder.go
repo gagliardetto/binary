@@ -77,14 +77,14 @@ func (d *Decoder) decodeWithOption(v interface{}, option *Option) (err error) {
 
 	// We decode rv not rv.Elem because the Unmarshaler interface
 	// test must be applied at the top level of the value.
-	err = d.value(rv, option)
+	err = d.decode(rv, option)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
+func (d *Decoder) decode(rv reflect.Value, option *Option) (err error) {
 	if option == nil {
 		option = &Option{}
 	}
@@ -92,7 +92,7 @@ func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 	unmarshaler, rv := indirect(rv, option.isOptional())
 
 	if traceEnabled {
-		zlog.Debug("decode type",
+		zlog.Debug("decode: type",
 			zap.Stringer("value_kind", rv.Kind()),
 			zap.Bool("has_unmarshaller", (unmarshaler != nil)),
 			zap.Reflect("options", option),
@@ -108,7 +108,7 @@ func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 
 		if isPresent == 0 {
 			if traceEnabled {
-				zlog.Debug("skipping optional value", typeField("type", rv))
+				zlog.Debug("decode: skipping optional value", zap.Stringer("type", rv.Kind()))
 			}
 
 			rv.Set(reflect.Zero(rv.Type()))
@@ -121,11 +121,11 @@ func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 
 	if unmarshaler != nil {
 		if traceEnabled {
-			zlog.Debug("using UnmarshalBinary method to decode type")
+			zlog.Debug("decode: using UnmarshalBinary method to decode type")
 		}
 		return unmarshaler.UnmarshalBinary(d)
 	}
-	rvType := rv.Type()
+	rt := rv.Type()
 
 	switch rv.Kind() {
 	case reflect.String:
@@ -198,15 +198,15 @@ func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 		//	return
 	}
 
-	switch rvType.Kind() {
+	switch rt.Kind() {
 	case reflect.Array:
-		len := rvType.Len()
+		len := rt.Len()
 		if traceEnabled {
-			zlog.Debug("reading array", zap.Int("length", len))
+			zlog.Debug("decoding: reading array", zap.Int("length", len))
 		}
 		for i := 0; i < len; i++ {
 			// TODO: we already have a value
-			if err = d.value(rv.Index(i), option); err != nil {
+			if err = d.decode(rv.Index(i), option); err != nil {
 				return
 			}
 		}
@@ -225,21 +225,20 @@ func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 		if traceEnabled {
 			zlog.Debug("reading slice", zap.Int("len", l), typeField("type", rv))
 		}
-		rv.Set(reflect.MakeSlice(rvType, int(l), int(l)))
+		rv.Set(reflect.MakeSlice(rt, int(l), int(l)))
 		for i := 0; i < int(l); i++ {
-			if err = d.value(rv.Index(i), option); err != nil {
+			if err = d.decode(rv.Index(i), option); err != nil {
 				return
 			}
 		}
 
 	case reflect.Struct:
-		err = d.decodeStruct(rvType, rv)
-		if err != nil {
+		if err = d.decodeStruct(rt, rv); err != nil {
 			return
 		}
 
 	default:
-		return fmt.Errorf("decode: unsupported type %q", rvType)
+		return fmt.Errorf("decode: unsupported type %q", rt)
 	}
 
 	return
@@ -250,15 +249,19 @@ func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 	l := rv.NumField()
 
+	if traceEnabled {
+		zlog.Debug("decode: struct", zap.Int("fields", l), zap.Stringer("type", rv.Kind()))
+	}
+
 	sizeOfMap := map[string]int{}
 	seenBinaryExtensionField := false
 	for i := 0; i < l; i++ {
 		structField := rt.Field(i)
-
 		fieldTag := parseFieldTag(structField.Tag)
+
 		if fieldTag.Skip {
 			if traceEnabled {
-				zlog.Debug("skipping struct field with skip flag",
+				zlog.Debug("decode: skipping struct field with skip flag",
 					zap.String("struct_field_name", structField.Name),
 				)
 			}
@@ -287,11 +290,11 @@ func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 			// This means that the field cannot be set, to fix this
 			// we need to create a pointer to said field
 			if !v.CanAddr() {
-				// we cannot create a pointe to field skipping
+				// we cannot create a point to field skipping
 				if traceEnabled {
 					zlog.Debug("skipping struct field that cannot be addressed",
 						zap.String("struct_field_name", structField.Name),
-						zap.Stringer("value_type", v.Kind()),
+						zap.Stringer("struct_value_type", v.Kind()),
 					)
 				}
 				return fmt.Errorf("Unable to decode a none setup struc field %q with type %q", structField.Name, v.Kind())
@@ -303,7 +306,7 @@ func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 			if traceEnabled {
 				zlog.Debug("skipping struct field that cannot be addressed",
 					zap.String("struct_field_name", structField.Name),
-					zap.Stringer("value_type", v.Kind()),
+					zap.Stringer("struct_value_type", v.Kind()),
 				)
 			}
 			continue
@@ -320,19 +323,17 @@ func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 			option.OptionalField = true
 		}
 
-		//// creates a pointer to the value.....
-		//value := v.Addr().Interface()
-
 		if traceEnabled {
-			zlog.Debug("struct field",
-				zap.Stringer("value_type", v.Kind()),
+			zlog.Debug("decode: struct field",
+				zap.Stringer("struct_field_value_type", v.Kind()),
 				zap.String("struct_field_name", structField.Name),
-				zap.Reflect("field_tags", fieldTag),
+				zap.Reflect("struct_field_tags", fieldTag),
+				zap.Reflect("struct_field_option", option),
 			)
 		}
 
 		// TODO: should not pass by thes.. go directly to .value()
-		if err = d.value(v, option); err != nil {
+		if err = d.decode(v, option); err != nil {
 			return
 		}
 
@@ -363,8 +364,6 @@ func sizeof(t reflect.Type, v reflect.Value) int {
 		}
 		return n
 	default:
-		//name := v.Type().FieldByIndex(index).Name
-		//panic(fmt.Sprintf("sizeof field %T.%s not an integer type", val.Interface(), name))
 		panic(fmt.Sprintf("sizeof field "))
 	}
 }
@@ -377,7 +376,7 @@ func (d *Decoder) ReadUvarint64() (uint64, error) {
 		return l, ErrVarIntBufferSize
 	}
 	if traceEnabled {
-		zlog.Debug("read uvarint64", zap.Uint64("val", l))
+		zlog.Debug("decode: read uvarint64", zap.Uint64("val", l))
 	}
 	d.pos += read
 	return l, nil
@@ -389,7 +388,7 @@ func (d *Decoder) ReadVarint64() (out int64, err error) {
 		return l, ErrVarIntBufferSize
 	}
 	if traceEnabled {
-		zlog.Debug("read varint", zap.Int64("val", l))
+		zlog.Debug("decode: read varint", zap.Int64("val", l))
 	}
 	d.pos += read
 	return l, nil
@@ -402,7 +401,7 @@ func (d *Decoder) ReadVarint32() (out int32, err error) {
 	}
 	out = int32(n)
 	if traceEnabled {
-		zlog.Debug("read varint32", zap.Int32("val", out))
+		zlog.Debug("decode: read varint32", zap.Int32("val", out))
 	}
 	return
 }
@@ -415,7 +414,7 @@ func (d *Decoder) ReadUvarint32() (out uint32, err error) {
 	}
 	out = uint32(n)
 	if traceEnabled {
-		zlog.Debug("read uvarint32", zap.Uint32("val", out))
+		zlog.Debug("decode: read uvarint32", zap.Uint32("val", out))
 	}
 	return
 }
@@ -426,7 +425,7 @@ func (d *Decoder) ReadVarint16() (out int16, err error) {
 	}
 	out = int16(n)
 	if traceEnabled {
-		zlog.Debug("read varint16", zap.Int16("val", out))
+		zlog.Debug("decode: read varint16", zap.Int16("val", out))
 	}
 	return
 }
@@ -439,7 +438,7 @@ func (d *Decoder) ReadUvarint16() (out uint16, err error) {
 	}
 	out = uint16(n)
 	if traceEnabled {
-		zlog.Debug("read uvarint16", zap.Uint16("val", out))
+		zlog.Debug("decode: read uvarint16", zap.Uint16("val", out))
 	}
 	return
 }
@@ -458,7 +457,7 @@ func (d *Decoder) ReadByteArray() (out []byte, err error) {
 	out = d.data[d.pos : d.pos+int(l)]
 	d.pos += int(l)
 	if traceEnabled {
-		zlog.Debug("read byte array", zap.Stringer("hex", HexBytes(out)))
+		zlog.Debug("decode: read byte array", zap.Stringer("hex", HexBytes(out)))
 	}
 	return
 }
@@ -472,7 +471,7 @@ func (d *Decoder) ReadByte() (out byte, err error) {
 	out = d.data[d.pos]
 	d.pos++
 	if traceEnabled {
-		zlog.Debug("read byte", zap.Uint8("byte", out), zap.String("hex", hex.EncodeToString([]byte{out})))
+		zlog.Debug("decode: read byte", zap.Uint8("byte", out), zap.String("hex", hex.EncodeToString([]byte{out})))
 	}
 	return
 }
@@ -490,7 +489,7 @@ func (d *Decoder) ReadBool() (out bool, err error) {
 	}
 	out = b != 0
 	if traceEnabled {
-		zlog.Debug("read bool", zap.Bool("val", out))
+		zlog.Debug("decode: read bool", zap.Bool("val", out))
 	}
 	return
 
@@ -505,7 +504,7 @@ func (d *Decoder) ReadInt8() (out int8, err error) {
 	b, err := d.ReadByte()
 	out = int8(b)
 	if traceEnabled {
-		zlog.Debug("read int8", zap.Int8("val", out))
+		zlog.Debug("decode: read int8", zap.Int8("val", out))
 	}
 	return
 }
@@ -519,7 +518,7 @@ func (d *Decoder) ReadUint16() (out uint16, err error) {
 	out = binary.LittleEndian.Uint16(d.data[d.pos:])
 	d.pos += TypeSize.Uint16
 	if traceEnabled {
-		zlog.Debug("read uint16", zap.Uint16("val", out))
+		zlog.Debug("decode: read uint16", zap.Uint16("val", out))
 	}
 	return
 }
@@ -528,7 +527,7 @@ func (d *Decoder) ReadInt16() (out int16, err error) {
 	n, err := d.ReadUint16()
 	out = int16(n)
 	if traceEnabled {
-		zlog.Debug("read int16", zap.Int16("val", out))
+		zlog.Debug("decode: read int16", zap.Int16("val", out))
 	}
 	return
 }
@@ -537,7 +536,7 @@ func (d *Decoder) ReadInt64() (out int64, err error) {
 	n, err := d.ReadUint64()
 	out = int64(n)
 	if traceEnabled {
-		zlog.Debug("read int64", zap.Int64("val", out))
+		zlog.Debug("decode: read int64", zap.Int64("val", out))
 	}
 	return
 }
@@ -551,7 +550,7 @@ func (d *Decoder) ReadUint32() (out uint32, err error) {
 	out = binary.LittleEndian.Uint32(d.data[d.pos:])
 	d.pos += TypeSize.Uint32
 	if traceEnabled {
-		zlog.Debug("read uint32", zap.Uint32("val", out))
+		zlog.Debug("decode: read uint32", zap.Uint32("val", out))
 	}
 	return
 }
@@ -560,14 +559,14 @@ func (d *Decoder) ReadInt32() (out int32, err error) {
 	n, err := d.ReadUint32()
 	out = int32(n)
 	if traceEnabled {
-		zlog.Debug("read int32", zap.Int32("val", out))
+		zlog.Debug("decode: read int32", zap.Int32("val", out))
 	}
 	return
 }
 
 func (d *Decoder) ReadUint64() (out uint64, err error) {
 	if d.remaining() < TypeSize.Uint64 {
-		err = fmt.Errorf("uint64 required [%d] bytes, remaining [%d]", TypeSize.Uint64, d.remaining())
+		err = fmt.Errorf("decode: uint64 required [%d] bytes, remaining [%d]", TypeSize.Uint64, d.remaining())
 		return
 	}
 
@@ -575,7 +574,7 @@ func (d *Decoder) ReadUint64() (out uint64, err error) {
 	out = binary.LittleEndian.Uint64(data)
 	d.pos += TypeSize.Uint64
 	if traceEnabled {
-		zlog.Debug("read uint64", zap.Uint64("val", out), zap.Stringer("hex", HexBytes(data)))
+		zlog.Debug("decode: read uint64", zap.Uint64("val", out), zap.Stringer("hex", HexBytes(data)))
 	}
 	return
 }
@@ -601,7 +600,7 @@ func (d *Decoder) ReadUint128(typeName string) (out Uint128, err error) {
 
 	d.pos += TypeSize.Uint128
 	if traceEnabled {
-		zlog.Debug("read uint128", zap.Stringer("hex", out), zap.Uint64("hi", out.Hi), zap.Uint64("lo", out.Lo))
+		zlog.Debug("decode: read uint128", zap.Stringer("hex", out), zap.Uint64("hi", out.Hi), zap.Uint64("lo", out.Lo))
 	}
 	return
 }
@@ -616,7 +615,7 @@ func (d *Decoder) ReadFloat32() (out float32, err error) {
 	out = math.Float32frombits(n)
 	d.pos += TypeSize.Float32
 	if traceEnabled {
-		zlog.Debug("read float32", zap.Float32("val", out))
+		zlog.Debug("decode: read float32", zap.Float32("val", out))
 	}
 	return
 }
@@ -631,7 +630,7 @@ func (d *Decoder) ReadFloat64() (out float64, err error) {
 	out = math.Float64frombits(n)
 	d.pos += TypeSize.Float64
 	if traceEnabled {
-		zlog.Debug("read Float64", zap.Float64("val", float64(out)))
+		zlog.Debug("decode: read Float64", zap.Float64("val", float64(out)))
 	}
 	return
 }
@@ -654,6 +653,13 @@ func (d *Decoder) SafeReadUTF8String() (out string, err error) {
 	return
 }
 
+func fixUtf(r rune) rune {
+	if r == utf8.RuneError {
+		return '�'
+	}
+	return r
+}
+
 func (d *Decoder) ReadString() (out string, err error) {
 	data, err := d.ReadByteArray()
 	out = string(data)
@@ -669,26 +675,6 @@ func (d *Decoder) remaining() int {
 
 func (d *Decoder) hasRemaining() bool {
 	return d.remaining() > 0
-}
-
-//func UnmarshalBinaryReader(reader io.Reader, v interface{}) (err error) {
-//	data, err := ioutil.ReadAll(reader)
-//	if err != nil {
-//		return
-//	}
-//	return UnmarshalBinary(data, v)
-//}
-//
-//func UnmarshalBinary(data []byte, v interface{}) (err error) {
-//	decoder := NewDecoder(data)
-//	return decoder.Decode(v)
-//}
-
-func fixUtf(r rune) rune {
-	if r == utf8.RuneError {
-		return '�'
-	}
-	return r
 }
 
 // indirect walks down v allocating pointers as needed,

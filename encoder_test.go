@@ -3,13 +3,35 @@ package bin
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"math"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestEncoder_AliastTestType(t *testing.T) {
+	buf := new(bytes.Buffer)
+	enc := NewEncoder(buf)
+	enc.Encode(aliasTestType(23))
+
+	assert.Equal(t, []byte{
+		0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0, 0x0,
+	}, buf.Bytes())
+}
+
+func TestEncoder_safeString(t *testing.T) {
+	buf := new(bytes.Buffer)
+
+	enc := NewEncoder(buf)
+	enc.Encode(SafeString("hello"))
+
+	assert.Equal(t, []byte{
+		0x5, 0x68, 0x65, 0x6c, 0x6c, 0x6f,
+	}, buf.Bytes())
+
+}
 
 func TestEncoder_int8(t *testing.T) {
 	buf := new(bytes.Buffer)
@@ -198,6 +220,15 @@ func TestEncoder_ByteArray(t *testing.T) {
 		0x03, 0x04, 0x05, 0x06,
 		0x07, 0x08,
 	}, buf.Bytes())
+
+	bufB := new(bytes.Buffer)
+
+	enc = NewEncoder(bufB)
+	enc.Encode([]byte{1, 2, 3})
+
+	assert.Equal(t, []byte{
+		0x03, 0x01, 0x02, 0x03,
+	}, bufB.Bytes())
 }
 
 func TestEncode_Array(t *testing.T) {
@@ -212,23 +243,16 @@ func TestEncode_Array(t *testing.T) {
 	)
 }
 
-func TestEncode_Array_Err(t *testing.T) {
-	buf := new(bytes.Buffer)
-
-	toEncode := [1]time.Duration{}
-
-	enc := NewEncoder(buf)
-	err := enc.Encode(toEncode)
-	assert.EqualError(t, err, "encode: unsupported type \"time.Duration\"")
-}
-
-func TestEncoder_Slide_Err(t *testing.T) {
+func Test_OptionalPointerToPrimitiveType_a(t *testing.T) {
+	b := uint64(23)
+	var a *uint64
+	a = &b
 
 	buf := new(bytes.Buffer)
-	enc := NewEncoder(buf)
-	err := enc.Encode([]time.Duration{time.Duration(0)})
-	assert.EqualError(t, err, "encode: unsupported type \"time.Duration\"")
-
+	encoder := NewEncoder(buf)
+	err := encoder.Encode(a)
+	require.NoError(t, err)
+	assert.Equal(t, []byte{0x17, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, buf.Bytes())
 }
 
 func Test_OptionalPointerToPrimitiveType(t *testing.T) {
@@ -236,9 +260,11 @@ func Test_OptionalPointerToPrimitiveType(t *testing.T) {
 		ID *Uint64 `bin:"optional"`
 	}
 
+	var expect []byte
+
 	out, err := MarshalBinary(test{ID: nil})
 	require.NoError(t, err)
-	assert.Equal(t, []byte{0x0}, out)
+	assert.Equal(t, expect, out)
 
 	id := Uint64(0)
 	out, err = MarshalBinary(test{ID: &id})
@@ -301,21 +327,15 @@ func TestEncoder_BinaryStruct(t *testing.T) {
 		F23: Bool(true),
 		F24: HexBytes([]byte{1, 2, 3, 4, 5}),
 	}
+
+	fmt.Println()
 	buf := new(bytes.Buffer)
 	enc := NewEncoder(buf)
-	assert.NoError(t, enc.Encode(s))
+	err := enc.Encode(s)
+	assert.NoError(t, err)
 
 	assert.Equal(t,
 		"03616263b5ff630019ffffffe703000051ccffffffffffff9f860100000000003d0ab9c15c8fc2f5285c0f4002036465660337383903666f6f03626172ff05010203040501e9ffffffffffffff17000000000000001f85eb51b81e09400a000000000000005200000000000000070000000000000003000000000000000a000000000000005200000000000000e707cd0f01050102030405",
 		hex.EncodeToString(buf.Bytes()),
 	)
-}
-
-func TestEncoder_BinaryStruct_Err(t *testing.T) {
-	s := binaryInvalidTestStruct{}
-
-	buf := new(bytes.Buffer)
-	enc := NewEncoder(buf)
-	err := enc.Encode(s)
-	assert.EqualError(t, err, "encode: unsupported type \"time.Duration\"")
 }

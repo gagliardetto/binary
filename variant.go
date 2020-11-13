@@ -174,13 +174,6 @@ func (a *BaseVariant) UnmarshalJSON(data []byte, def *VariantDefinition) error {
 	return nil
 }
 
-func ptr(v reflect.Value) reflect.Value {
-	pt := reflect.PtrTo(v.Type())
-	pv := reflect.New(pt.Elem())
-	pv.Elem().Set(v)
-	return pv
-}
-
 func (a *BaseVariant) UnmarshalBinaryVariant(decoder *Decoder, def *VariantDefinition) (err error) {
 	var typeID uint32
 	switch def.typeIDEncoding {

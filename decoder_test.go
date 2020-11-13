@@ -5,11 +5,21 @@ import (
 	"encoding/hex"
 	"math"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestDecoder_AliastTestType(t *testing.T) {
+	buf := []byte{
+		0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0, 0x0,
+	}
+
+	var s aliasTestType
+	err := NewDecoder(buf).Decode(&s)
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(23), uint64(s))
+}
 
 func TestDecoder_Remaining(t *testing.T) {
 	b := make([]byte, 4)
@@ -348,16 +358,6 @@ func TestDecoder_Array(t *testing.T) {
 	assert.Equal(t, [3]byte{1, 2, 4}, decoded)
 }
 
-func TestDecoder_Array_Err(t *testing.T) {
-
-	decoder := NewDecoder([]byte{1})
-
-	toDecode := [1]time.Duration{}
-	err := decoder.Decode(&toDecode)
-
-	assert.EqualError(t, err, "decode: unsupported type \"time.Duration\"")
-}
-
 func TestDecoder_Slice_Err(t *testing.T) {
 	buf := []byte{}
 
@@ -390,33 +390,6 @@ func TestDecoder_Int64(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, int64(72931), n)
 	assert.Equal(t, 0, d.remaining())
-}
-
-type binaryTestStruct struct {
-	F1  string
-	F2  int16
-	F3  uint16
-	F4  int32
-	F5  uint32
-	F6  int64
-	F7  uint64
-	F8  float32
-	F9  float64
-	F10 []string
-	F11 [2]string
-	F12 byte
-	F13 []byte
-	F14 bool
-	F15 Int64
-	F16 Uint64
-	F17 JSONFloat64
-	F18 Uint128
-	F19 Int128
-	F20 Float128
-	F21 Varuint32
-	F22 Varint32
-	F23 Bool
-	F24 HexBytes
 }
 
 func TestDecoder_BinaryStruct(t *testing.T) {
@@ -462,19 +435,8 @@ func TestDecoder_BinaryStruct(t *testing.T) {
 	assert.Equal(t, HexBytes([]byte{1, 2, 3, 4, 5}), s.F24)
 }
 
-type binaryInvalidTestStruct struct {
-	F1 time.Duration
-}
-
-func TestDecoder_BinaryStruct_Err(t *testing.T) {
-	s := binaryInvalidTestStruct{}
-	decoder := NewDecoder([]byte{})
-	err := decoder.Decode(&s)
-	assert.EqualError(t, err, "decode: unsupported type \"time.Duration\"")
-}
-
 func TestDecoder_Decode_No_Ptr(t *testing.T) {
 	decoder := NewDecoder([]byte{})
 	err := decoder.Decode(1)
-	assert.EqualError(t, err, "can only decode to pointer type, got int")
+	assert.EqualError(t, err, "decoder: Decode(non-pointer int)")
 }

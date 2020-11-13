@@ -14,6 +14,10 @@ import (
 
 type SafeString string
 
+func (ss SafeString) MarshalBinary(encoder *Encoder) error {
+	return encoder.WriteString(string(ss))
+}
+
 func (ss *SafeString) UnmarshalBinary(d *Decoder) error {
 	s, e := d.SafeReadUTF8String()
 	if e != nil {

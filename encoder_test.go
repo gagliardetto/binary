@@ -16,8 +16,8 @@ func TestEncoder_int8(t *testing.T) {
 
 	enc := NewEncoder(buf)
 	v := int8(-99)
-	enc.writeByte(byte(v))
-	enc.writeByte(byte(int8(100)))
+	enc.WriteByte(byte(v))
+	enc.WriteByte(byte(int8(100)))
 
 	assert.Equal(t, []byte{
 		0x9d, // -99
@@ -29,8 +29,8 @@ func TestEncoder_int16(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeInt16(int16(-82))
-	enc.writeInt16(int16(73))
+	enc.WriteInt16(int16(-82))
+	enc.WriteInt16(int16(73))
 
 	assert.Equal(t, []byte{
 		0xae, 0xff, // -82
@@ -42,8 +42,8 @@ func TestEncoder_int32(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeInt32(int32(-276132392))
-	enc.writeInt32(int32(237391))
+	enc.WriteInt32(int32(-276132392))
+	enc.WriteInt32(int32(237391))
 
 	assert.Equal(t, []byte{
 		0xd8, 0x8d, 0x8a, 0xef,
@@ -55,8 +55,8 @@ func TestEncoder_int64(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeInt64(int64(-819823))
-	enc.writeInt64(int64(72931))
+	enc.WriteInt64(int64(-819823))
+	enc.WriteInt64(int64(72931))
 
 	assert.Equal(t, []byte{
 		0x91, 0x7d, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, //-819823
@@ -68,8 +68,8 @@ func TestEncoder_uint8(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeByte(uint8(99))
-	enc.writeByte(uint8(100))
+	enc.WriteByte(uint8(99))
+	enc.WriteByte(uint8(100))
 
 	assert.Equal(t, []byte{
 		0x63, // 99
@@ -81,8 +81,8 @@ func TestEncoder_uint16(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeUint16(uint16(82))
-	enc.writeUint16(uint16(73))
+	enc.WriteUint16(uint16(82))
+	enc.WriteUint16(uint16(73))
 
 	assert.Equal(t, []byte{
 		0x52, 0x00, // 82
@@ -107,8 +107,8 @@ func TestEncoder_uint64(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeUint64(uint64(819823))
-	enc.writeUint64(uint64(72931))
+	enc.WriteUint64(uint64(819823))
+	enc.WriteUint64(uint64(72931))
 
 	assert.Equal(t, []byte{
 		0x6f, 0x82, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, //819823
@@ -120,8 +120,8 @@ func TestEncoder_float32(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeFloat32(float32(1.32))
-	enc.writeFloat32(float32(-3.21))
+	enc.WriteFloat32(float32(1.32))
+	enc.WriteFloat32(float32(-3.21))
 
 	assert.Equal(t, []byte{
 		0xc3, 0xf5, 0xa8, 0x3f,
@@ -133,10 +133,10 @@ func TestEncoder_float64(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeFloat64(float64(-62.23))
-	enc.writeFloat64(float64(23.239))
-	enc.writeFloat64(float64(math.Inf(1)))
-	enc.writeFloat64(float64(math.Inf(-1)))
+	enc.WriteFloat64(float64(-62.23))
+	enc.WriteFloat64(float64(23.239))
+	enc.WriteFloat64(float64(math.Inf(1)))
+	enc.WriteFloat64(float64(math.Inf(-1)))
 
 	assert.Equal(t, []byte{
 		0x3d, 0x0a, 0xd7, 0xa3, 0x70, 0x1d, 0x4f, 0xc0,
@@ -150,9 +150,9 @@ func TestEncoder_string(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeString("123")
-	enc.writeString("")
-	enc.writeString("abc")
+	enc.WriteString("123")
+	enc.WriteString("")
+	enc.WriteString("abc")
 
 	assert.Equal(t, []byte{
 		0x03, 0x31, 0x32, 0x33, // "123"
@@ -165,8 +165,8 @@ func TestEncoder_byte(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeByte(0)
-	enc.writeByte(1)
+	enc.WriteByte(0)
+	enc.WriteByte(1)
 
 	assert.Equal(t, []byte{
 		0x00, 0x01,
@@ -177,8 +177,8 @@ func TestEncoder_bool(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeBool(true)
-	enc.writeBool(false)
+	enc.WriteBool(true)
+	enc.WriteBool(false)
 
 	assert.Equal(t, []byte{
 		0x01, 0x00,
@@ -189,9 +189,9 @@ func TestEncoder_ByteArray(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeByteArray([]byte{1, 2, 3}, true)
-	enc.writeByteArray([]byte{4, 5, 6}, true)
-	enc.writeByteArray([]byte{7, 8}, false)
+	enc.WriteByteArray([]byte{1, 2, 3}, true)
+	enc.WriteByteArray([]byte{4, 5, 6}, true)
+	enc.WriteByteArray([]byte{7, 8}, false)
 
 	assert.Equal(t, []byte{
 		0x03, 0x01, 0x02, 0x03,

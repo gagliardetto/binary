@@ -1,7 +1,9 @@
 package bin
 
-import "github.com/dfuse-io/logging"
+import "go.uber.org/zap"
 
 func init() {
-	logging.TestingOverride()
+	//logging.TestingOverride()
+	traceEnabled = true
+	zlog, _ = zap.NewDevelopment()
 }

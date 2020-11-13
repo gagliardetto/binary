@@ -355,7 +355,7 @@ func TestDecoder_Array_Err(t *testing.T) {
 	toDecode := [1]time.Duration{}
 	err := decoder.Decode(&toDecode)
 
-	assert.EqualError(t, err, "decode: unsupported type time.Duration")
+	assert.EqualError(t, err, "decode: unsupported type \"time.Duration\"")
 }
 
 func TestDecoder_Slice_Err(t *testing.T) {
@@ -470,7 +470,7 @@ func TestDecoder_BinaryStruct_Err(t *testing.T) {
 	s := binaryInvalidTestStruct{}
 	decoder := NewDecoder([]byte{})
 	err := decoder.Decode(&s)
-	assert.EqualError(t, err, "decode: unsupported type time.Duration")
+	assert.EqualError(t, err, "decode: unsupported type \"time.Duration\"")
 }
 
 func TestDecoder_Decode_No_Ptr(t *testing.T) {

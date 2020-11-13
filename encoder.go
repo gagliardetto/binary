@@ -70,7 +70,7 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *Option) (err error) {
 	case bool:
 		return e.writeBool(cv)
 	case []byte:
-		return e.writeByteArray(cv)
+		return e.writeByteArray(cv, option)
 	case nil:
 	default:
 
@@ -94,10 +94,12 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *Option) (err error) {
 				}
 			}
 		case reflect.Slice:
-
 			var l int
 			if option.hasSizeOfSlice() {
-				l = int(*option.SizeOfSlice)
+				l = option.getSizeOfSlice()
+				if traceEnabled {
+					zlog.Debug("slice with size of", zap.Int("size_of", l))
+				}
 			} else {
 				l = rv.Len()
 				if err = e.writeUVarInt(l); err != nil {
@@ -130,7 +132,15 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *Option) (err error) {
 			for i := 0; i < l; i++ {
 				field := t.Field(i)
 
-				if s, ok := sizeOfMap["sizeof="+field.Name]; ok {
+				tag := field.Tag.Get("bin")
+				if tag == "-" {
+					continue
+				}
+				lookup := "sizeof=" + field.Name
+				if s, ok := sizeOfMap[lookup]; ok {
+					if traceEnabled {
+						zlog.Debug("setting sizeof option", zap.String("of", lookup), zap.Int("size", s))
+					}
 					option.setSizeOfSlice(s)
 				}
 
@@ -138,13 +148,11 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *Option) (err error) {
 					zlog.Debug("field", zap.String("field", field.Name))
 				}
 
-				tag := field.Tag.Get("bin")
-				if tag == "-" {
-					continue
-				}
-
 				if v := rv.Field(i); t.Field(i).Name != "_" {
 					if strings.HasPrefix(tag, "sizeof=") {
+						if traceEnabled {
+							zlog.Debug("found sizeof", zap.String("size_of", tag))
+						}
 						sizeOfMap[tag] = sizeof(field.Type, v)
 					}
 					if v.CanInterface() {
@@ -205,12 +213,14 @@ func (e *Encoder) toWriter(bytes []byte) (err error) {
 	return
 }
 
-func (e *Encoder) writeByteArray(b []byte) error {
+func (e *Encoder) writeByteArray(b []byte, option *Option) error {
 	if traceEnabled {
 		zlog.Debug("write byte array", zap.Int("len", len(b)))
 	}
-	if err := e.writeUVarInt(len(b)); err != nil {
-		return err
+	if !option.hasSizeOfSlice() {
+		if err := e.writeUVarInt(len(b)); err != nil {
+			return err
+		}
 	}
 	return e.toWriter(b)
 }
@@ -346,5 +356,5 @@ func (e *Encoder) writeString(s string) (err error) {
 	if traceEnabled {
 		zlog.Debug("write string", zap.String("val", s))
 	}
-	return e.writeByteArray([]byte(s))
+	return e.writeByteArray([]byte(s), nil)
 }

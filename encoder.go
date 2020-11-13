@@ -97,7 +97,7 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *Option) (err error) {
 
 			var l int
 			if option.hasSizeOfSlice() {
-				l = int(*option.sizeOfSlice)
+				l = int(*option.SizeOfSlice)
 			} else {
 				l = rv.Len()
 				if err = e.writeUVarInt(l); err != nil {

@@ -1,25 +1,22 @@
 package bin
 
-
-
 type Option struct {
-	optionalField bool
-	sizeOfSlice   *int
+	OptionalField bool
+	SizeOfSlice   *int
 }
 
 func (o *Option) isOptional() bool {
-	return o.optionalField
+	return o.OptionalField
 }
 
 func (o *Option) hasSizeOfSlice() bool {
-	return o.sizeOfSlice != nil
+	return o.SizeOfSlice != nil
 }
 
 func (o *Option) getSizeOfSlice() int {
-	return *o.sizeOfSlice
+	return *o.SizeOfSlice
 }
 
 func (o *Option) setSizeOfSlice(size int) {
-	o.sizeOfSlice = &size
+	o.SizeOfSlice = &size
 }
-

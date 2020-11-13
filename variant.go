@@ -182,7 +182,6 @@ func ptr(v reflect.Value) reflect.Value {
 }
 
 func (a *BaseVariant) UnmarshalBinaryVariant(decoder *Decoder, def *VariantDefinition) (err error) {
-
 	var typeID uint32
 	switch def.typeIDEncoding {
 	case Uvarint32TypeIDEncoding:
@@ -198,6 +197,7 @@ func (a *BaseVariant) UnmarshalBinaryVariant(decoder *Decoder, def *VariantDefin
 	}
 
 	a.TypeID = typeID
+
 	typeGo := def.typeIDToType[typeID]
 	if typeGo == nil {
 		return fmt.Errorf("no known type for type %d", typeID)

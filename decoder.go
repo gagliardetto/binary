@@ -93,7 +93,10 @@ func (d *Decoder) DecodeWithOption(v interface{}, option *Option) (err error) {
 	t := rv.Type()
 
 	if traceEnabled {
-		zlog.Debug("decode type", typeField("type", v), zap.Bool("optional", option.isOptional()))
+		zlog.Debug("decode type",
+			typeField("type", v),
+			zap.Reflect("options", option),
+		)
 	}
 
 	if option.isOptional() {
@@ -331,7 +334,7 @@ func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) 
 		if v := rv.Field(i); v.CanSet() && structField.Name != "_" {
 			// v is Value of given field for said struct
 			if tag == "optional" {
-				option.optionalField = true
+				option.OptionalField = true
 			}
 
 			// creates a pointer to the value.....

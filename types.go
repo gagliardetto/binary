@@ -54,7 +54,7 @@ func (b *Bool) UnmarshalBinary(decoder *Decoder) error {
 }
 
 func (b Bool) MarshalBinary(encoder *Encoder) error {
-	return encoder.writeBool(bool(b))
+	return encoder.WriteBool(bool(b))
 }
 
 type HexBytes []byte
@@ -89,11 +89,41 @@ func (o *HexBytes) UnmarshalBinary(decoder *Decoder) error {
 }
 
 func (o HexBytes) MarshalBinary(encoder *Encoder) error {
-	return encoder.writeByteArray([]byte(o))
+	return encoder.WriteByteArray([]byte(o), true)
 }
 
 type Varint16 int16
+
+func (o *Varint16) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadVarint16()
+	if err != nil {
+		return fmt.Errorf("varint16: %s", err)
+	}
+
+	*o = Varint16(value)
+	return nil
+}
+
+func (o Varint16) MarshalBinary(encoder *Encoder) error {
+	return encoder.WriteVarInt(int(o))
+}
+
 type Varuint16 uint16
+
+func (o *Varuint16) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadUvarint16()
+	if err != nil {
+		return fmt.Errorf("varuint16: %s", err)
+	}
+
+	*o = Varuint16(value)
+	return nil
+}
+
+func (o Varuint16) MarshalBinary(encoder *Encoder) error {
+	return encoder.WriteUVarInt(int(o))
+}
+
 type Varuint32 uint32
 
 func (o *Varuint32) UnmarshalBinary(decoder *Decoder) error {
@@ -107,7 +137,7 @@ func (o *Varuint32) UnmarshalBinary(decoder *Decoder) error {
 }
 
 func (o Varuint32) MarshalBinary(encoder *Encoder) error {
-	return encoder.writeUVarInt(int(o))
+	return encoder.WriteUVarInt(int(o))
 }
 
 type Varint32 int32
@@ -123,7 +153,7 @@ func (o *Varint32) UnmarshalBinary(decoder *Decoder) error {
 }
 
 func (o Varint32) MarshalBinary(encoder *Encoder) error {
-	return encoder.writeVarInt(int(o))
+	return encoder.WriteVarInt(int(o))
 }
 
 type JSONFloat64 float64
@@ -170,7 +200,7 @@ func (f *JSONFloat64) UnmarshalBinary(decoder *Decoder) error {
 }
 
 func (f JSONFloat64) MarshalBinary(encoder *Encoder) error {
-	return encoder.writeFloat64(float64(f))
+	return encoder.WriteFloat64(float64(f))
 }
 
 type Int64 int64
@@ -230,7 +260,7 @@ func (i *Int64) UnmarshalBinary(decoder *Decoder) error {
 }
 
 func (i Int64) MarshalBinary(encoder *Encoder) error {
-	return encoder.writeInt64(int64(i))
+	return encoder.WriteInt64(int64(i))
 }
 
 type Uint64 uint64
@@ -290,7 +320,7 @@ func (i *Uint64) UnmarshalBinary(decoder *Decoder) error {
 }
 
 func (i Uint64) MarshalBinary(encoder *Encoder) error {
-	return encoder.writeUint64(uint64(i))
+	return encoder.WriteUint64(uint64(i))
 }
 
 // uint128
@@ -375,7 +405,7 @@ func (i *Uint128) UnmarshalBinary(decoder *Decoder) error {
 }
 
 func (i Uint128) MarshalBinary(encoder *Encoder) error {
-	return encoder.writeUint128(i)
+	return encoder.WriteUint128(i)
 }
 
 // Int128
@@ -433,7 +463,7 @@ func (i *Int128) UnmarshalBinary(decoder *Decoder) error {
 }
 
 func (i Int128) MarshalBinary(encoder *Encoder) error {
-	return encoder.writeInt128(i)
+	return encoder.WriteInt128(i)
 }
 
 type Float128 Uint128
@@ -465,7 +495,7 @@ func (i *Float128) UnmarshalBinary(decoder *Decoder) error {
 }
 
 func (i Float128) MarshalBinary(encoder *Encoder) error {
-	return encoder.writeUint128(Uint128(i))
+	return encoder.WriteUint128(Uint128(i))
 }
 
 // Blob

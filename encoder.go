@@ -267,6 +267,10 @@ func (e *Encoder) WriteBool(b bool) (err error) {
 	return e.WriteByte(out)
 }
 
+func (e *Encoder) WriteUint8(i uint8) (err error) {
+	return e.WriteByte(i)
+}
+
 func (e *Encoder) WriteUint16(i uint16) (err error) {
 	if traceEnabled {
 		zlog.Debug("write uint16", zap.Uint16("val", i))

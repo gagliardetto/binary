@@ -43,7 +43,19 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// HexBytes
+func (b *Bool) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadBool()
+	if err != nil {
+		return err
+	}
+
+	*b = Bool(value)
+	return nil
+}
+
+func (b Bool) MarshalBinary(encoder *Encoder) error {
+	return encoder.writeBool(bool(b))
+}
 
 type HexBytes []byte
 
@@ -66,10 +78,53 @@ func (t HexBytes) String() string {
 	return hex.EncodeToString(t)
 }
 
+func (o *HexBytes) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadByteArray()
+	if err != nil {
+		return fmt.Errorf("hex bytes: %s", err)
+	}
+
+	*o = HexBytes(value)
+	return nil
+}
+
+func (o HexBytes) MarshalBinary(encoder *Encoder) error {
+	return encoder.writeByteArray([]byte(o))
+}
+
 type Varint16 int16
 type Varuint16 uint16
 type Varuint32 uint32
+
+func (o *Varuint32) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadUvarint64()
+	if err != nil {
+		return fmt.Errorf("varuint32: %s", err)
+	}
+
+	*o = Varuint32(value)
+	return nil
+}
+
+func (o Varuint32) MarshalBinary(encoder *Encoder) error {
+	return encoder.writeUVarInt(int(o))
+}
+
 type Varint32 int32
+
+func (o *Varint32) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadVarint32()
+	if err != nil {
+		return err
+	}
+
+	*o = Varint32(value)
+	return nil
+}
+
+func (o Varint32) MarshalBinary(encoder *Encoder) error {
+	return encoder.writeVarInt(int(o))
+}
 
 type JSONFloat64 float64
 
@@ -102,6 +157,20 @@ func (f *JSONFloat64) UnmarshalJSON(data []byte) error {
 	*f = JSONFloat64(fl)
 
 	return nil
+}
+
+func (f *JSONFloat64) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadFloat64()
+	if err != nil {
+		return err
+	}
+
+	*f = JSONFloat64(value)
+	return nil
+}
+
+func (f JSONFloat64) MarshalBinary(encoder *Encoder) error {
+	return encoder.writeFloat64(float64(f))
 }
 
 type Int64 int64
@@ -150,6 +219,20 @@ func (i *Int64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (i *Int64) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadInt64()
+	if err != nil {
+		return err
+	}
+
+	*i = Int64(value)
+	return nil
+}
+
+func (i Int64) MarshalBinary(encoder *Encoder) error {
+	return encoder.writeInt64(int64(i))
+}
+
 type Uint64 uint64
 
 func (i Uint64) MarshalJSON() (data []byte, err error) {
@@ -193,6 +276,16 @@ func (i *Uint64) UnmarshalJSON(data []byte) error {
 
 	*i = Uint64(v)
 
+	return nil
+}
+
+func (i *Uint64) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadUint64()
+	if err != nil {
+		return err
+	}
+
+	*i = Uint64(value)
 	return nil
 }
 
@@ -271,6 +364,20 @@ func (i *Uint128) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (i *Uint128) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadUint128("uint128")
+	if err != nil {
+		return err
+	}
+
+	*i = value
+	return nil
+}
+
+func (i Uint128) MarshalBinary(encoder *Encoder) error {
+	return encoder.writeUint128(i)
+}
+
 // Int128
 type Int128 Uint128
 
@@ -289,6 +396,10 @@ func (i Int128) BigInt() *big.Int {
 		value = (&big.Int{}).SetBytes(buf)
 	}
 	return value
+}
+
+func (i Int128) String() string {
+	return Uint128(i).String()
 }
 
 func (i Int128) DecimalString() string {
@@ -311,6 +422,20 @@ func (i *Int128) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (i *Int128) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadInt128()
+	if err != nil {
+		return err
+	}
+
+	*i = value
+	return nil
+}
+
+func (i Int128) MarshalBinary(encoder *Encoder) error {
+	return encoder.writeInt128(i)
+}
+
 type Float128 Uint128
 
 func (i Float128) MarshalJSON() (data []byte, err error) {
@@ -327,6 +452,20 @@ func (i *Float128) UnmarshalJSON(data []byte) error {
 	*i = out
 
 	return nil
+}
+
+func (i *Float128) UnmarshalBinary(decoder *Decoder) error {
+	value, err := decoder.ReadFloat128()
+	if err != nil {
+		return err
+	}
+
+	*i = Float128(value)
+	return nil
+}
+
+func (i Float128) MarshalBinary(encoder *Encoder) error {
+	return encoder.writeUint128(Uint128(i))
 }
 
 // Blob

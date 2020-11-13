@@ -1,7 +1,6 @@
 package bin
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"io"
@@ -12,24 +11,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// MarshalerBinary is the interface implemented by types
-// that can marshal to an EOSIO binary description of themselves.
-//
-// **Warning** This is experimental, exposed only for internal usage for now.
-type MarshalerBinary interface {
-	MarshalBinary(encoder *Encoder) error
-}
-
-func MarshalBinary(v interface{}) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	encoder := NewEncoder(buf)
-	err := encoder.Encode(v)
-	return buf.Bytes(), err
-}
-
-// --------------------------------------------------------------
-// Encoder implements the EOS packing, similar to FC_BUFFER
-// --------------------------------------------------------------
 type Encoder struct {
 	output io.Writer
 	Order  binary.ByteOrder
@@ -44,23 +25,12 @@ func NewEncoder(w io.Writer) *Encoder {
 	}
 }
 
-type EncodeOption struct {
-	sizeOfSlice *int
-}
-
-func (o *EncodeOption) setSizeOfSlice(size int) {
-	o.sizeOfSlice = &size
-}
-
-func (o *EncodeOption) hasSizeOfSlice() bool {
-	return o.sizeOfSlice != nil
-}
 func (e *Encoder) Encode(v interface{}) (err error) {
 	return e.EncodeWithOption(v, nil)
 }
-func (e *Encoder) EncodeWithOption(v interface{}, option *EncodeOption) (err error) {
+func (e *Encoder) EncodeWithOption(v interface{}, option *Option) (err error) {
 	if option == nil {
-		option = &EncodeOption{}
+		option = &Option{}
 	}
 
 	switch cv := v.(type) {
@@ -91,34 +61,14 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *EncodeOption) (err err
 		return e.WriteUint32(cv)
 	case uint64:
 		return e.writeUint64(cv)
-	case Int64:
-		return e.writeUint64(uint64(cv))
 	case int64:
 		return e.writeInt64(cv)
 	case float32:
 		return e.writeFloat32(cv)
 	case float64:
 		return e.writeFloat64(cv)
-	case Varint16:
-		return e.writeVarInt(int(cv))
-	case Varint32:
-		return e.writeVarInt(int(cv))
-	case Uint128:
-		return e.writeUint128(cv)
-	case Int128:
-		return e.writeUint128(Uint128(cv))
-	case Float128:
-		return e.writeUint128(Uint128(cv))
-	case Varuint16:
-		return e.writeUVarInt(int(cv))
-	case Varuint32:
-		return e.writeUVarInt(int(cv))
 	case bool:
 		return e.writeBool(cv)
-	case Bool:
-		return e.writeBool(bool(cv))
-	case HexBytes:
-		return e.writeByteArray(cv)
 	case []byte:
 		return e.writeByteArray(cv)
 	case nil:
@@ -237,7 +187,7 @@ func (e *Encoder) EncodeWithOption(v interface{}, option *EncodeOption) (err err
 			}
 
 		default:
-			return errors.New("Encode: unsupported type " + t.String())
+			return errors.New("encode: unsupported type " + t.String())
 		}
 	}
 
@@ -354,6 +304,16 @@ func (e *Encoder) writeUint64(i uint64) (err error) {
 func (e *Encoder) writeUint128(i Uint128) (err error) {
 	if traceEnabled {
 		zlog.Debug("write uint128", zap.Stringer("hex", i), zap.Uint64("lo", i.Lo), zap.Uint64("hi", i.Hi))
+	}
+	buf := make([]byte, TypeSize.Uint128)
+	binary.LittleEndian.PutUint64(buf, i.Lo)
+	binary.LittleEndian.PutUint64(buf[TypeSize.Uint64:], i.Hi)
+	return e.toWriter(buf)
+}
+
+func (e *Encoder) writeInt128(i Int128) (err error) {
+	if traceEnabled {
+		zlog.Debug("write int128", zap.Stringer("hex", i), zap.Uint64("lo", i.Lo), zap.Uint64("hi", i.Hi))
 	}
 	buf := make([]byte, TypeSize.Uint128)
 	binary.LittleEndian.PutUint64(buf, i.Lo)

@@ -77,39 +77,13 @@ func NewDecoder(data []byte) *Decoder {
 	}
 }
 
-func (d *Decoder) DecodeP2PMessage(decode bool) {
-	d.decodeP2PMessage = decode
-}
-
-func (d *Decoder) DecodeActions(decode bool) {
-	d.decodeActions = decode
-}
-
-type DecodeOption struct {
-	optionalField bool
-	sizeOfSlice   *int
-}
-
-func (o *DecodeOption) isOptional() bool {
-	return o.optionalField
-}
-func (o *DecodeOption) hasSizeOfSlice() bool {
-	return o.sizeOfSlice != nil
-}
-func (o *DecodeOption) getSizeOfSlice() int {
-	return *o.sizeOfSlice
-}
-func (o *DecodeOption) setSizeOfSlice(size int) {
-	o.sizeOfSlice = &size
-}
-
 func (d *Decoder) Decode(v interface{}) (err error) {
 	return d.DecodeWithOption(v, nil)
 }
 
-func (d *Decoder) DecodeWithOption(v interface{}, option *DecodeOption) (err error) {
+func (d *Decoder) DecodeWithOption(v interface{}, option *Option) (err error) {
 	if option == nil {
-		option = &DecodeOption{}
+		option = &Option{}
 	}
 
 	rv := reflect.Indirect(reflect.ValueOf(v))
@@ -207,12 +181,6 @@ func (d *Decoder) DecodeWithOption(v interface{}, option *DecodeOption) (err err
 		n, err = d.ReadInt64()
 		rv.SetInt(int64(n))
 		return
-	case *Int64:
-		var n int64
-		n, err = d.ReadInt64()
-		rv.SetInt(int64(n))
-		return
-
 	// This is so hackish, doing it right now, but the decoder needs to handle those
 	// case (a struct field that is itself a pointer) by itself.
 	case **Uint64:
@@ -221,31 +189,6 @@ func (d *Decoder) DecodeWithOption(v interface{}, option *DecodeOption) (err err
 		if err == nil {
 			rv.Set(reflect.ValueOf((Uint64)(n)))
 		}
-		return
-	case *Uint64:
-		var n uint64
-		n, err = d.ReadUint64()
-		rv.SetUint(uint64(n))
-		return
-	case *JSONFloat64:
-		var n float64
-		n, err = d.ReadFloat64()
-		rv.SetFloat(n)
-		return
-	case *Uint128:
-		var n Uint128
-		n, err = d.ReadUint128("uint128")
-		rv.Set(reflect.ValueOf(n))
-		return
-	case *Int128:
-		var n Uint128
-		n, err = d.ReadUint128("int128")
-		rv.Set(reflect.ValueOf(Int128(n)))
-		return
-	case *Float128:
-		var n Uint128
-		n, err = d.ReadUint128("float128")
-		rv.Set(reflect.ValueOf(Float128(n)))
 		return
 	case *uint16:
 		var n uint16
@@ -277,17 +220,17 @@ func (d *Decoder) DecodeWithOption(v interface{}, option *DecodeOption) (err err
 		r, err = d.ReadUvarint16()
 		rv.SetUint(uint64(r))
 		return
-	case *Varuint32:
-		var r uint64
-		r, err = d.ReadUvarint64()
-		rv.SetUint(r)
+	case *float32:
+		var n float32
+		n, err = d.ReadFloat32()
+		rv.SetFloat(float64(n))
+		return
+	case *float64:
+		var n float64
+		n, err = d.ReadFloat64()
+		rv.SetFloat(n)
 		return
 	case *bool:
-		var r bool
-		r, err = d.ReadBool()
-		rv.SetBool(r)
-		return
-	case *Bool:
 		var r bool
 		r, err = d.ReadBool()
 		rv.SetBool(r)
@@ -341,7 +284,7 @@ func (d *Decoder) DecodeWithOption(v interface{}, option *DecodeOption) (err err
 		}
 
 	default:
-		return errors.New("decode, unsupported type " + t.String())
+		return errors.New("decode: unsupported type " + t.String())
 	}
 
 	return
@@ -355,7 +298,7 @@ func (d *Decoder) decodeStruct(v interface{}, t reflect.Type, rv reflect.Value) 
 	sizeOfMap := map[string]int{}
 	seenBinaryExtensionField := false
 	for i := 0; i < l; i++ {
-		option := &DecodeOption{}
+		option := &Option{}
 		structField := t.Field(i)
 		tag := structField.Tag.Get("eos")
 		if tag == "-" {
@@ -686,21 +629,6 @@ func (d *Decoder) ReadFloat32() (out float32, err error) {
 	return
 }
 
-func (d *Decoder) ReadNodeosFloat32() (out float32, err error) {
-	if d.remaining() < TypeSize.Float32 {
-		err = fmt.Errorf("float32 required [%d] bytes, remaining [%d]", TypeSize.Float32, d.remaining())
-		return
-	}
-
-	n := binary.LittleEndian.Uint32(d.data[d.pos:])
-	out = math.Float32frombits(n)
-	d.pos += TypeSize.Float32
-	if traceEnabled {
-		zlog.Debug("read float32", zap.Float32("val", out))
-	}
-	return
-}
-
 func (d *Decoder) ReadFloat64() (out float64, err error) {
 	if d.remaining() < TypeSize.Float64 {
 		err = fmt.Errorf("float64 required [%d] bytes, remaining [%d]", TypeSize.Float64, d.remaining())
@@ -714,6 +642,15 @@ func (d *Decoder) ReadFloat64() (out float64, err error) {
 		zlog.Debug("read Float64", zap.Float64("val", float64(out)))
 	}
 	return
+}
+
+func (d *Decoder) ReadFloat128() (out Float128, err error) {
+	value, err := d.ReadUint128("float128")
+	if err != nil {
+		return out, fmt.Errorf("float128: %s", err)
+	}
+
+	return Float128(value), nil
 }
 
 func (d *Decoder) SafeReadUTF8String() (out string, err error) {

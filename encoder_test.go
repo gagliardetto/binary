@@ -217,7 +217,7 @@ func TestEncode_Array_Err(t *testing.T) {
 
 	enc := NewEncoder(buf)
 	err := enc.Encode(toEncode)
-	assert.EqualError(t, err, "encode: unsupported type time.Duration")
+	assert.EqualError(t, err, "encode: unsupported type \"time.Duration\"")
 }
 
 func TestEncoder_Slide_Err(t *testing.T) {
@@ -225,7 +225,7 @@ func TestEncoder_Slide_Err(t *testing.T) {
 	buf := new(bytes.Buffer)
 	enc := NewEncoder(buf)
 	err := enc.Encode([]time.Duration{time.Duration(0)})
-	assert.EqualError(t, err, "encode: unsupported type time.Duration")
+	assert.EqualError(t, err, "encode: unsupported type \"time.Duration\"")
 
 }
 
@@ -315,5 +315,5 @@ func TestEncoder_BinaryStruct_Err(t *testing.T) {
 	buf := new(bytes.Buffer)
 	enc := NewEncoder(buf)
 	err := enc.Encode(s)
-	assert.EqualError(t, err, "encode: unsupported type time.Duration")
+	assert.EqualError(t, err, "encode: unsupported type \"time.Duration\"")
 }

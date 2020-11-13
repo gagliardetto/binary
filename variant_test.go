@@ -1,6 +1,7 @@
 package bin
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -50,6 +51,18 @@ func (n *Node) MarshalBinary(encoder *Encoder) error {
 	return encoder.Encode(n.Impl)
 }
 
+func TestDecoder_AnotherTest(t *testing.T) {
+	buf := []byte{
+		0x4f, 0x9f, 0x3, 0x00, // 237391
+	}
+
+	d := NewDecoder(buf)
+	var v uint32
+	err := d.Decode(&v)
+	require.NoError(t, err)
+	fmt.Println("value ", v)
+}
+
 func TestDecode_Variant(t *testing.T) {
 	buf := []byte{
 		0x73, 0x65, 0x72, 0x75, 0x6d, // Padding[5]byte
@@ -63,7 +76,7 @@ func TestDecode_Variant(t *testing.T) {
 	}
 
 	decoder := NewDecoder(buf)
-	var tree *Tree
+	var tree Tree
 	err := decoder.Decode(&tree)
 	require.NoError(t, err)
 	require.Equal(t, 0, decoder.remaining())

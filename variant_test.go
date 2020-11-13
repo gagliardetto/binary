@@ -8,6 +8,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type Forest struct {
+	T Tree
+}
+
 type Tree struct {
 	Padding   [5]byte
 	NodeCount uint32 `bin:"sizeof=Nodes"`
@@ -76,11 +80,11 @@ func TestDecode_Variant(t *testing.T) {
 	}
 
 	decoder := NewDecoder(buf)
-	var tree Tree
-	err := decoder.Decode(&tree)
+	forest := Forest{}
+	err := decoder.Decode(&forest)
 	require.NoError(t, err)
 	require.Equal(t, 0, decoder.remaining())
-	assert.Equal(t, &Tree{
+	assert.Equal(t, Tree{
 		Padding:   [5]byte{0x73, 0x65, 0x72, 0x75, 0x6d},
 		NodeCount: 5,
 		Random:    65535,
@@ -137,6 +141,23 @@ func TestDecode_Variant(t *testing.T) {
 				},
 			},
 		},
-	}, tree)
+	}, forest.T)
 
+}
+
+type unexportesStruct struct {
+	value uint32
+}
+
+func Test_Decoding_UnexporterStruct(t *testing.T) {
+	buf := []byte{
+		0x05, 0x00, 0x00, 0x00,
+	}
+
+	decoder := NewDecoder(buf)
+	s := unexportesStruct{}
+	err := decoder.Decode(&s)
+	require.NoError(t, err)
+	require.Equal(t, 4, decoder.remaining())
+	assert.Equal(t, unexportesStruct{value: 0}, s)
 }

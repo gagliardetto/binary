@@ -13,14 +13,6 @@ import (
 	"go.uber.org/zap"
 )
 
-// UnmarshalerBinary is the interface implemented by types
-// that can unmarshal an EOSIO binary description of themselves.
-//
-// **Warning** This is experimental, exposed only for internal usage for now.
-type UnmarshalerBinary interface {
-	UnmarshalBinary(decoder *Decoder) error
-}
-
 var TypeSize = struct {
 	Bool int
 	Byte int
@@ -79,9 +71,9 @@ func (d *Decoder) Decode(v interface{}) (err error) {
 
 func (d *Decoder) decodeWithOption(v interface{}, option *Option) (err error) {
 	rv := reflect.ValueOf(v)
-	//if rv.Kind() != reflect.Ptr || rv.IsNil() {
-	//	return &InvalidDecoderError{reflect.TypeOf(v)}
-	//}
+	if rv.Kind() != reflect.Ptr {
+		return &InvalidDecoderError{reflect.TypeOf(v)}
+	}
 
 	// We decode rv not rv.Elem because the Unmarshaler interface
 	// test must be applied at the top level of the value.
@@ -91,17 +83,18 @@ func (d *Decoder) decodeWithOption(v interface{}, option *Option) (err error) {
 	}
 	return nil
 }
+
 func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 	if option == nil {
 		option = &Option{}
 	}
 
-	unmarshaler, rv := indirect(rv, true)
-	rvType := rv.Type()
+	unmarshaler, rv := indirect(rv, option.isOptional())
 
 	if traceEnabled {
 		zlog.Debug("decode type",
-			zap.String("type", rvType.String()),
+			zap.Stringer("value_kind", rv.Kind()),
+			zap.Bool("has_unmarshaller", (unmarshaler != nil)),
 			zap.Reflect("options", option),
 		)
 	}
@@ -118,44 +111,13 @@ func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 				zlog.Debug("skipping optional value", typeField("type", rv))
 			}
 
-			rv.Set(reflect.Zero(rvType))
+			rv.Set(reflect.Zero(rv.Type()))
 			return
 		}
-	}
 
-	//if t.Kind() == reflect.Ptr {
-	//	t = t.Elem()
-	//	newRV := reflect.New(t)
-	//	rv.Set(newRV)
-	//
-	//	// At this point, `newRV` is a pointer to our target type, we need to check here because
-	//	// after that, when `reflect.Indirect` is used, we get a `**<Type>` instead of a `*<Type>`
-	//	// which breaks the interface checking.
-	//	//
-	//	// Ultimately, I think this could should be re-written, I don't think the `**<Type>` is necessary.
-	//	if u, ok := newRV.Interface().(UnmarshalerBinary); ok {
-	//		if traceEnabled {
-	//			zlog.Debug("using UnmarshalBinary method to decode type", typeField("type", v))
-	//		}
-	//		return u.UnmarshalBinary(d)
-	//	}
-	//
-	//	rv = reflect.Indirect(newRV)
-	//} else {
-	//	// We check if `v` directly is `UnmarshalerBinary` this is to overcome our bad code that
-	//	// has problem dealing with non-pointer type, which should still be possible here, by allocating
-	//	// the empty value for it can then unmarshalling using the address of it. See comment above about
-	//	// `newRV` being turned into `**<Type>`.
-	//	//
-	//	// We should re-code all the logic to determine the type and indirection using Golang `json` package
-	//	// logic. See here: https://github.com/golang/go/blob/54697702e435bddb69c0b76b25b3209c78d2120a/src/encoding/json/decode.go#L439
-	//	if u, ok := v.(UnmarshalerBinary); ok {
-	//		if traceEnabled {
-	//			zlog.Debug("using UnmarshalBinary method to decode type", typeField("type", v))
-	//		}
-	//		return u.UnmarshalBinary(d)
-	//	}
-	//}
+		// we have ptr here we should not go get the element
+		unmarshaler, rv = indirect(rv, false)
+	}
 
 	if unmarshaler != nil {
 		if traceEnabled {
@@ -163,6 +125,7 @@ func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 		}
 		return unmarshaler.UnmarshalBinary(d)
 	}
+	rvType := rv.Type()
 
 	switch rv.Kind() {
 	case reflect.String:
@@ -198,15 +161,6 @@ func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 		n, err = d.ReadInt64()
 		rv.SetInt(int64(n))
 		return
-	//// This is so hackish, doing it right now, but the decoder needs to handle those
-	//// case (a struct field that is itself a pointer) by itself.
-	//case **Uint64:
-	//	var n uint64
-	//	n, err = d.ReadUint64()
-	//	if err == nil {
-	//		rv.Set(reflect.ValueOf((Uint64)(n)))
-	//	}
-	//	return
 	case reflect.Uint16:
 		var n uint16
 		n, err = d.ReadUint16()
@@ -222,16 +176,6 @@ func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 		n, err = d.ReadUint64()
 		rv.SetUint(n)
 		return
-	//case *Varint16:
-	//	var r int16
-	//	r, err = d.ReadVarint16()
-	//	rv.SetInt(int64(r))
-	//	return
-	//case *Varuint16:
-	//	var r uint16
-	//	r, err = d.ReadUvarint16()
-	//	rv.SetUint(uint64(r))
-	//	return
 	case reflect.Float32:
 		var n float32
 		n, err = d.ReadFloat32()
@@ -257,12 +201,12 @@ func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 	switch rvType.Kind() {
 	case reflect.Array:
 		len := rvType.Len()
-
 		if traceEnabled {
 			zlog.Debug("reading array", zap.Int("length", len))
 		}
 		for i := 0; i < len; i++ {
-			if err = d.decodeWithOption(rv.Index(i).Addr().Interface(), nil); err != nil {
+			// TODO: we already have a value
+			if err = d.value(rv.Index(i), option); err != nil {
 				return
 			}
 		}
@@ -283,13 +227,12 @@ func (d *Decoder) value(rv reflect.Value, option *Option) (err error) {
 		}
 		rv.Set(reflect.MakeSlice(rvType, int(l), int(l)))
 		for i := 0; i < int(l); i++ {
-			if err = d.decodeWithOption(rv.Index(i).Addr().Interface(), nil); err != nil {
+			if err = d.value(rv.Index(i), option); err != nil {
 				return
 			}
 		}
 
 	case reflect.Struct:
-
 		err = d.decodeStruct(rvType, rv)
 		if err != nil {
 			return
@@ -314,6 +257,11 @@ func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 
 		fieldTag := parseFieldTag(structField.Tag)
 		if fieldTag.Skip {
+			if traceEnabled {
+				zlog.Debug("skipping struct field with skip flag",
+					zap.String("struct_field_name", structField.Name),
+				)
+			}
 			continue
 		}
 
@@ -334,43 +282,69 @@ func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 				continue
 			}
 		}
-
-		if v := rv.Field(i); v.CanSet() && structField.Name != "_" {
-			option := &Option{}
-
-			if s, ok := sizeOfMap[structField.Name]; ok {
-				option.setSizeOfSlice(s)
-			}
-
-			// v is Value of given field for said struct
-			if fieldTag.Optional {
-				option.OptionalField = true
-			}
-
-			// creates a pointer to the value.....
-			value := v.Addr().Interface()
-
-			if traceEnabled {
-				zlog.Debug("struct field",
-					typeField(structField.Name, value),
-					zap.Reflect("field_tags", fieldTag),
-				)
-			}
-
-			if err = d.decodeWithOption(value, option); err != nil {
-				return
-			}
-
-			if fieldTag.Sizeof != "" {
-				size := sizeof(structField.Type, v)
+		v := rv.Field(i)
+		if !v.CanSet() {
+			// This means that the field cannot be set, to fix this
+			// we need to create a pointer to said field
+			if !v.CanAddr() {
+				// we cannot create a pointe to field skipping
 				if traceEnabled {
-					zlog.Debug("setting size of field",
-						zap.String("field_name", fieldTag.Sizeof),
-						zap.Int("size", size),
+					zlog.Debug("skipping struct field that cannot be addressed",
+						zap.String("struct_field_name", structField.Name),
+						zap.Stringer("value_type", v.Kind()),
 					)
 				}
-				sizeOfMap[fieldTag.Sizeof] = size
+				return fmt.Errorf("Unable to decode a none setup struc field %q with type %q", structField.Name, v.Kind())
 			}
+			v = v.Addr()
+		}
+
+		if !v.CanSet() {
+			if traceEnabled {
+				zlog.Debug("skipping struct field that cannot be addressed",
+					zap.String("struct_field_name", structField.Name),
+					zap.Stringer("value_type", v.Kind()),
+				)
+			}
+			continue
+		}
+
+		option := &Option{}
+
+		if s, ok := sizeOfMap[structField.Name]; ok {
+			option.setSizeOfSlice(s)
+		}
+
+		// v is Value of given field for said struct
+		if fieldTag.Optional {
+			option.OptionalField = true
+		}
+
+		//// creates a pointer to the value.....
+		//value := v.Addr().Interface()
+
+		if traceEnabled {
+			zlog.Debug("struct field",
+				zap.Stringer("value_type", v.Kind()),
+				zap.String("struct_field_name", structField.Name),
+				zap.Reflect("field_tags", fieldTag),
+			)
+		}
+
+		// TODO: should not pass by thes.. go directly to .value()
+		if err = d.value(v, option); err != nil {
+			return
+		}
+
+		if fieldTag.Sizeof != "" {
+			size := sizeof(structField.Type, v)
+			if traceEnabled {
+				zlog.Debug("setting size of field",
+					zap.String("field_name", fieldTag.Sizeof),
+					zap.Int("size", size),
+				)
+			}
+			sizeOfMap[fieldTag.Sizeof] = size
 		}
 	}
 	return

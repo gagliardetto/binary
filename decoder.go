@@ -63,17 +63,13 @@ var TypeSize = struct {
 
 // Decoder implements the EOS unpacking, similar to FC_BUFFER
 type Decoder struct {
-	data             []byte
-	pos              int
-	decodeP2PMessage bool
-	decodeActions    bool
+	data []byte
+	pos  int
 }
 
 func NewDecoder(data []byte) *Decoder {
 	return &Decoder{
-		data:             data,
-		decodeP2PMessage: true,
-		decodeActions:    true,
+		data: data,
 	}
 }
 

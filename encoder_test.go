@@ -94,8 +94,8 @@ func TestEncoder_uint32(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewEncoder(buf)
-	enc.writeUint32(uint32(276132392))
-	enc.writeUint32(uint32(237391))
+	enc.WriteUint32(uint32(276132392))
+	enc.WriteUint32(uint32(237391))
 
 	assert.Equal(t, []byte{
 		0x28, 0x72, 0x75, 0x10, // 276132392 as LE

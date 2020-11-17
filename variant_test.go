@@ -71,7 +71,7 @@ func TestDecode_Variant(t *testing.T) {
 	forest := Forest{}
 	err := decoder.Decode(&forest)
 	require.NoError(t, err)
-	require.Equal(t, 0, decoder.remaining())
+	require.Equal(t, 0, decoder.Remaining())
 	assert.Equal(t, Tree{
 		Padding:   [5]byte{0x73, 0x65, 0x72, 0x75, 0x6d},
 		NodeCount: 5,
@@ -223,7 +223,7 @@ func TestDecode_UnexporterStruct(t *testing.T) {
 	s := unexportesStruct{}
 	err := decoder.Decode(&s)
 	require.NoError(t, err)
-	require.Equal(t, 4, decoder.remaining())
+	require.Equal(t, 4, decoder.Remaining())
 	assert.Equal(t, unexportesStruct{value: 0}, s)
 }
 

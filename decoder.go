@@ -463,8 +463,8 @@ func (d *Decoder) ReadByteArray() (out []byte, err error) {
 }
 
 func (d *Decoder) ReadByte() (out byte, err error) {
-	if d.remaining() < TypeSize.Byte {
-		err = fmt.Errorf("required [1] byte, remaining [%d]", d.remaining())
+	if d.Remaining() < TypeSize.Byte {
+		err = fmt.Errorf("required [1] byte, remaining [%d]", d.Remaining())
 		return
 	}
 
@@ -477,8 +477,8 @@ func (d *Decoder) ReadByte() (out byte, err error) {
 }
 
 func (d *Decoder) ReadBool() (out bool, err error) {
-	if d.remaining() < TypeSize.Bool {
-		err = fmt.Errorf("bool required [%d] byte, remaining [%d]", TypeSize.Bool, d.remaining())
+	if d.Remaining() < TypeSize.Bool {
+		err = fmt.Errorf("bool required [%d] byte, remaining [%d]", TypeSize.Bool, d.Remaining())
 		return
 	}
 
@@ -510,8 +510,8 @@ func (d *Decoder) ReadInt8() (out int8, err error) {
 }
 
 func (d *Decoder) ReadUint16() (out uint16, err error) {
-	if d.remaining() < TypeSize.Uint16 {
-		err = fmt.Errorf("uint16 required [%d] bytes, remaining [%d]", TypeSize.Uint16, d.remaining())
+	if d.Remaining() < TypeSize.Uint16 {
+		err = fmt.Errorf("uint16 required [%d] bytes, remaining [%d]", TypeSize.Uint16, d.Remaining())
 		return
 	}
 
@@ -542,8 +542,8 @@ func (d *Decoder) ReadInt64() (out int64, err error) {
 }
 
 func (d *Decoder) ReadUint32() (out uint32, err error) {
-	if d.remaining() < TypeSize.Uint32 {
-		err = fmt.Errorf("uint32 required [%d] bytes, remaining [%d]", TypeSize.Uint32, d.remaining())
+	if d.Remaining() < TypeSize.Uint32 {
+		err = fmt.Errorf("uint32 required [%d] bytes, remaining [%d]", TypeSize.Uint32, d.Remaining())
 		return
 	}
 
@@ -565,8 +565,8 @@ func (d *Decoder) ReadInt32() (out int32, err error) {
 }
 
 func (d *Decoder) ReadUint64() (out uint64, err error) {
-	if d.remaining() < TypeSize.Uint64 {
-		err = fmt.Errorf("decode: uint64 required [%d] bytes, remaining [%d]", TypeSize.Uint64, d.remaining())
+	if d.Remaining() < TypeSize.Uint64 {
+		err = fmt.Errorf("decode: uint64 required [%d] bytes, remaining [%d]", TypeSize.Uint64, d.Remaining())
 		return
 	}
 
@@ -589,8 +589,8 @@ func (d *Decoder) ReadInt128() (out Int128, err error) {
 }
 
 func (d *Decoder) ReadUint128(typeName string) (out Uint128, err error) {
-	if d.remaining() < TypeSize.Uint128 {
-		err = fmt.Errorf("%s required [%d] bytes, remaining [%d]", typeName, TypeSize.Uint128, d.remaining())
+	if d.Remaining() < TypeSize.Uint128 {
+		err = fmt.Errorf("%s required [%d] bytes, remaining [%d]", typeName, TypeSize.Uint128, d.Remaining())
 		return
 	}
 
@@ -606,8 +606,8 @@ func (d *Decoder) ReadUint128(typeName string) (out Uint128, err error) {
 }
 
 func (d *Decoder) ReadFloat32() (out float32, err error) {
-	if d.remaining() < TypeSize.Float32 {
-		err = fmt.Errorf("float32 required [%d] bytes, remaining [%d]", TypeSize.Float32, d.remaining())
+	if d.Remaining() < TypeSize.Float32 {
+		err = fmt.Errorf("float32 required [%d] bytes, remaining [%d]", TypeSize.Float32, d.Remaining())
 		return
 	}
 
@@ -621,8 +621,8 @@ func (d *Decoder) ReadFloat32() (out float32, err error) {
 }
 
 func (d *Decoder) ReadFloat64() (out float64, err error) {
-	if d.remaining() < TypeSize.Float64 {
-		err = fmt.Errorf("float64 required [%d] bytes, remaining [%d]", TypeSize.Float64, d.remaining())
+	if d.Remaining() < TypeSize.Float64 {
+		err = fmt.Errorf("float64 required [%d] bytes, remaining [%d]", TypeSize.Float64, d.Remaining())
 		return
 	}
 
@@ -669,12 +669,12 @@ func (d *Decoder) ReadString() (out string, err error) {
 	return
 }
 
-func (d *Decoder) remaining() int {
+func (d *Decoder) Remaining() int {
 	return len(d.data) - d.pos
 }
 
-func (d *Decoder) hasRemaining() bool {
-	return d.remaining() > 0
+func (d *Decoder) HasRemaining() bool {
+	return d.Remaining() > 0
 }
 
 // indirect walks down v allocating pointers as needed,

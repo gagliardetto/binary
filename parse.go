@@ -18,10 +18,6 @@ func parseFieldTag(tag reflect.StructTag) *fieldTag {
 	t := &fieldTag{
 		Order: binary.LittleEndian,
 	}
-	if tag == "-" {
-		t.Skip = true
-		return t
-	}
 	tagStr := tag.Get("bin")
 	for _, s := range strings.Split(tagStr, ",") {
 		if strings.HasPrefix(s, "sizeof=") {
@@ -35,6 +31,8 @@ func parseFieldTag(tag reflect.StructTag) *fieldTag {
 			t.Optional = true
 		} else if s == "binary_extension" {
 			t.BinaryExtension = true
+		} else if s == "-" {
+			t.Skip = true
 		}
 	}
 	return t

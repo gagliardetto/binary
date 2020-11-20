@@ -52,6 +52,10 @@ func (e *Encoder) encode(rv reflect.Value, opt *option) (err error) {
 		e.WriteBool(true)
 	}
 
+	if isZero(rv) {
+		return nil
+	}
+
 	if marshaler, ok := rv.Interface().(MarshalerBinary); ok {
 		if traceEnabled {
 			zlog.Debug("encode: using MarshalerBinary method to encode type")

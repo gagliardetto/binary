@@ -473,3 +473,12 @@ func TestEncoder_BinaryTestStructWithTags(t *testing.T) {
 		hex.EncodeToString(buf.Bytes()),
 	)
 }
+
+func TestEncoder_InterfaceNil(t *testing.T) {
+	var foo interface{}
+	foo = nil
+	buf := new(bytes.Buffer)
+	enc := NewEncoder(buf)
+	err := enc.Encode(foo)
+	assert.NoError(t, err)
+}

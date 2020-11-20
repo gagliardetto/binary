@@ -500,13 +500,3 @@ func (i *Float128) UnmarshalBinary(dec *Decoder) error {
 func (i Float128) MarshalBinary(enc *Encoder) error {
 	return enc.WriteUint128(Uint128(i), enc.currentFieldOpt.Order)
 }
-
-func twosComplement(v []byte) []byte {
-	buf := make([]byte, len(v))
-	for i, b := range v {
-		buf[i] = b ^ byte(0xff)
-	}
-	one := big.NewInt(1)
-	value := (&big.Int{}).SetBytes(buf)
-	return value.Add(value, one).Bytes()
-}

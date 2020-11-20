@@ -8,13 +8,13 @@ type option struct {
 	Order         binary.ByteOrder
 }
 
-func LE() *option { return &option{Order: binary.LittleEndian} }
-func BE() *option { return &option{Order: binary.BigEndian} }
+func LE() binary.ByteOrder { return binary.LittleEndian }
+func BE() binary.ByteOrder { return binary.BigEndian }
 
 func newDefaultOption() *option {
 	return &option{
 		OptionalField: false,
-		Order:         binary.LittleEndian,
+		Order:         LE(),
 	}
 }
 

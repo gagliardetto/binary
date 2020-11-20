@@ -193,7 +193,7 @@ func (f *JSONFloat64) UnmarshalJSON(data []byte) error {
 }
 
 func (f *JSONFloat64) UnmarshalBinary(dec *Decoder) error {
-	value, err := dec.ReadFloat64(dec.currentFieldOpt)
+	value, err := dec.ReadFloat64(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
 	}
@@ -203,7 +203,7 @@ func (f *JSONFloat64) UnmarshalBinary(dec *Decoder) error {
 }
 
 func (f JSONFloat64) MarshalBinary(enc *Encoder) error {
-	return enc.WriteFloat64(float64(f), enc.currentFieldOpt)
+	return enc.WriteFloat64(float64(f), enc.currentFieldOpt.Order)
 }
 
 type Int64 int64
@@ -253,7 +253,7 @@ func (i *Int64) UnmarshalJSON(data []byte) error {
 }
 
 func (i *Int64) UnmarshalBinary(dec *Decoder) error {
-	value, err := dec.ReadInt64(dec.currentFieldOpt)
+	value, err := dec.ReadInt64(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
 	}
@@ -263,7 +263,7 @@ func (i *Int64) UnmarshalBinary(dec *Decoder) error {
 }
 
 func (i Int64) MarshalBinary(enc *Encoder) error {
-	return enc.WriteInt64(int64(i), enc.currentFieldOpt)
+	return enc.WriteInt64(int64(i), enc.currentFieldOpt.Order)
 }
 
 type Uint64 uint64
@@ -313,7 +313,7 @@ func (i *Uint64) UnmarshalJSON(data []byte) error {
 }
 
 func (i *Uint64) UnmarshalBinary(dec *Decoder) error {
-	value, err := dec.ReadUint64(dec.currentFieldOpt)
+	value, err := dec.ReadUint64(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
 	}
@@ -323,7 +323,7 @@ func (i *Uint64) UnmarshalBinary(dec *Decoder) error {
 }
 
 func (i Uint64) MarshalBinary(enc *Encoder) error {
-	return enc.WriteUint64(uint64(i), enc.currentFieldOpt)
+	return enc.WriteUint64(uint64(i), enc.currentFieldOpt.Order)
 }
 
 // uint128
@@ -398,7 +398,7 @@ func (i *Uint128) UnmarshalJSON(data []byte) error {
 }
 
 func (i *Uint128) UnmarshalBinary(dec *Decoder) error {
-	value, err := dec.ReadUint128(dec.currentFieldOpt)
+	value, err := dec.ReadUint128(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
 	}
@@ -408,7 +408,7 @@ func (i *Uint128) UnmarshalBinary(dec *Decoder) error {
 }
 
 func (i Uint128) MarshalBinary(enc *Encoder) error {
-	return enc.WriteUint128(i, enc.currentFieldOpt)
+	return enc.WriteUint128(i, enc.currentFieldOpt.Order)
 }
 
 // Int128
@@ -456,7 +456,7 @@ func (i *Int128) UnmarshalJSON(data []byte) error {
 }
 
 func (i *Int128) UnmarshalBinary(dec *Decoder) error {
-	value, err := dec.ReadInt128(dec.currentFieldOpt)
+	value, err := dec.ReadInt128(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
 	}
@@ -466,7 +466,7 @@ func (i *Int128) UnmarshalBinary(dec *Decoder) error {
 }
 
 func (i Int128) MarshalBinary(enc *Encoder) error {
-	return enc.WriteInt128(i, enc.currentFieldOpt)
+	return enc.WriteInt128(i, enc.currentFieldOpt.Order)
 }
 
 type Float128 Uint128
@@ -488,7 +488,7 @@ func (i *Float128) UnmarshalJSON(data []byte) error {
 }
 
 func (i *Float128) UnmarshalBinary(dec *Decoder) error {
-	value, err := dec.ReadFloat128(dec.currentFieldOpt)
+	value, err := dec.ReadFloat128(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
 	}
@@ -498,7 +498,7 @@ func (i *Float128) UnmarshalBinary(dec *Decoder) error {
 }
 
 func (i Float128) MarshalBinary(enc *Encoder) error {
-	return enc.WriteUint128(Uint128(i), enc.currentFieldOpt)
+	return enc.WriteUint128(Uint128(i), enc.currentFieldOpt.Order)
 }
 
 func twosComplement(v []byte) []byte {

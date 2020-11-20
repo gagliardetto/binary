@@ -34,7 +34,7 @@ Example
 type Example struct {
     Var      uint32 `bin:"_"`
     Str      string
-    IntCount utin32 `bin:"sizeof=Var"`
+    IntCount uint32 `bin:"sizeof=Var"`
     Weird    [8]byte
     Var      []int
 }

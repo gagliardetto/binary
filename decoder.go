@@ -324,7 +324,6 @@ func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 			)
 		}
 
-		// TODO: should not pass by thes.. go directly to .value()
 		if err = d.decode(v, option); err != nil {
 			return
 		}

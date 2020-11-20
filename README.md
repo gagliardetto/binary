@@ -65,3 +65,11 @@ func (e *Example) MarshalBinary(encoder *Encoder) error {
 	return encoder.WriteUint32(e.Value, BE())
 }
 ```
+
+# Contributing
+
+Any contributions are welcome, use your standard GitHub-fu to pitch in and improve.
+
+# License
+
+[Apache 2.0](LICENSE)

@@ -13,10 +13,6 @@ type aliasTestType uint64
 type unknownType struct {
 }
 
-type binaryInvalidTestStruct struct {
-	F1 unknownType
-}
-
 type binaryTestStruct struct {
 	F1  string
 	F2  int16
@@ -42,4 +38,18 @@ type binaryTestStruct struct {
 	F22 Varint32
 	F23 Bool
 	F24 HexBytes
+}
+
+type binaryTestStructWithTags struct {
+	F1  string  `bin:"-"`
+	F2  int16   `bin:"big"`
+	F3  uint16  `bin:"big"`
+	F4  int32   `bin:"big"`
+	F5  uint32  `bin:"big"`
+	F6  int64   `bin:"big"`
+	F7  uint64  `bin:"big"`
+	F8  float32 `bin:"big"`
+	F9  float64 `bin:"big"`
+	F10 bool
+	F11 *Int64 `bin:"optional"`
 }

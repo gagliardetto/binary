@@ -183,7 +183,7 @@ func (a *BaseVariant) UnmarshalBinaryVariant(decoder *Decoder, def *VariantDefin
 			return fmt.Errorf("uvarint32: unable to read variant type id: %s", err)
 		}
 	case Uint32TypeIDEncoding:
-		typeID, err = decoder.ReadUint32()
+		typeID, err = decoder.ReadUint32(LE())
 		if err != nil {
 			return fmt.Errorf("uint32: unable to read variant type id: %s", err)
 		}

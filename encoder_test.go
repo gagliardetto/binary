@@ -243,18 +243,6 @@ func TestEncode_Array(t *testing.T) {
 	)
 }
 
-func Test_OptionalPointerToPrimitiveType_a(t *testing.T) {
-	b := uint64(23)
-	var a *uint64
-	a = &b
-
-	buf := new(bytes.Buffer)
-	encoder := NewEncoder(buf)
-	err := encoder.Encode(a)
-	require.NoError(t, err)
-	assert.Equal(t, []byte{0x17, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, buf.Bytes())
-}
-
 func Test_OptionalPointerToPrimitiveType(t *testing.T) {
 	type test struct {
 		ID *Uint64 `bin:"optional"`

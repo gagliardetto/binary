@@ -369,7 +369,9 @@ func (e *Encoder) encodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 			continue
 		}
 
-		option := &Option{}
+		option := &Option{
+			OptionalField: fieldTag.Optional,
+		}
 
 		if s, ok := sizeOfMap[structField.Name]; ok {
 			if traceEnabled {

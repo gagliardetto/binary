@@ -10,6 +10,9 @@ Usage
 #### Struct Field Tags
 - `_` will skip the field when encoding & deocode a struc
 - `sizeof=` indicates this field is a number used to track the length of a another field.
+- `little` indicates this field will be encoded as little endian
+- `big` indicates this field will be encoded as big endian
+- `optional` indicates this field is optional. An optional field will have an initial byte either `0x00` or `0x01` indicating whether the field is present. If the field is present it will be followed by the value.
 - Bare values will be parsed as type and little endian when necessary
 
 #### Supported Types
@@ -19,11 +22,14 @@ Usage
  - `string`, `bool`
  - `Varint16`, `Varint32`
  - `Varuint16`, `Varuint32`
+
 #### Custom Types
 To implement custom types, your types would need to implement the `MarshalerBinary` & `UnmarshalerBinary` interfaces
 
 Example
 ----
+
+#### Basic Implementation
 ```Go
 type Example struct {
     Var      uint32 `bin:"_"`
@@ -31,5 +37,31 @@ type Example struct {
     IntCount utin32 `bin:"sizeof=Var"`
     Weird    [8]byte
     Var      []int
+}
+```
+
+
+#### Custom Implementation
+```Go
+type Example struct {
+	Prefix byte
+	Value  uint32
+}
+
+func (e *Example) UnmarshalBinary(decoder *Decoder) (err error) {
+	if e.Prefix, err = decoder.ReadByte(); err != nil {
+		return err
+	}
+	if e.Value, err = decoder.ReadUint32(BE()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *Example) MarshalBinary(encoder *Encoder) error {
+	if err := encoder.WriteByte(e.Prefix); err != nil {
+		return err
+	}
+	return encoder.WriteUint32(e.Value, BE())
 }
 ```

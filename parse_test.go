@@ -23,7 +23,7 @@ func Test_parseFieldTag(t *testing.T) {
 		},
 		{
 			name: "with a skip",
-			tag:  "-",
+			tag:  `bin:"-"`,
 			expectValue: &fieldTag{
 				Order: binary.LittleEndian,
 				Skip:  true,

@@ -48,7 +48,7 @@ func (n *Node) UnmarshalBinary(decoder *Decoder) error {
 	return n.BaseVariant.UnmarshalBinaryVariant(decoder, NodeVariantDef)
 }
 func (n *Node) MarshalBinary(encoder *Encoder) error {
-	err := encoder.WriteUint32(n.TypeID)
+	err := encoder.WriteUint32(n.TypeID, LE())
 	if err != nil {
 		return err
 	}

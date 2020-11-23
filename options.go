@@ -1,22 +1,35 @@
 package bin
 
-type Option struct {
+import "encoding/binary"
+
+type option struct {
 	OptionalField bool
 	SizeOfSlice   *int
+	Order         binary.ByteOrder
 }
 
-func (o *Option) isOptional() bool {
+func LE() binary.ByteOrder { return binary.LittleEndian }
+func BE() binary.ByteOrder { return binary.BigEndian }
+
+func newDefaultOption() *option {
+	return &option{
+		OptionalField: false,
+		Order:         LE(),
+	}
+}
+
+func (o *option) isOptional() bool {
 	return o.OptionalField
 }
 
-func (o *Option) hasSizeOfSlice() bool {
+func (o *option) hasSizeOfSlice() bool {
 	return o.SizeOfSlice != nil
 }
 
-func (o *Option) getSizeOfSlice() int {
+func (o *option) getSizeOfSlice() int {
 	return *o.SizeOfSlice
 }
 
-func (o *Option) setSizeOfSlice(size int) {
+func (o *option) setSizeOfSlice(size int) {
 	o.SizeOfSlice = &size
 }

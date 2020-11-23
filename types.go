@@ -1,7 +1,6 @@
 package bin
 
 import (
-	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
@@ -193,8 +192,8 @@ func (f *JSONFloat64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (f *JSONFloat64) UnmarshalBinary(decoder *Decoder) error {
-	value, err := decoder.ReadFloat64()
+func (f *JSONFloat64) UnmarshalBinary(dec *Decoder) error {
+	value, err := dec.ReadFloat64(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
 	}
@@ -203,8 +202,8 @@ func (f *JSONFloat64) UnmarshalBinary(decoder *Decoder) error {
 	return nil
 }
 
-func (f JSONFloat64) MarshalBinary(encoder *Encoder) error {
-	return encoder.WriteFloat64(float64(f))
+func (f JSONFloat64) MarshalBinary(enc *Encoder) error {
+	return enc.WriteFloat64(float64(f), enc.currentFieldOpt.Order)
 }
 
 type Int64 int64
@@ -253,8 +252,8 @@ func (i *Int64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i *Int64) UnmarshalBinary(decoder *Decoder) error {
-	value, err := decoder.ReadInt64()
+func (i *Int64) UnmarshalBinary(dec *Decoder) error {
+	value, err := dec.ReadInt64(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
 	}
@@ -263,8 +262,8 @@ func (i *Int64) UnmarshalBinary(decoder *Decoder) error {
 	return nil
 }
 
-func (i Int64) MarshalBinary(encoder *Encoder) error {
-	return encoder.WriteInt64(int64(i))
+func (i Int64) MarshalBinary(enc *Encoder) error {
+	return enc.WriteInt64(int64(i), enc.currentFieldOpt.Order)
 }
 
 type Uint64 uint64
@@ -313,8 +312,8 @@ func (i *Uint64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i *Uint64) UnmarshalBinary(decoder *Decoder) error {
-	value, err := decoder.ReadUint64()
+func (i *Uint64) UnmarshalBinary(dec *Decoder) error {
+	value, err := dec.ReadUint64(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
 	}
@@ -323,8 +322,8 @@ func (i *Uint64) UnmarshalBinary(decoder *Decoder) error {
 	return nil
 }
 
-func (i Uint64) MarshalBinary(encoder *Encoder) error {
-	return encoder.WriteUint64(uint64(i))
+func (i Uint64) MarshalBinary(enc *Encoder) error {
+	return enc.WriteUint64(uint64(i), enc.currentFieldOpt.Order)
 }
 
 // uint128
@@ -398,8 +397,8 @@ func (i *Uint128) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i *Uint128) UnmarshalBinary(decoder *Decoder) error {
-	value, err := decoder.ReadUint128("uint128")
+func (i *Uint128) UnmarshalBinary(dec *Decoder) error {
+	value, err := dec.ReadUint128(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
 	}
@@ -408,8 +407,8 @@ func (i *Uint128) UnmarshalBinary(decoder *Decoder) error {
 	return nil
 }
 
-func (i Uint128) MarshalBinary(encoder *Encoder) error {
-	return encoder.WriteUint128(i)
+func (i Uint128) MarshalBinary(enc *Encoder) error {
+	return enc.WriteUint128(i, enc.currentFieldOpt.Order)
 }
 
 // Int128
@@ -456,8 +455,8 @@ func (i *Int128) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i *Int128) UnmarshalBinary(decoder *Decoder) error {
-	value, err := decoder.ReadInt128()
+func (i *Int128) UnmarshalBinary(dec *Decoder) error {
+	value, err := dec.ReadInt128(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
 	}
@@ -466,8 +465,8 @@ func (i *Int128) UnmarshalBinary(decoder *Decoder) error {
 	return nil
 }
 
-func (i Int128) MarshalBinary(encoder *Encoder) error {
-	return encoder.WriteInt128(i)
+func (i Int128) MarshalBinary(enc *Encoder) error {
+	return enc.WriteInt128(i, enc.currentFieldOpt.Order)
 }
 
 type Float128 Uint128
@@ -488,8 +487,8 @@ func (i *Float128) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i *Float128) UnmarshalBinary(decoder *Decoder) error {
-	value, err := decoder.ReadFloat128()
+func (i *Float128) UnmarshalBinary(dec *Decoder) error {
+	value, err := dec.ReadFloat128(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
 	}
@@ -498,32 +497,6 @@ func (i *Float128) UnmarshalBinary(decoder *Decoder) error {
 	return nil
 }
 
-func (i Float128) MarshalBinary(encoder *Encoder) error {
-	return encoder.WriteUint128(Uint128(i))
-}
-
-// Blob
-
-// Blob is base64 encoded data
-// https://github.com/EOSIO/fc/blob/0e74738e938c2fe0f36c5238dbc549665ddaef82/include/fc/variant.hpp#L47
-type Blob string
-
-// Data returns decoded base64 data
-func (b Blob) Data() ([]byte, error) {
-	return base64.StdEncoding.DecodeString(string(b))
-}
-
-// String returns the blob as a string
-func (b Blob) String() string {
-	return string(b)
-}
-
-func twosComplement(v []byte) []byte {
-	buf := make([]byte, len(v))
-	for i, b := range v {
-		buf[i] = b ^ byte(0xff)
-	}
-	one := big.NewInt(1)
-	value := (&big.Int{}).SetBytes(buf)
-	return value.Add(value, one).Bytes()
+func (i Float128) MarshalBinary(enc *Encoder) error {
+	return enc.WriteUint128(Uint128(i), enc.currentFieldOpt.Order)
 }

@@ -28,12 +28,12 @@ func TestDecoder_Remaining(t *testing.T) {
 
 	d := NewDecoder(b)
 
-	n, err := d.ReadUint16()
+	n, err := d.ReadUint16(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, uint16(1), n)
 	assert.Equal(t, 2, d.Remaining())
 
-	n, err = d.ReadUint16()
+	n, err = d.ReadUint16(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, uint16(2), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -59,6 +59,7 @@ func TestDecoder_int8(t *testing.T) {
 }
 
 func TestDecoder_int16(t *testing.T) {
+	// little endian
 	buf := []byte{
 		0xae, 0xff, // -82
 		0x49, 0x00, // 73
@@ -66,18 +67,37 @@ func TestDecoder_int16(t *testing.T) {
 
 	d := NewDecoder(buf)
 
-	n, err := d.ReadInt16()
+	n, err := d.ReadInt16(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, int16(-82), n)
 	assert.Equal(t, 2, d.Remaining())
 
-	n, err = d.ReadInt16()
+	n, err = d.ReadInt16(LE())
+	assert.NoError(t, err)
+	assert.Equal(t, int16(73), n)
+	assert.Equal(t, 0, d.Remaining())
+
+	// big endian
+	buf = []byte{
+		0xff, 0xae, // -82
+		0x00, 0x49, // 73
+	}
+
+	d = NewDecoder(buf)
+
+	n, err = d.ReadInt16(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, int16(-82), n)
+	assert.Equal(t, 2, d.Remaining())
+
+	n, err = d.ReadInt16(BE())
 	assert.NoError(t, err)
 	assert.Equal(t, int16(73), n)
 	assert.Equal(t, 0, d.Remaining())
 }
 
 func TestDecoder_int32(t *testing.T) {
+	// little endian
 	buf := []byte{
 		0xd8, 0x8d, 0x8a, 0xef, // -276132392
 		0x4f, 0x9f, 0x3, 0x00, // 237391
@@ -85,18 +105,37 @@ func TestDecoder_int32(t *testing.T) {
 
 	d := NewDecoder(buf)
 
-	n, err := d.ReadInt32()
+	n, err := d.ReadInt32(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, int32(-276132392), n)
 	assert.Equal(t, 4, d.Remaining())
 
-	n, err = d.ReadInt32()
+	n, err = d.ReadInt32(LE())
+	assert.NoError(t, err)
+	assert.Equal(t, int32(237391), n)
+	assert.Equal(t, 0, d.Remaining())
+
+	// big endian
+	buf = []byte{
+		0xef, 0x8a, 0x8d, 0xd8, // -276132392
+		0x00, 0x3, 0x9f, 0x4f, // 237391
+	}
+
+	d = NewDecoder(buf)
+
+	n, err = d.ReadInt32(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, int32(-276132392), n)
+	assert.Equal(t, 4, d.Remaining())
+
+	n, err = d.ReadInt32(BE())
 	assert.NoError(t, err)
 	assert.Equal(t, int32(237391), n)
 	assert.Equal(t, 0, d.Remaining())
 }
 
 func TestDecoder_int64(t *testing.T) {
+	// little endian
 	buf := []byte{
 		0x91, 0x7d, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, //-819823
 		0xe3, 0x1c, 0x1, 0x00, 0x00, 0x00, 0x00, 0x00, //72931
@@ -104,12 +143,30 @@ func TestDecoder_int64(t *testing.T) {
 
 	d := NewDecoder(buf)
 
-	n, err := d.ReadInt64()
+	n, err := d.ReadInt64(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, int64(-819823), n)
 	assert.Equal(t, 8, d.Remaining())
 
-	n, err = d.ReadInt64()
+	n, err = d.ReadInt64(LE())
+	assert.NoError(t, err)
+	assert.Equal(t, int64(72931), n)
+	assert.Equal(t, 0, d.Remaining())
+
+	// big endian
+	buf = []byte{
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xf3, 0x7d, 0x91, //-819823
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x1, 0x1c, 0xe3, //72931
+	}
+
+	d = NewDecoder(buf)
+
+	n, err = d.ReadInt64(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, int64(-819823), n)
+	assert.Equal(t, 8, d.Remaining())
+
+	n, err = d.ReadInt64(BE())
 	assert.NoError(t, err)
 	assert.Equal(t, int64(72931), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -135,6 +192,7 @@ func TestDecoder_uint8(t *testing.T) {
 }
 
 func TestDecoder_uint16(t *testing.T) {
+	// little endian
 	buf := []byte{
 		0x52, 0x00, // 82
 		0x49, 0x00, // 73
@@ -142,18 +200,37 @@ func TestDecoder_uint16(t *testing.T) {
 
 	d := NewDecoder(buf)
 
-	n, err := d.ReadUint16()
+	n, err := d.ReadUint16(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, uint16(82), n)
 	assert.Equal(t, 2, d.Remaining())
 
-	n, err = d.ReadUint16()
+	n, err = d.ReadUint16(LE())
+	assert.NoError(t, err)
+	assert.Equal(t, uint16(73), n)
+	assert.Equal(t, 0, d.Remaining())
+
+	// big endian
+	buf = []byte{
+		0x00, 0x52, // 82
+		0x00, 0x49, // 73
+	}
+
+	d = NewDecoder(buf)
+
+	n, err = d.ReadUint16(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, uint16(82), n)
+	assert.Equal(t, 2, d.Remaining())
+
+	n, err = d.ReadUint16(BE())
 	assert.NoError(t, err)
 	assert.Equal(t, uint16(73), n)
 	assert.Equal(t, 0, d.Remaining())
 }
 
 func TestDecoder_uint32(t *testing.T) {
+	// little endian
 	buf := []byte{
 		0x28, 0x72, 0x75, 0x10, // 276132392 as LE
 		0x4f, 0x9f, 0x03, 0x00, // 237391 as LE
@@ -161,18 +238,37 @@ func TestDecoder_uint32(t *testing.T) {
 
 	d := NewDecoder(buf)
 
-	n, err := d.ReadUint32()
+	n, err := d.ReadUint32(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(276132392), n)
 	assert.Equal(t, 4, d.Remaining())
 
-	n, err = d.ReadUint32()
+	n, err = d.ReadUint32(LE())
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(237391), n)
+	assert.Equal(t, 0, d.Remaining())
+
+	// big endian
+	buf = []byte{
+		0x10, 0x75, 0x72, 0x28, // 276132392 as LE
+		0x00, 0x03, 0x9f, 0x4f, // 237391 as LE
+	}
+
+	d = NewDecoder(buf)
+
+	n, err = d.ReadUint32(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(276132392), n)
+	assert.Equal(t, 4, d.Remaining())
+
+	n, err = d.ReadUint32(BE())
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(237391), n)
 	assert.Equal(t, 0, d.Remaining())
 }
 
 func TestDecoder_uint64(t *testing.T) {
+	// little endian
 	buf := []byte{
 		0x6f, 0x82, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, //819823
 		0xe3, 0x1c, 0x1, 0x00, 0x00, 0x00, 0x00, 0x00, //72931
@@ -180,18 +276,37 @@ func TestDecoder_uint64(t *testing.T) {
 
 	d := NewDecoder(buf)
 
-	n, err := d.ReadUint64()
+	n, err := d.ReadUint64(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(819823), n)
 	assert.Equal(t, 8, d.Remaining())
 
-	n, err = d.ReadUint64()
+	n, err = d.ReadUint64(LE())
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(72931), n)
+	assert.Equal(t, 0, d.Remaining())
+
+	// big endian
+	buf = []byte{
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x82, 0x6f, //819823
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x1, 0x1c, 0xe3, //72931
+	}
+
+	d = NewDecoder(buf)
+
+	n, err = d.ReadUint64(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(819823), n)
+	assert.Equal(t, 8, d.Remaining())
+
+	n, err = d.ReadUint64(BE())
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(72931), n)
 	assert.Equal(t, 0, d.Remaining())
 }
 
 func TestDecoder_float32(t *testing.T) {
+	// little endian
 	buf := []byte{
 		0xc3, 0xf5, 0xa8, 0x3f,
 		0xa4, 0x70, 0x4d, 0xc0,
@@ -199,18 +314,37 @@ func TestDecoder_float32(t *testing.T) {
 
 	d := NewDecoder(buf)
 
-	n, err := d.ReadFloat32()
+	n, err := d.ReadFloat32(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, float32(1.32), n)
 	assert.Equal(t, 4, d.Remaining())
 
-	n, err = d.ReadFloat32()
+	n, err = d.ReadFloat32(LE())
+	assert.NoError(t, err)
+	assert.Equal(t, float32(-3.21), n)
+	assert.Equal(t, 0, d.Remaining())
+
+	// big endian
+	buf = []byte{
+		0x3f, 0xa8, 0xf5, 0xc3,
+		0xc0, 0x4d, 0x70, 0xa4,
+	}
+
+	d = NewDecoder(buf)
+
+	n, err = d.ReadFloat32(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, float32(1.32), n)
+	assert.Equal(t, 4, d.Remaining())
+
+	n, err = d.ReadFloat32(BE())
 	assert.NoError(t, err)
 	assert.Equal(t, float32(-3.21), n)
 	assert.Equal(t, 0, d.Remaining())
 }
 
 func TestDecoder_float64(t *testing.T) {
+	// little endian
 	buf := []byte{
 		0x3d, 0x0a, 0xd7, 0xa3, 0x70, 0x1d, 0x4f, 0xc0,
 		0x77, 0xbe, 0x9f, 0x1a, 0x2f, 0x3d, 0x37, 0x40,
@@ -221,27 +355,62 @@ func TestDecoder_float64(t *testing.T) {
 
 	d := NewDecoder(buf)
 
-	n, err := d.ReadFloat64()
+	n, err := d.ReadFloat64(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, float64(-62.23), n)
 	assert.Equal(t, 32, d.Remaining())
 
-	n, err = d.ReadFloat64()
+	n, err = d.ReadFloat64(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, float64(23.239), n)
 	assert.Equal(t, 24, d.Remaining())
 
-	n, err = d.ReadFloat64()
+	n, err = d.ReadFloat64(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, math.Inf(1), n)
 	assert.Equal(t, 16, d.Remaining())
 
-	n, err = d.ReadFloat64()
+	n, err = d.ReadFloat64(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, math.Inf(-1), n)
 	assert.Equal(t, 8, d.Remaining())
 
-	n, err = d.ReadFloat64()
+	n, err = d.ReadFloat64(LE())
+	assert.NoError(t, err)
+	assert.True(t, math.IsNaN(n))
+
+	// big endian
+	buf = []byte{
+		0xc0, 0x4f, 0x1d, 0x70, 0xa3, 0xd7, 0x0a, 0x3d,
+		0x40, 0x37, 0x3d, 0x2f, 0x1a, 0x9f, 0xbe, 0x77,
+		0x7f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+	}
+
+	d = NewDecoder(buf)
+
+	n, err = d.ReadFloat64(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, float64(-62.23), n)
+	assert.Equal(t, 32, d.Remaining())
+
+	n, err = d.ReadFloat64(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, float64(23.239), n)
+	assert.Equal(t, 24, d.Remaining())
+
+	n, err = d.ReadFloat64(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, math.Inf(1), n)
+	assert.Equal(t, 16, d.Remaining())
+
+	n, err = d.ReadFloat64(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, math.Inf(-1), n)
+	assert.Equal(t, 8, d.Remaining())
+
+	n, err = d.ReadFloat64(BE())
 	assert.NoError(t, err)
 	assert.True(t, math.IsNaN(n))
 }
@@ -374,6 +543,7 @@ func TestDecoder_Slice_Err(t *testing.T) {
 }
 
 func TestDecoder_Int64(t *testing.T) {
+	// little endian
 	buf := []byte{
 		0x91, 0x7d, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, //-819823
 		0xe3, 0x1c, 0x1, 0x00, 0x00, 0x00, 0x00, 0x00, //72931
@@ -381,14 +551,60 @@ func TestDecoder_Int64(t *testing.T) {
 
 	d := NewDecoder(buf)
 
-	n, err := d.ReadInt64()
+	n, err := d.ReadInt64(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, int64(-819823), n)
 	assert.Equal(t, 8, d.Remaining())
 
-	n, err = d.ReadInt64()
+	n, err = d.ReadInt64(LE())
 	assert.NoError(t, err)
 	assert.Equal(t, int64(72931), n)
+	assert.Equal(t, 0, d.Remaining())
+
+	// big endian
+	buf = []byte{
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xf3, 0x7d, 0x91, //-819823
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x1, 0x1c, 0xe3, //72931
+	}
+
+	d = NewDecoder(buf)
+
+	n, err = d.ReadInt64(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, int64(-819823), n)
+	assert.Equal(t, 8, d.Remaining())
+
+	n, err = d.ReadInt64(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, int64(72931), n)
+	assert.Equal(t, 0, d.Remaining())
+}
+
+func TestDecoder_Uint128(t *testing.T) {
+	// little endian
+	buf := []byte{
+		0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	}
+
+	d := NewDecoder(buf)
+
+	n, err := d.ReadUint128(LE())
+	assert.NoError(t, err)
+	assert.Equal(t, Uint128{Lo: 7, Hi: 9}, n)
+	assert.Equal(t, 0, d.Remaining())
+
+	// big endian
+	buf = []byte{
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09,
+	}
+
+	d = NewDecoder(buf)
+
+	n, err = d.ReadUint128(BE())
+	assert.NoError(t, err)
+	assert.Equal(t, Uint128{Lo: 7, Hi: 9}, n)
 	assert.Equal(t, 0, d.Remaining())
 }
 
@@ -439,4 +655,26 @@ func TestDecoder_Decode_No_Ptr(t *testing.T) {
 	decoder := NewDecoder([]byte{})
 	err := decoder.Decode(1)
 	assert.EqualError(t, err, "decoder: Decode(non-pointer int)")
+}
+
+func TestDecoder_BinaryTestStructWithTags(t *testing.T) {
+	cnt, err := hex.DecodeString("ffb50063ffffff19000003e7ffffffffffffcc51000000000001869fc1b90a3d400f5c28f5c28f5c0100")
+	require.NoError(t, err)
+
+	s := &binaryTestStructWithTags{}
+	decoder := NewDecoder(cnt)
+	assert.NoError(t, decoder.Decode(s))
+
+	assert.Equal(t, "", s.F1)
+	assert.Equal(t, int16(-75), s.F2)
+	assert.Equal(t, uint16(99), s.F3)
+	assert.Equal(t, int32(-231), s.F4)
+	assert.Equal(t, uint32(999), s.F5)
+	assert.Equal(t, int64(-13231), s.F6)
+	assert.Equal(t, uint64(99999), s.F7)
+	assert.Equal(t, float32(-23.13), s.F8)
+	assert.Equal(t, float64(3.92), s.F9)
+	assert.Equal(t, true, s.F10)
+	var i *Int64
+	assert.Equal(t, i, s.F11)
 }

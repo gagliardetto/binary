@@ -12,14 +12,14 @@ import (
 
 type Encoder struct {
 	output io.Writer
-	Order  binary.ByteOrder
 	count  int
+
+	currentFieldOpt *option
 }
 
 func NewEncoder(w io.Writer) *Encoder {
 	return &Encoder{
 		output: w,
-		Order:  binary.LittleEndian,
 		count:  0,
 	}
 }
@@ -28,31 +28,33 @@ func (e *Encoder) Encode(v interface{}) (err error) {
 	return e.encode(reflect.ValueOf(v), nil)
 }
 
-func (e *Encoder) encode(rv reflect.Value, option *Option) (err error) {
-	if option == nil {
-		option = &Option{}
+func (e *Encoder) encode(rv reflect.Value, opt *option) (err error) {
+	if opt == nil {
+		opt = newDefaultOption()
 	}
+	e.currentFieldOpt = opt
 
 	if traceEnabled {
 		zlog.Debug("encode: type",
 			zap.Stringer("value_kind", rv.Kind()),
-			zap.Reflect("options", option),
+			zap.Reflect("options", opt),
 		)
 	}
 
-	if option.isOptional() {
+	if opt.isOptional() {
 		if rv.IsZero() {
 			if traceEnabled {
 				zlog.Debug("encode: skipping optional value with", zap.Stringer("type", rv.Kind()))
 			}
+			e.WriteBool(false)
 			return nil
 		}
 		e.WriteBool(true)
 	}
 
-	//if rv.IsZero() {
-	//	return nil
-	//}
+	if isZero(rv) {
+		return nil
+	}
 
 	if marshaler, ok := rv.Interface().(MarshalerBinary); ok {
 		if traceEnabled {
@@ -67,25 +69,25 @@ func (e *Encoder) encode(rv reflect.Value, option *Option) (err error) {
 	case reflect.Uint8, reflect.Int8:
 		return e.WriteByte(byte(rv.Uint()))
 	case reflect.Int16:
-		return e.WriteInt16(int16(rv.Int()))
+		return e.WriteInt16(int16(rv.Int()), opt.Order)
 	case reflect.Uint16:
-		return e.WriteUint16(uint16(rv.Uint()))
+		return e.WriteUint16(uint16(rv.Uint()), opt.Order)
 	case reflect.Int32:
-		return e.WriteInt32(int32(rv.Int()))
+		return e.WriteInt32(int32(rv.Int()), opt.Order)
 	case reflect.Uint32:
-		return e.WriteUint32(uint32(rv.Uint()))
+		return e.WriteUint32(uint32(rv.Uint()), opt.Order)
 	case reflect.Uint64:
-		return e.WriteUint64(rv.Uint())
+		return e.WriteUint64(rv.Uint(), opt.Order)
 	case reflect.Int64:
-		return e.WriteInt64(rv.Int())
+		return e.WriteInt64(rv.Int(), opt.Order)
 	case reflect.Float32:
-		return e.WriteFloat32(float32(rv.Float()))
+		return e.WriteFloat32(float32(rv.Float()), opt.Order)
 	case reflect.Float64:
-		return e.WriteFloat64(rv.Float())
+		return e.WriteFloat64(rv.Float(), opt.Order)
 	case reflect.Bool:
 		return e.WriteBool(rv.Bool())
 	case reflect.Ptr:
-		return e.encode(rv.Elem(), option)
+		return e.encode(rv.Elem(), opt)
 	}
 
 	rv = reflect.Indirect(rv)
@@ -99,14 +101,14 @@ func (e *Encoder) encode(rv reflect.Value, option *Option) (err error) {
 			zlog.Debug("encode: array", zap.Int("length", l), zap.Stringer("type", rv.Kind()))
 		}
 		for i := 0; i < l; i++ {
-			if err = e.encode(rv.Index(i), option); err != nil {
+			if err = e.encode(rv.Index(i), opt); err != nil {
 				return
 			}
 		}
 	case reflect.Slice:
 		var l int
-		if option.hasSizeOfSlice() {
-			l = option.getSizeOfSlice()
+		if opt.hasSizeOfSlice() {
+			l = opt.getSizeOfSlice()
 			if traceEnabled {
 				zlog.Debug("encode: slice with sizeof set", zap.Int("size_of", l))
 			}
@@ -123,7 +125,7 @@ func (e *Encoder) encode(rv reflect.Value, option *Option) (err error) {
 		}
 
 		for i := 0; i < l; i++ {
-			if err = e.encode(rv.Index(i), option); err != nil {
+			if err = e.encode(rv.Index(i), opt); err != nil {
 				return
 			}
 		}
@@ -230,91 +232,91 @@ func (e *Encoder) WriteUint8(i uint8) (err error) {
 	return e.WriteByte(i)
 }
 
-func (e *Encoder) WriteUint16(i uint16) (err error) {
+func (e *Encoder) WriteUint16(i uint16, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write uint16", zap.Uint16("val", i))
 	}
 	buf := make([]byte, TypeSize.Uint16)
-	binary.LittleEndian.PutUint16(buf, i)
+	order.PutUint16(buf, i)
 	return e.toWriter(buf)
 }
 
-func (e *Encoder) WriteInt16(i int16) (err error) {
+func (e *Encoder) WriteInt16(i int16, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write int16", zap.Int16("val", i))
 	}
-	return e.WriteUint16(uint16(i))
+	return e.WriteUint16(uint16(i), order)
 }
 
-func (e *Encoder) WriteInt32(i int32) (err error) {
+func (e *Encoder) WriteInt32(i int32, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write int32", zap.Int32("val", i))
 	}
-	return e.WriteUint32(uint32(i))
+	return e.WriteUint32(uint32(i), order)
 }
 
-func (e *Encoder) WriteUint32(i uint32) (err error) {
+func (e *Encoder) WriteUint32(i uint32, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write uint32", zap.Uint32("val", i))
 	}
 	buf := make([]byte, TypeSize.Uint32)
-	binary.LittleEndian.PutUint32(buf, i)
+	order.PutUint32(buf, i)
 	return e.toWriter(buf)
 }
 
-func (e *Encoder) WriteInt64(i int64) (err error) {
+func (e *Encoder) WriteInt64(i int64, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write int64", zap.Int64("val", i))
 	}
-	return e.WriteUint64(uint64(i))
+	return e.WriteUint64(uint64(i), order)
 }
 
-func (e *Encoder) WriteUint64(i uint64) (err error) {
+func (e *Encoder) WriteUint64(i uint64, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write uint64", zap.Uint64("val", i))
 	}
 	buf := make([]byte, TypeSize.Uint64)
-	binary.LittleEndian.PutUint64(buf, i)
+	order.PutUint64(buf, i)
 	return e.toWriter(buf)
 }
 
-func (e *Encoder) WriteUint128(i Uint128) (err error) {
+func (e *Encoder) WriteUint128(i Uint128, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write uint128", zap.Stringer("hex", i), zap.Uint64("lo", i.Lo), zap.Uint64("hi", i.Hi))
 	}
 	buf := make([]byte, TypeSize.Uint128)
-	binary.LittleEndian.PutUint64(buf, i.Lo)
-	binary.LittleEndian.PutUint64(buf[TypeSize.Uint64:], i.Hi)
+	order.PutUint64(buf, i.Lo)
+	order.PutUint64(buf[TypeSize.Uint64:], i.Hi)
 	return e.toWriter(buf)
 }
 
-func (e *Encoder) WriteInt128(i Int128) (err error) {
+func (e *Encoder) WriteInt128(i Int128, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write int128", zap.Stringer("hex", i), zap.Uint64("lo", i.Lo), zap.Uint64("hi", i.Hi))
 	}
 	buf := make([]byte, TypeSize.Uint128)
-	binary.LittleEndian.PutUint64(buf, i.Lo)
-	binary.LittleEndian.PutUint64(buf[TypeSize.Uint64:], i.Hi)
+	order.PutUint64(buf, i.Lo)
+	order.PutUint64(buf[TypeSize.Uint64:], i.Hi)
 	return e.toWriter(buf)
 }
 
-func (e *Encoder) WriteFloat32(f float32) (err error) {
+func (e *Encoder) WriteFloat32(f float32, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write float32", zap.Float32("val", f))
 	}
 	i := math.Float32bits(f)
 	buf := make([]byte, TypeSize.Uint32)
-	binary.LittleEndian.PutUint32(buf, i)
+	order.PutUint32(buf, i)
 
 	return e.toWriter(buf)
 }
-func (e *Encoder) WriteFloat64(f float64) (err error) {
+func (e *Encoder) WriteFloat64(f float64, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write float64", zap.Float64("val", f))
 	}
 	i := math.Float64bits(f)
 	buf := make([]byte, TypeSize.Uint64)
-	binary.LittleEndian.PutUint64(buf, i)
+	order.PutUint64(buf, i)
 
 	return e.toWriter(buf)
 }
@@ -369,7 +371,10 @@ func (e *Encoder) encodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 			continue
 		}
 
-		option := &Option{}
+		option := &option{
+			OptionalField: fieldTag.Optional,
+			Order:         fieldTag.Order,
+		}
 
 		if s, ok := sizeOfMap[structField.Name]; ok {
 			if traceEnabled {

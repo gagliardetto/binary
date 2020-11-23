@@ -35,6 +35,7 @@ type TypeIDEncoding uint32
 const (
 	Uvarint32TypeIDEncoding TypeIDEncoding = iota
 	Uint32TypeIDEncoding
+	Uint8TypeIDEncoding
 )
 
 // NewVariantDefinition creates a variant definition based on the *ordered* provided types.
@@ -187,6 +188,12 @@ func (a *BaseVariant) UnmarshalBinaryVariant(decoder *Decoder, def *VariantDefin
 		if err != nil {
 			return fmt.Errorf("uint32: unable to read variant type id: %s", err)
 		}
+	case Uint8TypeIDEncoding:
+		id, err := decoder.ReadUint8()
+		if err != nil {
+			return fmt.Errorf("uint8: unable to read variant type id: %s", err)
+		}
+		typeID = uint32(id)
 	}
 
 	a.TypeID = typeID

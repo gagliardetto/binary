@@ -1,6 +1,10 @@
 package bin
 
-import "github.com/dfuse-io/logging"
+import (
+	"testing"
+
+	"github.com/dfuse-io/logging"
+)
 
 func init() {
 	logging.TestingOverride()
@@ -52,4 +56,9 @@ type binaryTestStructWithTags struct {
 	F9  float64 `bin:"big"`
 	F10 bool
 	F11 *Int64 `bin:"optional"`
+}
+
+func setupBench(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
 }

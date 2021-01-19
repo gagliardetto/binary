@@ -102,7 +102,8 @@ func makeUint64List(itemCount int) (out []int64) {
 func makeStringList(itemCount int) (out []string) {
 	out = make([]string, itemCount)
 	for i := 0; i < itemCount; i++ {
-		data, _ := rand.Read(make([]byte, i>>1))
+		data := make([]byte, i>>1)
+		rand.Read(data)
 		out[i] = string(data)
 	}
 

@@ -351,20 +351,20 @@ func (e *Encoder) encodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 
 		rv := rv.Field(i)
 
-		if fieldTag.Sizeof != "" {
+		if fieldTag.SizeOf != "" {
 			if traceEnabled {
 				zlog.Debug("encode: struct field has sizeof tag",
-					zap.String("sizeof_field_name", fieldTag.Sizeof),
+					zap.String("sizeof_field_name", fieldTag.SizeOf),
 					zap.String("struct_field_name", structField.Name),
 				)
 			}
-			sizeOfMap[fieldTag.Sizeof] = sizeof(structField.Type, rv)
+			sizeOfMap[fieldTag.SizeOf] = sizeof(structField.Type, rv)
 		}
 
 		if !rv.CanInterface() {
 			if traceEnabled {
 				zlog.Debug("encode:  skipping field: unable to interface field, probably since field is not exported",
-					zap.String("sizeof_field_name", fieldTag.Sizeof),
+					zap.String("sizeof_field_name", fieldTag.SizeOf),
 					zap.String("struct_field_name", structField.Name),
 				)
 			}

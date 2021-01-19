@@ -218,6 +218,11 @@ func (d *Decoder) decode(rv reflect.Value, opt *option) (err error) {
 			}
 			l = int(length)
 		}
+
+		if opt.hasSliceOffset() {
+			d.pos += opt.getSliceOffset()
+		}
+
 		if traceEnabled {
 			zlog.Debug("reading slice", zap.Int("len", l), typeField("type", rv))
 		}
@@ -248,6 +253,7 @@ func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 	}
 
 	sizeOfMap := map[string]int{}
+	sliceOffsetOf := map[string]int{}
 	seenBinaryExtensionField := false
 	for i := 0; i < l; i++ {
 		structField := rt.Field(i)
@@ -314,6 +320,9 @@ func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 		if s, ok := sizeOfMap[structField.Name]; ok {
 			option.setSizeOfSlice(s)
 		}
+		if s, ok := sliceOffsetOf[structField.Name]; ok {
+			option.setSliceOffset(s)
+		}
 
 		if traceEnabled {
 			zlog.Debug("decode: struct field",
@@ -328,15 +337,25 @@ func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 			return
 		}
 
-		if fieldTag.Sizeof != "" {
+		if fieldTag.SizeOf != "" {
 			size := sizeof(structField.Type, v)
 			if traceEnabled {
 				zlog.Debug("setting size of field",
-					zap.String("field_name", fieldTag.Sizeof),
+					zap.String("field_name", fieldTag.SizeOf),
 					zap.Int("size", size),
 				)
 			}
-			sizeOfMap[fieldTag.Sizeof] = size
+			sizeOfMap[fieldTag.SizeOf] = size
+		}
+		if fieldTag.SliceOffsetOf != "" {
+			offset := sizeof(structField.Type, v)
+			if traceEnabled {
+				zlog.Debug("setting slice offset of field",
+					zap.String("field_name", fieldTag.SliceOffsetOf),
+					zap.Int("size", offset),
+				)
+			}
+			sliceOffsetOf[fieldTag.SliceOffsetOf] = offset * fieldTag.SliceOffsetMultiplier
 		}
 	}
 	return

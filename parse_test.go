@@ -47,7 +47,7 @@ func Test_parseFieldTag(t *testing.T) {
 		},
 		{
 			name: "with a optional and size of",
-			tag:  `bin:"optional,sizeof=Nodes"`,
+			tag:  `bin:"optional sizeof=Nodes"`,
 			expectValue: &fieldTag{
 				Order:    binary.LittleEndian,
 				Optional: true,

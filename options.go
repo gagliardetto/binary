@@ -5,7 +5,6 @@ import "encoding/binary"
 type option struct {
 	OptionalField bool
 	SizeOfSlice   *int
-	SliceOffset   *int
 	Order         binary.ByteOrder
 }
 
@@ -33,16 +32,4 @@ func (o *option) getSizeOfSlice() int {
 
 func (o *option) setSizeOfSlice(size int) {
 	o.SizeOfSlice = &size
-}
-
-func (o *option) hasSliceOffset() bool {
-	return o.SliceOffset != nil
-}
-
-func (o *option) setSliceOffset(size int) {
-	o.SliceOffset = &size
-}
-
-func (o *option) getSliceOffset() int {
-	return *o.SliceOffset
 }

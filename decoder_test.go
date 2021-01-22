@@ -682,34 +682,6 @@ func TestDecoder_BinaryTestStructWithTags(t *testing.T) {
 type binaryTestSimpleStruct struct {
 	F1 int64
 }
-type binaryTestStructWithSliceTags struct {
-	Offset uint8 `bin:"sliceoffsetof=F3,8"`
-	Count  uint8 `bin:"sizeof=F3"`
-	F3     []*binaryTestSimpleStruct
-}
-
-func TestDecoder_BinaryTestStructWithSliceTags(t *testing.T) {
-	buf := []byte{
-		0x03,                                           //offset
-		0x02,                                           //count
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, //junk
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, //junk
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, //junk
-		0x91, 0x7d, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, //-819823
-		0xe3, 0x1c, 0x1, 0x00, 0x00, 0x00, 0x00, 0x00, //72931
-	}
-
-	o := &binaryTestStructWithSliceTags{}
-	decoder := NewDecoder(buf)
-	require.NoError(t, decoder.Decode(o))
-
-	assert.Equal(t, uint8(3), o.Offset)
-	assert.Equal(t, uint8(2), o.Count)
-
-	assert.Equal(t, int64(-819823), o.F3[0].F1)
-	assert.Equal(t, int64(72931), o.F3[1].F1)
-	assert.Equal(t, 2, len(o.F3))
-}
 
 func TestDecoder_SkipBytes(t *testing.T) {
 	buf := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}

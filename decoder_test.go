@@ -679,10 +679,6 @@ func TestDecoder_BinaryTestStructWithTags(t *testing.T) {
 	assert.Equal(t, i, s.F11)
 }
 
-type binaryTestSimpleStruct struct {
-	F1 int64
-}
-
 func TestDecoder_SkipBytes(t *testing.T) {
 	buf := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
 	decoder := NewDecoder(buf)

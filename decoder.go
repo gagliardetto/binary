@@ -654,6 +654,14 @@ func (d *Decoder) ReadFloat128(order binary.ByteOrder) (out Float128, err error)
 	return Float128(value), nil
 }
 
+func (d *Decoder) SkipBytes(count int) error {
+	if d.Remaining() < count {
+		return fmt.Errorf("resquest to skip %d but only %d bytes remain", count, d.Remaining())
+	}
+	d.pos += count
+	return nil
+}
+
 func (d *Decoder) SafeReadUTF8String() (out string, err error) {
 	data, err := d.ReadByteArray()
 	out = strings.Map(fixUtf, string(data))

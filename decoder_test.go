@@ -710,3 +710,23 @@ func TestDecoder_BinaryTestStructWithSliceTags(t *testing.T) {
 	assert.Equal(t, int64(72931), o.F3[1].F1)
 	assert.Equal(t, 2, len(o.F3))
 }
+
+func TestDecoder_SkipBytes(t *testing.T) {
+	buf := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
+	decoder := NewDecoder(buf)
+	err := decoder.SkipBytes(1)
+	require.NoError(t, err)
+	require.Equal(t, 7, decoder.Remaining())
+
+	err = decoder.SkipBytes(2)
+	require.NoError(t, err)
+	require.Equal(t, 5, decoder.Remaining())
+
+	err = decoder.SkipBytes(6)
+	require.Error(t, err)
+
+	err = decoder.SkipBytes(5)
+	require.NoError(t, err)
+	require.Equal(t, 0, decoder.Remaining())
+
+}

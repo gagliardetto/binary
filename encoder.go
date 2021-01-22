@@ -124,6 +124,8 @@ func (e *Encoder) encode(rv reflect.Value, opt *option) (err error) {
 			zlog.Debug("encode: slice", zap.Int("length", l), zap.Stringer("type", rv.Kind()))
 		}
 
+		// we would want to skip to the correct head_offset
+
 		for i := 0; i < l; i++ {
 			if err = e.encode(rv.Index(i), opt); err != nil {
 				return

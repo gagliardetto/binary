@@ -222,6 +222,7 @@ func (d *Decoder) decode(rv reflect.Value, opt *option) (err error) {
 		if traceEnabled {
 			zlog.Debug("reading slice", zap.Int("len", l), typeField("type", rv))
 		}
+
 		rv.Set(reflect.MakeSlice(rt, l, l))
 		for i := 0; i < l; i++ {
 			if err = d.decode(rv.Index(i), opt); err != nil {
@@ -636,14 +637,6 @@ func (d *Decoder) ReadFloat128(order binary.ByteOrder) (out Float128, err error)
 	return Float128(value), nil
 }
 
-func (d *Decoder) SkipBytes(count int) error {
-	if d.Remaining() < count {
-		return fmt.Errorf("resquest to skip %d but only %d bytes remain", count, d.Remaining())
-	}
-	d.pos += count
-	return nil
-}
-
 func (d *Decoder) SafeReadUTF8String() (out string, err error) {
 	data, err := d.ReadByteArray()
 	out = strings.Map(fixUtf, string(data))
@@ -667,6 +660,26 @@ func (d *Decoder) ReadString() (out string, err error) {
 		zlog.Debug("read string", zap.String("val", out))
 	}
 	return
+}
+
+func (d *Decoder) SkipBytes(count uint) error {
+	if uint(d.Remaining()) < count {
+		return fmt.Errorf("request to skip %d but only %d bytes remain", count, d.Remaining())
+	}
+	d.pos += int(count)
+	return nil
+}
+
+func (d *Decoder) SetPosition(idx uint) error {
+	if int(idx) < len(d.data) {
+		d.pos = int(idx)
+		return nil
+	}
+	return fmt.Errorf("request to set position to %d outsize of buffer (buffer size %d)", idx, len(d.data))
+}
+
+func (d *Decoder) Position() uint {
+	return uint(d.pos)
 }
 
 func (d *Decoder) Remaining() int {

@@ -343,8 +343,9 @@ func (i Uint128) BigInt() *big.Int {
 func (i Uint128) String() string {
 	//Same for Int128, Float128
 	number := make([]byte, 16)
-	binary.LittleEndian.PutUint64(number[:], i.Lo)
-	binary.LittleEndian.PutUint64(number[8:], i.Hi)
+
+	binary.BigEndian.PutUint64(number[:], i.Lo)
+	binary.BigEndian.PutUint64(number[8:], i.Hi)
 	return fmt.Sprintf("0x%s%s", hex.EncodeToString(number[:8]), hex.EncodeToString(number[8:]))
 }
 

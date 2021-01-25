@@ -580,6 +580,20 @@ func TestDecoder_Int64(t *testing.T) {
 	assert.Equal(t, 0, d.Remaining())
 }
 
+func TestDecoder_Uint128_2(t *testing.T) {
+	// little endian
+	buf := []byte{
+		0x0d, 0x88, 0xd3, 0xff, 0xff, 0xff, 0xff, 0xff,
+		0x6d, 0x0b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	}
+
+	d := NewDecoder(buf)
+
+	n, err := d.ReadUint128(LE())
+	assert.NoError(t, err)
+	assert.Equal(t, Uint128{Lo: 0xb6d, Hi: 0xffffffffffd3880d}, n)
+}
+
 func TestDecoder_Uint128(t *testing.T) {
 	// little endian
 	buf := []byte{
@@ -591,7 +605,7 @@ func TestDecoder_Uint128(t *testing.T) {
 
 	n, err := d.ReadUint128(LE())
 	assert.NoError(t, err)
-	assert.Equal(t, Uint128{Lo: 7, Hi: 9}, n)
+	assert.Equal(t, Uint128{Lo: 0x9, Hi: 0x7}, n)
 	assert.Equal(t, 0, d.Remaining())
 
 	// big endian
@@ -634,16 +648,16 @@ func TestDecoder_BinaryStruct(t *testing.T) {
 	assert.Equal(t, Uint64(23), s.F16)
 	assert.Equal(t, JSONFloat64(3.14), s.F17)
 	assert.Equal(t, Uint128{
-		Lo: 10,
-		Hi: 82,
+		Lo: 82,
+		Hi: 10,
 	}, s.F18)
 	assert.Equal(t, Int128{
-		Lo: 7,
-		Hi: 3,
+		Lo: 3,
+		Hi: 7,
 	}, s.F19)
 	assert.Equal(t, Float128{
-		Lo: 10,
-		Hi: 82,
+		Lo: 82,
+		Hi: 10,
 	}, s.F20)
 	assert.Equal(t, Varuint32(999), s.F21)
 	assert.Equal(t, Varint32(-999), s.F22)

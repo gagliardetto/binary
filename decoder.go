@@ -588,8 +588,14 @@ func (d *Decoder) ReadUint128(order binary.ByteOrder) (out Uint128, err error) {
 	}
 
 	data := d.data[d.pos : d.pos+TypeSize.Uint128]
-	out.Lo = order.Uint64(data)
-	out.Hi = order.Uint64(data[8:])
+
+	if order == binary.LittleEndian {
+		out.Lo = order.Uint64(data[8:])
+		out.Hi = order.Uint64(data)
+	} else {
+		out.Lo = order.Uint64(data)
+		out.Hi = order.Uint64(data[8:])
+	}
 
 	d.pos += TypeSize.Uint128
 	if traceEnabled {

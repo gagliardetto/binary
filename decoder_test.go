@@ -591,35 +591,19 @@ func TestDecoder_Uint128_2(t *testing.T) {
 
 	n, err := d.ReadUint128(LE())
 	assert.NoError(t, err)
-	assert.Equal(t, Uint128{Lo: 0xb6d, Hi: 0xffffffffffd3880d}, n)
-}
+	assert.Equal(t, Uint128{Hi: 0xb6d, Lo: 0xffffffffffd3880d}, n)
 
-func TestDecoder_Uint128(t *testing.T) {
-	// little endian
-	buf := []byte{
-		0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	}
-
-	d := NewDecoder(buf)
-
-	n, err := d.ReadUint128(LE())
-	assert.NoError(t, err)
-	assert.Equal(t, Uint128{Lo: 0x9, Hi: 0x7}, n)
-	assert.Equal(t, 0, d.Remaining())
-
-	// big endian
 	buf = []byte{
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0xbb,
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xac, 0xdc, 0xad,
 	}
 
 	d = NewDecoder(buf)
 
 	n, err = d.ReadUint128(BE())
 	assert.NoError(t, err)
-	assert.Equal(t, Uint128{Lo: 7, Hi: 9}, n)
-	assert.Equal(t, 0, d.Remaining())
+	assert.Equal(t, Uint128{Hi: 0x00000000000008bb, Lo: 0xffffffffffacdcad}, n)
+
 }
 
 func TestDecoder_BinaryStruct(t *testing.T) {

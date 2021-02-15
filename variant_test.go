@@ -111,8 +111,8 @@ func TestDecode_Variant(t *testing.T) {
 					TypeID: 2,
 					Impl: &NodeInner{
 						Key: Uint128{
-							Lo: 0,
-							Hi: 999999999999999,
+							Lo: 999999999999999,
+							Hi: 0,
 						},
 					},
 				},
@@ -122,8 +122,8 @@ func TestDecode_Variant(t *testing.T) {
 					TypeID: 2,
 					Impl: &NodeInner{
 						Key: Uint128{
-							Lo: 0,
-							Hi: 983623123129123,
+							Lo: 983623123129123,
+							Hi: 0,
 						},
 					},
 				},

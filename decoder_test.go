@@ -632,16 +632,16 @@ func TestDecoder_BinaryStruct(t *testing.T) {
 	assert.Equal(t, Uint64(23), s.F16)
 	assert.Equal(t, JSONFloat64(3.14), s.F17)
 	assert.Equal(t, Uint128{
-		Lo: 82,
-		Hi: 10,
+		Lo: 10,
+		Hi: 82,
 	}, s.F18)
 	assert.Equal(t, Int128{
-		Lo: 3,
-		Hi: 7,
+		Lo: 7,
+		Hi: 3,
 	}, s.F19)
 	assert.Equal(t, Float128{
-		Lo: 82,
-		Hi: 10,
+		Lo: 10,
+		Hi: 82,
 	}, s.F20)
 	assert.Equal(t, Varuint32(999), s.F21)
 	assert.Equal(t, Varint32(-999), s.F22)

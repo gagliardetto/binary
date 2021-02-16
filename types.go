@@ -344,9 +344,10 @@ func (i Uint128) String() string {
 	//Same for Int128, Float128
 	number := make([]byte, 16)
 
-	binary.BigEndian.PutUint64(number[:], i.Lo)
-	binary.BigEndian.PutUint64(number[8:], i.Hi)
-	return fmt.Sprintf("0x%s%s", hex.EncodeToString(number[:8]), hex.EncodeToString(number[8:]))
+	binary.BigEndian.PutUint64(number[:], i.Hi)
+	binary.BigEndian.PutUint64(number[8:], i.Lo)
+
+	return fmt.Sprintf("0x%s", hex.EncodeToString(number))
 }
 
 func (i Uint128) DecimalString() string {

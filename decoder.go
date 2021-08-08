@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"reflect"
 	"strings"
@@ -453,6 +454,23 @@ func (d *Decoder) ReadByteArray() (out []byte, err error) {
 		zlog.Debug("decode: read byte array", zap.Stringer("hex", HexBytes(out)))
 	}
 	return
+}
+
+func readNBytes(n int, reader io.ByteReader) ([]byte, error) {
+	buf := make([]byte, n)
+	for i := 0; i < n; i++ {
+		b, err := reader.ReadByte()
+		if err != nil {
+			return nil, err
+		}
+		buf[i] = b
+	}
+
+	return buf, nil
+}
+
+func (d *Decoder) ReadNBytes(n int) (out []byte, err error) {
+	return readNBytes(n, d)
 }
 
 func (d *Decoder) ReadByte() (out byte, err error) {

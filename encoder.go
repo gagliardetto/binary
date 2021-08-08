@@ -66,8 +66,10 @@ func (e *Encoder) encode(rv reflect.Value, opt *option) (err error) {
 	switch rv.Kind() {
 	case reflect.String:
 		return e.WriteString(rv.String())
-	case reflect.Uint8, reflect.Int8:
+	case reflect.Uint8:
 		return e.WriteByte(byte(rv.Uint()))
+	case reflect.Int8:
+		return e.WriteByte(byte(rv.Int()))
 	case reflect.Int16:
 		return e.WriteInt16(int16(rv.Int()), opt.Order)
 	case reflect.Uint16:

@@ -15,13 +15,42 @@ type Encoder struct {
 	count  int
 
 	currentFieldOpt *option
+
+	encoding Encoding
 }
 
-func NewEncoder(w io.Writer) *Encoder {
+func (enc *Encoder) IsBorsh() bool {
+	return enc.encoding.IsBorsh()
+}
+
+func (enc *Encoder) IsBin() bool {
+	return enc.encoding.IsBin()
+}
+
+func (enc *Encoder) IsCompact16() bool {
+	return enc.encoding.IsCompact16()
+}
+
+func NewEncoderWithEncoding(writer io.Writer, enc Encoding) *Encoder {
+	if !isValidEncoding(enc) {
+		panic(fmt.Sprintf("provided encoding is not valid: %s", enc))
+	}
 	return &Encoder{
-		output: w,
+		output: writer,
 		count:  0,
 	}
+}
+
+func NewBinEncoder(writer io.Writer) *Encoder {
+	return NewEncoderWithEncoding(writer, Encodings.Bin)
+}
+
+func NewBorshEncoder(writer io.Writer) *Encoder {
+	return NewEncoderWithEncoding(writer, Encodings.Borsh)
+}
+
+func NewCompact16Encoder(writer io.Writer) *Encoder {
+	return NewEncoderWithEncoding(writer, Encodings.Compact16)
 }
 
 func (e *Encoder) Encode(v interface{}) (err error) {

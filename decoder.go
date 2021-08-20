@@ -60,19 +60,49 @@ type Decoder struct {
 	pos  int
 
 	currentFieldOpt *option
+
+	encoding Encoding
 }
 
-func NewDecoder(data []byte) *Decoder {
+func (dec *Decoder) IsBorsh() bool {
+	return dec.encoding.IsBorsh()
+}
+
+func (dec *Decoder) IsBin() bool {
+	return dec.encoding.IsBin()
+}
+
+func (dec *Decoder) IsCompact16() bool {
+	return dec.encoding.IsCompact16()
+}
+
+func NewDecoderWithEncoding(data []byte, enc Encoding) *Decoder {
+	if !isValidEncoding(enc) {
+		panic(fmt.Sprintf("provided encoding is not valid: %s", enc))
+	}
 	return &Decoder{
-		data: data,
+		data:     data,
+		encoding: enc,
 	}
 }
 
-func (d *Decoder) Decode(v interface{}) (err error) {
-	return d.decodeWithOption(v, nil)
+func NewBinDecoder(data []byte) *Decoder {
+	return NewDecoderWithEncoding(data, Encodings.Bin)
 }
 
-func (d *Decoder) decodeWithOption(v interface{}, option *option) (err error) {
+func NewBorshDecoder(data []byte) *Decoder {
+	return NewDecoderWithEncoding(data, Encodings.Borsh)
+}
+
+func NewCompact16Decoder(data []byte) *Decoder {
+	return NewDecoderWithEncoding(data, Encodings.Compact16)
+}
+
+func (dec *Decoder) Decode(v interface{}) (err error) {
+	return dec.decodeWithOption(v, nil)
+}
+
+func (dec *Decoder) decodeWithOption(v interface{}, option *option) (err error) {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr {
 		return &InvalidDecoderError{reflect.TypeOf(v)}
@@ -80,18 +110,18 @@ func (d *Decoder) decodeWithOption(v interface{}, option *option) (err error) {
 
 	// We decode rv not rv.Elem because the Unmarshaler interface
 	// test must be applied at the top level of the value.
-	err = d.decode(rv, option)
+	err = dec.decode(rv, option)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (d *Decoder) decode(rv reflect.Value, opt *option) (err error) {
+func (dec *Decoder) decode(rv reflect.Value, opt *option) (err error) {
 	if opt == nil {
 		opt = newDefaultOption()
 	}
-	d.currentFieldOpt = opt
+	dec.currentFieldOpt = opt
 
 	unmarshaler, rv := indirect(rv, opt.isOptional())
 
@@ -104,7 +134,7 @@ func (d *Decoder) decode(rv reflect.Value, opt *option) (err error) {
 	}
 
 	if opt.isOptional() {
-		isPresent, e := d.ReadByte()
+		isPresent, e := dec.ReadByte()
 		if e != nil {
 			err = fmt.Errorf("decode: %t isPresent, %s", rv.Type(), e)
 			return
@@ -127,13 +157,13 @@ func (d *Decoder) decode(rv reflect.Value, opt *option) (err error) {
 		if traceEnabled {
 			zlog.Debug("decode: using UnmarshalBinary method to decode type")
 		}
-		return unmarshaler.UnmarshalBinary(d)
+		return unmarshaler.UnmarshalBinary(dec)
 	}
 	rt := rv.Type()
 
 	switch rv.Kind() {
 	case reflect.String:
-		s, e := d.ReadString()
+		s, e := dec.ReadString()
 		if e != nil {
 			err = e
 			return
@@ -142,57 +172,57 @@ func (d *Decoder) decode(rv reflect.Value, opt *option) (err error) {
 		return
 	case reflect.Uint8:
 		var n byte
-		n, err = d.ReadByte()
+		n, err = dec.ReadByte()
 		rv.SetUint(uint64(n))
 		return
 	case reflect.Int8:
 		var n int8
-		n, err = d.ReadInt8()
+		n, err = dec.ReadInt8()
 		rv.SetInt(int64(n))
 		return
 	case reflect.Int16:
 		var n int16
-		n, err = d.ReadInt16(opt.Order)
+		n, err = dec.ReadInt16(opt.Order)
 		rv.SetInt(int64(n))
 		return
 	case reflect.Int32:
 		var n int32
-		n, err = d.ReadInt32(opt.Order)
+		n, err = dec.ReadInt32(opt.Order)
 		rv.SetInt(int64(n))
 		return
 	case reflect.Int64:
 		var n int64
-		n, err = d.ReadInt64(opt.Order)
+		n, err = dec.ReadInt64(opt.Order)
 		rv.SetInt(int64(n))
 		return
 	case reflect.Uint16:
 		var n uint16
-		n, err = d.ReadUint16(opt.Order)
+		n, err = dec.ReadUint16(opt.Order)
 		rv.SetUint(uint64(n))
 		return
 	case reflect.Uint32:
 		var n uint32
-		n, err = d.ReadUint32(opt.Order)
+		n, err = dec.ReadUint32(opt.Order)
 		rv.SetUint(uint64(n))
 		return
 	case reflect.Uint64:
 		var n uint64
-		n, err = d.ReadUint64(opt.Order)
+		n, err = dec.ReadUint64(opt.Order)
 		rv.SetUint(n)
 		return
 	case reflect.Float32:
 		var n float32
-		n, err = d.ReadFloat32(opt.Order)
+		n, err = dec.ReadFloat32(opt.Order)
 		rv.SetFloat(float64(n))
 		return
 	case reflect.Float64:
 		var n float64
-		n, err = d.ReadFloat64(opt.Order)
+		n, err = dec.ReadFloat64(opt.Order)
 		rv.SetFloat(n)
 		return
 	case reflect.Bool:
 		var r bool
-		r, err = d.ReadBool()
+		r, err = dec.ReadBool()
 		rv.SetBool(r)
 		return
 	}
@@ -203,7 +233,7 @@ func (d *Decoder) decode(rv reflect.Value, opt *option) (err error) {
 			zlog.Debug("decoding: reading array", zap.Int("length", length))
 		}
 		for i := 0; i < length; i++ {
-			if err = d.decode(rv.Index(i), opt); err != nil {
+			if err = dec.decode(rv.Index(i), opt); err != nil {
 				return
 			}
 		}
@@ -213,7 +243,7 @@ func (d *Decoder) decode(rv reflect.Value, opt *option) (err error) {
 		if opt.hasSizeOfSlice() {
 			l = opt.getSizeOfSlice()
 		} else {
-			length, err := d.ReadUvarint64()
+			length, err := dec.ReadUvarint64()
 			if err != nil {
 				return err
 			}
@@ -226,13 +256,13 @@ func (d *Decoder) decode(rv reflect.Value, opt *option) (err error) {
 
 		rv.Set(reflect.MakeSlice(rt, l, l))
 		for i := 0; i < l; i++ {
-			if err = d.decode(rv.Index(i), opt); err != nil {
+			if err = dec.decode(rv.Index(i), opt); err != nil {
 				return
 			}
 		}
 
 	case reflect.Struct:
-		if err = d.decodeStruct(rt, rv); err != nil {
+		if err = dec.decodeStruct(rt, rv); err != nil {
 			return
 		}
 
@@ -243,7 +273,7 @@ func (d *Decoder) decode(rv reflect.Value, opt *option) (err error) {
 	return
 }
 
-func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
+func (dec *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 	l := rv.NumField()
 
 	if traceEnabled {
@@ -278,7 +308,7 @@ func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 			//        But at the same time, does it make sense otherwise? What would be the inference
 			//        rule in the case of extra bytes available? Continue decoding and revert if it's
 			//        not working? But how to detect valid errors?
-			if len(d.data[d.pos:]) <= 0 {
+			if len(dec.data[dec.pos:]) <= 0 {
 				continue
 			}
 		}
@@ -327,7 +357,7 @@ func (d *Decoder) decodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 			)
 		}
 
-		if err = d.decode(v, option); err != nil {
+		if err = dec.decode(v, option); err != nil {
 			return
 		}
 
@@ -364,15 +394,15 @@ func sizeof(t reflect.Type, v reflect.Value) int {
 
 var ErrVarIntBufferSize = errors.New("varint: invalid buffer size")
 
-func (d *Decoder) ReadUvarint64() (uint64, error) {
-	l, read := binary.Uvarint(d.data[d.pos:])
+func (dec *Decoder) ReadUvarint64() (uint64, error) {
+	l, read := binary.Uvarint(dec.data[dec.pos:])
 	if read <= 0 {
 		return l, ErrVarIntBufferSize
 	}
 	if traceEnabled {
 		zlog.Debug("decode: read uvarint64", zap.Uint64("val", l))
 	}
-	d.pos += read
+	dec.pos += read
 	return l, nil
 }
 
@@ -388,8 +418,8 @@ func (d *Decoder) ReadVarint64() (out int64, err error) {
 	return l, nil
 }
 
-func (d *Decoder) ReadVarint32() (out int32, err error) {
-	n, err := d.ReadVarint64()
+func (dec *Decoder) ReadVarint32() (out int32, err error) {
+	n, err := dec.ReadVarint64()
 	if err != nil {
 		return out, err
 	}
@@ -400,9 +430,9 @@ func (d *Decoder) ReadVarint32() (out int32, err error) {
 	return
 }
 
-func (d *Decoder) ReadUvarint32() (out uint32, err error) {
+func (dec *Decoder) ReadUvarint32() (out uint32, err error) {
 
-	n, err := d.ReadUvarint64()
+	n, err := dec.ReadUvarint64()
 	if err != nil {
 		return out, err
 	}
@@ -412,8 +442,8 @@ func (d *Decoder) ReadUvarint32() (out uint32, err error) {
 	}
 	return
 }
-func (d *Decoder) ReadVarint16() (out int16, err error) {
-	n, err := d.ReadVarint64()
+func (dec *Decoder) ReadVarint16() (out int16, err error) {
+	n, err := dec.ReadVarint64()
 	if err != nil {
 		return out, err
 	}
@@ -424,9 +454,9 @@ func (d *Decoder) ReadVarint16() (out int16, err error) {
 	return
 }
 
-func (d *Decoder) ReadUvarint16() (out uint16, err error) {
+func (dec *Decoder) ReadUvarint16() (out uint16, err error) {
 
-	n, err := d.ReadUvarint64()
+	n, err := dec.ReadUvarint64()
 	if err != nil {
 		return out, err
 	}
@@ -437,19 +467,19 @@ func (d *Decoder) ReadUvarint16() (out uint16, err error) {
 	return
 }
 
-func (d *Decoder) ReadByteArray() (out []byte, err error) {
+func (dec *Decoder) ReadByteArray() (out []byte, err error) {
 
-	l, err := d.ReadUvarint64()
+	l, err := dec.ReadUvarint64()
 	if err != nil {
 		return nil, err
 	}
 
-	if len(d.data) < d.pos+int(l) {
-		return nil, fmt.Errorf("byte array: varlen=%d, missing %d bytes", l, d.pos+int(l)-len(d.data))
+	if len(dec.data) < dec.pos+int(l) {
+		return nil, fmt.Errorf("byte array: varlen=%d, missing %d bytes", l, dec.pos+int(l)-len(dec.data))
 	}
 
-	out = d.data[d.pos : d.pos+int(l)]
-	d.pos += int(l)
+	out = dec.data[dec.pos : dec.pos+int(l)]
+	dec.pos += int(l)
 	if traceEnabled {
 		zlog.Debug("decode: read byte array", zap.Stringer("hex", HexBytes(out)))
 	}
@@ -469,31 +499,31 @@ func readNBytes(n int, reader io.ByteReader) ([]byte, error) {
 	return buf, nil
 }
 
-func (d *Decoder) ReadNBytes(n int) (out []byte, err error) {
-	return readNBytes(n, d)
+func (dec *Decoder) ReadNBytes(n int) (out []byte, err error) {
+	return readNBytes(n, dec)
 }
 
-func (d *Decoder) ReadByte() (out byte, err error) {
-	if d.Remaining() < TypeSize.Byte {
-		err = fmt.Errorf("required [1] byte, remaining [%d]", d.Remaining())
+func (dec *Decoder) ReadByte() (out byte, err error) {
+	if dec.Remaining() < TypeSize.Byte {
+		err = fmt.Errorf("required [1] byte, remaining [%d]", dec.Remaining())
 		return
 	}
 
-	out = d.data[d.pos]
-	d.pos++
+	out = dec.data[dec.pos]
+	dec.pos++
 	if traceEnabled {
 		zlog.Debug("decode: read byte", zap.Uint8("byte", out), zap.String("hex", hex.EncodeToString([]byte{out})))
 	}
 	return
 }
 
-func (d *Decoder) ReadBool() (out bool, err error) {
-	if d.Remaining() < TypeSize.Bool {
-		err = fmt.Errorf("bool required [%d] byte, remaining [%d]", TypeSize.Bool, d.Remaining())
+func (dec *Decoder) ReadBool() (out bool, err error) {
+	if dec.Remaining() < TypeSize.Bool {
+		err = fmt.Errorf("bool required [%d] byte, remaining [%d]", TypeSize.Bool, dec.Remaining())
 		return
 	}
 
-	b, err := d.ReadByte()
+	b, err := dec.ReadByte()
 
 	if err != nil {
 		err = fmt.Errorf("readBool, %s", err)
@@ -506,13 +536,13 @@ func (d *Decoder) ReadBool() (out bool, err error) {
 
 }
 
-func (d *Decoder) ReadUint8() (out uint8, err error) {
-	out, err = d.ReadByte()
+func (dec *Decoder) ReadUint8() (out uint8, err error) {
+	out, err = dec.ReadByte()
 	return
 }
 
-func (d *Decoder) ReadInt8() (out int8, err error) {
-	b, err := d.ReadByte()
+func (dec *Decoder) ReadInt8() (out int8, err error) {
+	b, err := dec.ReadByte()
 	out = int8(b)
 	if traceEnabled {
 		zlog.Debug("decode: read int8", zap.Int8("val", out))
@@ -520,22 +550,22 @@ func (d *Decoder) ReadInt8() (out int8, err error) {
 	return
 }
 
-func (d *Decoder) ReadUint16(order binary.ByteOrder) (out uint16, err error) {
-	if d.Remaining() < TypeSize.Uint16 {
-		err = fmt.Errorf("uint16 required [%d] bytes, remaining [%d]", TypeSize.Uint16, d.Remaining())
+func (dec *Decoder) ReadUint16(order binary.ByteOrder) (out uint16, err error) {
+	if dec.Remaining() < TypeSize.Uint16 {
+		err = fmt.Errorf("uint16 required [%d] bytes, remaining [%d]", TypeSize.Uint16, dec.Remaining())
 		return
 	}
 
-	out = order.Uint16(d.data[d.pos:])
-	d.pos += TypeSize.Uint16
+	out = order.Uint16(dec.data[dec.pos:])
+	dec.pos += TypeSize.Uint16
 	if traceEnabled {
 		zlog.Debug("decode: read uint16", zap.Uint16("val", out))
 	}
 	return
 }
 
-func (d *Decoder) ReadInt16(order binary.ByteOrder) (out int16, err error) {
-	n, err := d.ReadUint16(order)
+func (dec *Decoder) ReadInt16(order binary.ByteOrder) (out int16, err error) {
+	n, err := dec.ReadUint16(order)
 	out = int16(n)
 	if traceEnabled {
 		zlog.Debug("decode: read int16", zap.Int16("val", out))
@@ -543,8 +573,8 @@ func (d *Decoder) ReadInt16(order binary.ByteOrder) (out int16, err error) {
 	return
 }
 
-func (d *Decoder) ReadInt64(order binary.ByteOrder) (out int64, err error) {
-	n, err := d.ReadUint64(order)
+func (dec *Decoder) ReadInt64(order binary.ByteOrder) (out int64, err error) {
+	n, err := dec.ReadUint64(order)
 	out = int64(n)
 	if traceEnabled {
 		zlog.Debug("decode: read int64", zap.Int64("val", out))
@@ -552,22 +582,22 @@ func (d *Decoder) ReadInt64(order binary.ByteOrder) (out int64, err error) {
 	return
 }
 
-func (d *Decoder) ReadUint32(order binary.ByteOrder) (out uint32, err error) {
-	if d.Remaining() < TypeSize.Uint32 {
-		err = fmt.Errorf("uint32 required [%d] bytes, remaining [%d]", TypeSize.Uint32, d.Remaining())
+func (dec *Decoder) ReadUint32(order binary.ByteOrder) (out uint32, err error) {
+	if dec.Remaining() < TypeSize.Uint32 {
+		err = fmt.Errorf("uint32 required [%d] bytes, remaining [%d]", TypeSize.Uint32, dec.Remaining())
 		return
 	}
 
-	out = order.Uint32(d.data[d.pos:])
-	d.pos += TypeSize.Uint32
+	out = order.Uint32(dec.data[dec.pos:])
+	dec.pos += TypeSize.Uint32
 	if traceEnabled {
 		zlog.Debug("decode: read uint32", zap.Uint32("val", out))
 	}
 	return
 }
 
-func (d *Decoder) ReadInt32(order binary.ByteOrder) (out int32, err error) {
-	n, err := d.ReadUint32(order)
+func (dec *Decoder) ReadInt32(order binary.ByteOrder) (out int32, err error) {
+	n, err := dec.ReadUint32(order)
 	out = int32(n)
 	if traceEnabled {
 		zlog.Debug("decode: read int32", zap.Int32("val", out))
@@ -575,23 +605,23 @@ func (d *Decoder) ReadInt32(order binary.ByteOrder) (out int32, err error) {
 	return
 }
 
-func (d *Decoder) ReadUint64(order binary.ByteOrder) (out uint64, err error) {
-	if d.Remaining() < TypeSize.Uint64 {
-		err = fmt.Errorf("decode: uint64 required [%d] bytes, remaining [%d]", TypeSize.Uint64, d.Remaining())
+func (dec *Decoder) ReadUint64(order binary.ByteOrder) (out uint64, err error) {
+	if dec.Remaining() < TypeSize.Uint64 {
+		err = fmt.Errorf("decode: uint64 required [%d] bytes, remaining [%d]", TypeSize.Uint64, dec.Remaining())
 		return
 	}
 
-	data := d.data[d.pos : d.pos+TypeSize.Uint64]
+	data := dec.data[dec.pos : dec.pos+TypeSize.Uint64]
 	out = order.Uint64(data)
-	d.pos += TypeSize.Uint64
+	dec.pos += TypeSize.Uint64
 	if traceEnabled {
 		zlog.Debug("decode: read uint64", zap.Uint64("val", out), zap.Stringer("hex", HexBytes(data)))
 	}
 	return
 }
 
-func (d *Decoder) ReadInt128(order binary.ByteOrder) (out Int128, err error) {
-	v, err := d.ReadUint128(order)
+func (dec *Decoder) ReadInt128(order binary.ByteOrder) (out Int128, err error) {
+	v, err := dec.ReadUint128(order)
 	if err != nil {
 		return
 	}
@@ -599,13 +629,13 @@ func (d *Decoder) ReadInt128(order binary.ByteOrder) (out Int128, err error) {
 	return Int128(v), nil
 }
 
-func (d *Decoder) ReadUint128(order binary.ByteOrder) (out Uint128, err error) {
-	if d.Remaining() < TypeSize.Uint128 {
-		err = fmt.Errorf("uint128 required [%d] bytes, remaining [%d]", TypeSize.Uint128, d.Remaining())
+func (dec *Decoder) ReadUint128(order binary.ByteOrder) (out Uint128, err error) {
+	if dec.Remaining() < TypeSize.Uint128 {
+		err = fmt.Errorf("uint128 required [%d] bytes, remaining [%d]", TypeSize.Uint128, dec.Remaining())
 		return
 	}
 
-	data := d.data[d.pos : d.pos+TypeSize.Uint128]
+	data := dec.data[dec.pos : dec.pos+TypeSize.Uint128]
 
 	if order == binary.LittleEndian {
 		out.Lo = order.Uint64(data)
@@ -615,45 +645,45 @@ func (d *Decoder) ReadUint128(order binary.ByteOrder) (out Uint128, err error) {
 		out.Hi = order.Uint64(data)
 	}
 
-	d.pos += TypeSize.Uint128
+	dec.pos += TypeSize.Uint128
 	if traceEnabled {
 		zlog.Debug("decode: read uint128", zap.Stringer("hex", out), zap.Uint64("hi", out.Hi), zap.Uint64("lo", out.Lo))
 	}
 	return
 }
 
-func (d *Decoder) ReadFloat32(order binary.ByteOrder) (out float32, err error) {
-	if d.Remaining() < TypeSize.Float32 {
-		err = fmt.Errorf("float32 required [%d] bytes, remaining [%d]", TypeSize.Float32, d.Remaining())
+func (dec *Decoder) ReadFloat32(order binary.ByteOrder) (out float32, err error) {
+	if dec.Remaining() < TypeSize.Float32 {
+		err = fmt.Errorf("float32 required [%d] bytes, remaining [%d]", TypeSize.Float32, dec.Remaining())
 		return
 	}
 
-	n := order.Uint32(d.data[d.pos:])
+	n := order.Uint32(dec.data[dec.pos:])
 	out = math.Float32frombits(n)
-	d.pos += TypeSize.Float32
+	dec.pos += TypeSize.Float32
 	if traceEnabled {
 		zlog.Debug("decode: read float32", zap.Float32("val", out))
 	}
 	return
 }
 
-func (d *Decoder) ReadFloat64(order binary.ByteOrder) (out float64, err error) {
-	if d.Remaining() < TypeSize.Float64 {
-		err = fmt.Errorf("float64 required [%d] bytes, remaining [%d]", TypeSize.Float64, d.Remaining())
+func (dec *Decoder) ReadFloat64(order binary.ByteOrder) (out float64, err error) {
+	if dec.Remaining() < TypeSize.Float64 {
+		err = fmt.Errorf("float64 required [%d] bytes, remaining [%d]", TypeSize.Float64, dec.Remaining())
 		return
 	}
 
-	n := order.Uint64(d.data[d.pos:])
+	n := order.Uint64(dec.data[dec.pos:])
 	out = math.Float64frombits(n)
-	d.pos += TypeSize.Float64
+	dec.pos += TypeSize.Float64
 	if traceEnabled {
 		zlog.Debug("decode: read Float64", zap.Float64("val", out))
 	}
 	return
 }
 
-func (d *Decoder) ReadFloat128(order binary.ByteOrder) (out Float128, err error) {
-	value, err := d.ReadUint128(order)
+func (dec *Decoder) ReadFloat128(order binary.ByteOrder) (out Float128, err error) {
+	value, err := dec.ReadUint128(order)
 	if err != nil {
 		return out, fmt.Errorf("float128: %s", err)
 	}
@@ -661,8 +691,8 @@ func (d *Decoder) ReadFloat128(order binary.ByteOrder) (out Float128, err error)
 	return Float128(value), nil
 }
 
-func (d *Decoder) SafeReadUTF8String() (out string, err error) {
-	data, err := d.ReadByteArray()
+func (dec *Decoder) SafeReadUTF8String() (out string, err error) {
+	data, err := dec.ReadByteArray()
 	out = strings.Map(fixUtf, string(data))
 	if traceEnabled {
 		zlog.Debug("read safe UTF8 string", zap.String("val", out))
@@ -677,8 +707,8 @@ func fixUtf(r rune) rune {
 	return r
 }
 
-func (d *Decoder) ReadString() (out string, err error) {
-	data, err := d.ReadByteArray()
+func (dec *Decoder) ReadString() (out string, err error) {
+	data, err := dec.ReadByteArray()
 	out = string(data)
 	if traceEnabled {
 		zlog.Debug("read string", zap.String("val", out))
@@ -686,32 +716,32 @@ func (d *Decoder) ReadString() (out string, err error) {
 	return
 }
 
-func (d *Decoder) SkipBytes(count uint) error {
-	if uint(d.Remaining()) < count {
-		return fmt.Errorf("request to skip %d but only %d bytes remain", count, d.Remaining())
+func (dec *Decoder) SkipBytes(count uint) error {
+	if uint(dec.Remaining()) < count {
+		return fmt.Errorf("request to skip %d but only %d bytes remain", count, dec.Remaining())
 	}
-	d.pos += int(count)
+	dec.pos += int(count)
 	return nil
 }
 
-func (d *Decoder) SetPosition(idx uint) error {
-	if int(idx) < len(d.data) {
-		d.pos = int(idx)
+func (dec *Decoder) SetPosition(idx uint) error {
+	if int(idx) < len(dec.data) {
+		dec.pos = int(idx)
 		return nil
 	}
-	return fmt.Errorf("request to set position to %d outsize of buffer (buffer size %d)", idx, len(d.data))
+	return fmt.Errorf("request to set position to %d outsize of buffer (buffer size %d)", idx, len(dec.data))
 }
 
-func (d *Decoder) Position() uint {
-	return uint(d.pos)
+func (dec *Decoder) Position() uint {
+	return uint(dec.pos)
 }
 
-func (d *Decoder) Remaining() int {
-	return len(d.data) - d.pos
+func (dec *Decoder) Remaining() int {
+	return len(dec.data) - dec.pos
 }
 
-func (d *Decoder) HasRemaining() bool {
-	return d.Remaining() > 0
+func (dec *Decoder) HasRemaining() bool {
+	return dec.Remaining() > 0
 }
 
 // indirect walks down v allocating pointers as needed,

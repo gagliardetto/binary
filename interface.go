@@ -15,7 +15,7 @@ type UnmarshalerBinary interface {
 
 func MarshalBinary(v interface{}) ([]byte, error) {
 	buf := new(bytes.Buffer)
-	encoder := NewEncoder(buf)
+	encoder := NewBinEncoder(buf)
 	err := encoder.Encode(v)
 	return buf.Bytes(), err
 }
@@ -44,7 +44,7 @@ func MustByteCount(v interface{}) uint64 {
 // your fields is performed, size could vary for different structure.
 func ByteCount(v interface{}) (uint64, error) {
 	counter := byteCounter{}
-	err := NewEncoder(&counter).Encode(v)
+	err := NewBinEncoder(&counter).Encode(v)
 	if err != nil {
 		return 0, fmt.Errorf("encode %T: %w", v, err)
 	}

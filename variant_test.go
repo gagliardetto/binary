@@ -67,7 +67,7 @@ func TestDecode_Variant(t *testing.T) {
 		0x02, 0x00, 0x00, 0x00, 0x23, 0xd3, 0xd8, 0x9a, 0x99, 0x7e, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // inner node -> key = 983623123129123
 	}
 
-	decoder := NewDecoder(buf)
+	decoder := NewBinDecoder(buf)
 	forest := Forest{}
 	err := decoder.Decode(&forest)
 	require.NoError(t, err)
@@ -146,7 +146,7 @@ func TestEncode_Variant(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 
 	enc.Encode(&Forest{T: Tree{
 		Padding:   [5]byte{0x73, 0x65, 0x72, 0x75, 0x6d},
@@ -219,7 +219,7 @@ func TestDecode_UnexporterStruct(t *testing.T) {
 		0x05, 0x00, 0x00, 0x00,
 	}
 
-	decoder := NewDecoder(buf)
+	decoder := NewBinDecoder(buf)
 	s := unexportesStruct{}
 	err := decoder.Decode(&s)
 	require.NoError(t, err)
@@ -231,7 +231,7 @@ func TestEncode_UnexporterStruct(t *testing.T) {
 	var expectData []byte
 
 	buf := new(bytes.Buffer)
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 
 	enc.Encode(&unexportesStruct{value: 5})
 	assert.Equal(t, expectData, buf.Bytes())

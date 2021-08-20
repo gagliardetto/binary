@@ -12,7 +12,7 @@ import (
 
 func TestEncoder_AliastTestType(t *testing.T) {
 	buf := new(bytes.Buffer)
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.Encode(aliasTestType(23))
 
 	assert.Equal(t, []byte{
@@ -23,7 +23,7 @@ func TestEncoder_AliastTestType(t *testing.T) {
 func TestEncoder_safeString(t *testing.T) {
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.Encode(SafeString("hello"))
 
 	assert.Equal(t, []byte{
@@ -35,7 +35,7 @@ func TestEncoder_safeString(t *testing.T) {
 func TestEncoder_int8(t *testing.T) {
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	v := int8(-99)
 	enc.WriteByte(byte(v))
 	enc.WriteByte(byte(int8(100)))
@@ -50,7 +50,7 @@ func TestEncoder_int16(t *testing.T) {
 	// little endian
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteInt16(int16(-82), LE())
 	enc.WriteInt16(int16(73), LE())
 
@@ -62,7 +62,7 @@ func TestEncoder_int16(t *testing.T) {
 	// big endian
 	buf = new(bytes.Buffer)
 
-	enc = NewEncoder(buf)
+	enc = NewBinEncoder(buf)
 	enc.WriteInt16(int16(-82), BE())
 	enc.WriteInt16(int16(73), BE())
 
@@ -76,7 +76,7 @@ func TestEncoder_int32(t *testing.T) {
 	// little endian
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteInt32(int32(-276132392), LE())
 	enc.WriteInt32(int32(237391), LE())
 
@@ -88,7 +88,7 @@ func TestEncoder_int32(t *testing.T) {
 	// big endian
 	buf = new(bytes.Buffer)
 
-	enc = NewEncoder(buf)
+	enc = NewBinEncoder(buf)
 	enc.WriteInt32(int32(-276132392), BE())
 	enc.WriteInt32(int32(237391), BE())
 
@@ -102,7 +102,7 @@ func TestEncoder_int64(t *testing.T) {
 	// little endian
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteInt64(int64(-819823), LE())
 	enc.WriteInt64(int64(72931), LE())
 
@@ -114,7 +114,7 @@ func TestEncoder_int64(t *testing.T) {
 	// big endian
 	buf = new(bytes.Buffer)
 
-	enc = NewEncoder(buf)
+	enc = NewBinEncoder(buf)
 	enc.WriteInt64(int64(-819823), BE())
 	enc.WriteInt64(int64(72931), BE())
 
@@ -127,7 +127,7 @@ func TestEncoder_int64(t *testing.T) {
 func TestEncoder_uint8(t *testing.T) {
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteByte(uint8(99))
 	enc.WriteByte(uint8(100))
 
@@ -141,7 +141,7 @@ func TestEncoder_uint16(t *testing.T) {
 	// little endian
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteUint16(uint16(82), LE())
 	enc.WriteUint16(uint16(73), LE())
 
@@ -153,7 +153,7 @@ func TestEncoder_uint16(t *testing.T) {
 	// big endian
 	buf = new(bytes.Buffer)
 
-	enc = NewEncoder(buf)
+	enc = NewBinEncoder(buf)
 	enc.WriteUint16(uint16(82), BE())
 	enc.WriteUint16(uint16(73), BE())
 
@@ -167,7 +167,7 @@ func TestEncoder_uint32(t *testing.T) {
 	// little endian
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteUint32(uint32(276132392), LE())
 	enc.WriteUint32(uint32(237391), LE())
 
@@ -179,7 +179,7 @@ func TestEncoder_uint32(t *testing.T) {
 	// big endian
 	buf = new(bytes.Buffer)
 
-	enc = NewEncoder(buf)
+	enc = NewBinEncoder(buf)
 	enc.WriteUint32(uint32(276132392), BE())
 	enc.WriteUint32(uint32(237391), BE())
 
@@ -193,7 +193,7 @@ func TestEncoder_uint64(t *testing.T) {
 	// little endian
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteUint64(uint64(819823), LE())
 	enc.WriteUint64(uint64(72931), LE())
 
@@ -205,7 +205,7 @@ func TestEncoder_uint64(t *testing.T) {
 	// big endian
 	buf = new(bytes.Buffer)
 
-	enc = NewEncoder(buf)
+	enc = NewBinEncoder(buf)
 	enc.WriteUint64(uint64(819823), BE())
 	enc.WriteUint64(uint64(72931), BE())
 
@@ -219,7 +219,7 @@ func TestEncoder_float32(t *testing.T) {
 	// little endian
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteFloat32(float32(1.32), LE())
 	enc.WriteFloat32(float32(-3.21), LE())
 
@@ -231,7 +231,7 @@ func TestEncoder_float32(t *testing.T) {
 	// big endian
 	buf = new(bytes.Buffer)
 
-	enc = NewEncoder(buf)
+	enc = NewBinEncoder(buf)
 	enc.WriteFloat32(float32(1.32), BE())
 	enc.WriteFloat32(float32(-3.21), BE())
 	assert.Equal(t, []byte{
@@ -244,7 +244,7 @@ func TestEncoder_float64(t *testing.T) {
 	// little endian
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteFloat64(float64(-62.23), LE())
 	enc.WriteFloat64(float64(23.239), LE())
 	enc.WriteFloat64(float64(math.Inf(1)), LE())
@@ -260,7 +260,7 @@ func TestEncoder_float64(t *testing.T) {
 	// big endian
 	buf = new(bytes.Buffer)
 
-	enc = NewEncoder(buf)
+	enc = NewBinEncoder(buf)
 	enc.WriteFloat64(float64(-62.23), BE())
 	enc.WriteFloat64(float64(23.239), BE())
 	enc.WriteFloat64(float64(math.Inf(1)), BE())
@@ -277,7 +277,7 @@ func TestEncoder_float64(t *testing.T) {
 func TestEncoder_string(t *testing.T) {
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteString("123")
 	enc.WriteString("")
 	enc.WriteString("abc")
@@ -292,7 +292,7 @@ func TestEncoder_string(t *testing.T) {
 func TestEncoder_byte(t *testing.T) {
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteByte(0)
 	enc.WriteByte(1)
 
@@ -304,7 +304,7 @@ func TestEncoder_byte(t *testing.T) {
 func TestEncoder_bool(t *testing.T) {
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteBool(true)
 	enc.WriteBool(false)
 
@@ -316,7 +316,7 @@ func TestEncoder_bool(t *testing.T) {
 func TestEncoder_ByteArray(t *testing.T) {
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteByteArray([]byte{1, 2, 3}, true)
 	enc.WriteByteArray([]byte{4, 5, 6}, true)
 	enc.WriteByteArray([]byte{7, 8}, false)
@@ -329,7 +329,7 @@ func TestEncoder_ByteArray(t *testing.T) {
 
 	bufB := new(bytes.Buffer)
 
-	enc = NewEncoder(bufB)
+	enc = NewBinEncoder(bufB)
 	enc.Encode([]byte{1, 2, 3})
 
 	assert.Equal(t, []byte{
@@ -340,7 +340,7 @@ func TestEncoder_ByteArray(t *testing.T) {
 func TestEncode_Array(t *testing.T) {
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.Encode([3]byte{1, 2, 4})
 
 	assert.Equal(t,
@@ -381,7 +381,7 @@ func TestEncoder_Uint128(t *testing.T) {
 
 	buf := new(bytes.Buffer)
 
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.WriteUint128(u, LE())
 
 	assert.Equal(t, []byte{
@@ -392,7 +392,7 @@ func TestEncoder_Uint128(t *testing.T) {
 	// big endian
 	buf = new(bytes.Buffer)
 
-	enc = NewEncoder(buf)
+	enc = NewBinEncoder(buf)
 	enc.WriteUint128(u, BE())
 
 	assert.Equal(t, []byte{
@@ -439,7 +439,7 @@ func TestEncoder_BinaryStruct(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	err := enc.Encode(s)
 	assert.NoError(t, err)
 
@@ -464,7 +464,7 @@ func TestEncoder_BinaryTestStructWithTags(t *testing.T) {
 	}
 
 	buf := new(bytes.Buffer)
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	err := enc.Encode(s)
 	assert.NoError(t, err)
 
@@ -478,7 +478,7 @@ func TestEncoder_InterfaceNil(t *testing.T) {
 	var foo interface{}
 	foo = nil
 	buf := new(bytes.Buffer)
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	err := enc.Encode(foo)
 	assert.NoError(t, err)
 }

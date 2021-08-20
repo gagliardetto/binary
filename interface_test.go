@@ -32,7 +32,7 @@ func (e *Example) MarshalBinary(encoder *Encoder) error {
 func TestMarshalBinary(t *testing.T) {
 	buf := new(bytes.Buffer)
 	e := &Example{Value: 72, Prefix: 0xaa}
-	enc := NewEncoder(buf)
+	enc := NewBinEncoder(buf)
 	enc.Encode(e)
 
 	assert.Equal(t, []byte{
@@ -46,7 +46,7 @@ func TestUnmarshalBinary(t *testing.T) {
 	}
 
 	e := &Example{}
-	d := NewDecoder(buf)
+	d := NewBinDecoder(buf)
 	err := d.Decode(e)
 	assert.NoError(t, err)
 	assert.Equal(t, e, &Example{Value: 72, Prefix: 0xaa})

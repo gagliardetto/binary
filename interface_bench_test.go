@@ -31,7 +31,7 @@ func BenchmarkByteCount(b *testing.B) {
 		b.Run(bm.name, func(b *testing.B) {
 			setupBench(b)
 			for i := 0; i < b.N; i++ {
-				ByteCount(bm.v)
+				BinByteCount(bm.v)
 			}
 		})
 	}

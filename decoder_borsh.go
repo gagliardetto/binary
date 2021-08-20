@@ -201,6 +201,7 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 		}
 		rv.Set(reflect.MakeMap(rt))
 		if l == 0 {
+			// TODO: should the map stay nil?
 			return nil
 		}
 		for i := 0; i < int(l); i++ {

@@ -13,9 +13,23 @@ type UnmarshalerBinary interface {
 	UnmarshalBinary(decoder *Decoder) error
 }
 
-func MarshalBinary(v interface{}) ([]byte, error) {
+func MarshalBin(v interface{}) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	encoder := NewBinEncoder(buf)
+	err := encoder.Encode(v)
+	return buf.Bytes(), err
+}
+
+func MarshalBorsh(v interface{}) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	encoder := NewBorshEncoder(buf)
+	err := encoder.Encode(v)
+	return buf.Bytes(), err
+}
+
+func MarshalCompact16(v interface{}) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	encoder := NewCompact16Encoder(buf)
 	err := encoder.Encode(v)
 	return buf.Bytes(), err
 }

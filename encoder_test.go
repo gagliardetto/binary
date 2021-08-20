@@ -356,17 +356,17 @@ func Test_OptionalPointerToPrimitiveType(t *testing.T) {
 
 	expect := []byte{0x00}
 
-	out, err := MarshalBinary(test{ID: nil})
+	out, err := MarshalBin(test{ID: nil})
 	require.NoError(t, err)
 	assert.Equal(t, expect, out)
 
 	id := Uint64(0)
-	out, err = MarshalBinary(test{ID: &id})
+	out, err = MarshalBin(test{ID: &id})
 	require.NoError(t, err)
 	assert.Equal(t, []byte{0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, out)
 
 	id = Uint64(10)
-	out, err = MarshalBinary(test{ID: &id})
+	out, err = MarshalBin(test{ID: &id})
 	require.NoError(t, err)
 
 	assert.Equal(t, []byte{0x1, 0xa, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, out)

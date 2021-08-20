@@ -36,8 +36,9 @@ func NewEncoderWithEncoding(writer io.Writer, enc Encoding) *Encoder {
 		panic(fmt.Sprintf("provided encoding is not valid: %s", enc))
 	}
 	return &Encoder{
-		output: writer,
-		count:  0,
+		output:   writer,
+		count:    0,
+		encoding: enc,
 	}
 }
 
@@ -54,10 +55,17 @@ func NewCompact16Encoder(writer io.Writer) *Encoder {
 }
 
 func (e *Encoder) Encode(v interface{}) (err error) {
-	return e.encode(reflect.ValueOf(v), nil)
+	switch e.encoding {
+	case EncodingBin:
+		return e.encodeBin(reflect.ValueOf(v), nil)
+	case EncodingBorsh:
+		return e.encodeBorsh(reflect.ValueOf(v), nil)
+	default:
+		panic(fmt.Errorf("encoding not implemented: %s", e.encoding))
+	}
 }
 
-func (e *Encoder) encode(rv reflect.Value, opt *option) (err error) {
+func (e *Encoder) encodeBin(rv reflect.Value, opt *option) (err error) {
 	if opt == nil {
 		opt = newDefaultOption()
 	}
@@ -118,7 +126,7 @@ func (e *Encoder) encode(rv reflect.Value, opt *option) (err error) {
 	case reflect.Bool:
 		return e.WriteBool(rv.Bool())
 	case reflect.Ptr:
-		return e.encode(rv.Elem(), opt)
+		return e.encodeBin(rv.Elem(), opt)
 	case reflect.Interface:
 		// skip
 		return nil
@@ -135,7 +143,7 @@ func (e *Encoder) encode(rv reflect.Value, opt *option) (err error) {
 			zlog.Debug("encode: array", zap.Int("length", l), zap.Stringer("type", rv.Kind()))
 		}
 		for i := 0; i < l; i++ {
-			if err = e.encode(rv.Index(i), opt); err != nil {
+			if err = e.encodeBin(rv.Index(i), opt); err != nil {
 				return
 			}
 		}
@@ -161,7 +169,7 @@ func (e *Encoder) encode(rv reflect.Value, opt *option) (err error) {
 		// we would want to skip to the correct head_offset
 
 		for i := 0; i < l; i++ {
-			if err = e.encode(rv.Index(i), opt); err != nil {
+			if err = e.encodeBin(rv.Index(i), opt); err != nil {
 				return
 			}
 		}
@@ -214,13 +222,28 @@ func (e *Encoder) toWriter(bytes []byte) (err error) {
 	return
 }
 
-func (e *Encoder) WriteByteArray(b []byte, writeLength bool) error {
+func (e *Encoder) WriteBytes(b []byte, writeLength bool) error {
 	if traceEnabled {
 		zlog.Debug("encode: write byte array", zap.Int("len", len(b)))
 	}
 	if writeLength {
-		if err := e.WriteUVarInt(len(b)); err != nil {
-			return err
+		switch e.encoding {
+		case EncodingBin:
+			if err := e.WriteUVarInt(len(b)); err != nil {
+				return err
+			}
+		case EncodingBorsh:
+			if err := e.WriteUint32(uint32(len(b)), LE()); err != nil {
+				return err
+			}
+		case EncodingCompact16:
+			var buf []byte
+			EncodeCompact16Length(&buf, len(b))
+			if err := e.WriteBytes(buf, false); err != nil {
+				return err
+			}
+		default:
+			panic(fmt.Errorf("encoding not implemented: %s", e.encoding))
 		}
 	}
 	return e.toWriter(b)
@@ -361,7 +384,7 @@ func (e *Encoder) WriteString(s string) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write string", zap.String("val", s))
 	}
-	return e.WriteByteArray([]byte(s), true)
+	return e.WriteBytes([]byte(s), true)
 }
 
 func (e *Encoder) encodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
@@ -428,7 +451,7 @@ func (e *Encoder) encodeStruct(rt reflect.Type, rv reflect.Value) (err error) {
 			)
 		}
 
-		if err := e.encode(rv, option); err != nil {
+		if err := e.encodeBin(rv, option); err != nil {
 			return err
 		}
 	}

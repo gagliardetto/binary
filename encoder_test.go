@@ -317,9 +317,9 @@ func TestEncoder_ByteArray(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewBinEncoder(buf)
-	enc.WriteByteArray([]byte{1, 2, 3}, true)
-	enc.WriteByteArray([]byte{4, 5, 6}, true)
-	enc.WriteByteArray([]byte{7, 8}, false)
+	enc.WriteBytes([]byte{1, 2, 3}, true)
+	enc.WriteBytes([]byte{4, 5, 6}, true)
+	enc.WriteBytes([]byte{7, 8}, false)
 
 	assert.Equal(t, []byte{
 		0x03, 0x01, 0x02, 0x03,

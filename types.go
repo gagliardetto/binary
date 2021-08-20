@@ -82,7 +82,7 @@ func (t HexBytes) String() string {
 }
 
 func (o *HexBytes) UnmarshalBinary(decoder *Decoder) error {
-	value, err := decoder.ReadByteArray()
+	value, err := decoder.ReadByteSlice()
 	if err != nil {
 		return fmt.Errorf("hex bytes: %s", err)
 	}
@@ -92,7 +92,7 @@ func (o *HexBytes) UnmarshalBinary(decoder *Decoder) error {
 }
 
 func (o HexBytes) MarshalBinary(encoder *Encoder) error {
-	return encoder.WriteByteArray([]byte(o), true)
+	return encoder.WriteBytes([]byte(o), true)
 }
 
 type Varint16 int16

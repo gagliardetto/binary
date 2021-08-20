@@ -119,6 +119,9 @@ func (e *Encoder) encode(rv reflect.Value, opt *option) (err error) {
 		return e.WriteBool(rv.Bool())
 	case reflect.Ptr:
 		return e.encode(rv.Elem(), opt)
+	case reflect.Interface:
+		// skip
+		return nil
 	}
 
 	rv = reflect.Indirect(rv)

@@ -225,6 +225,9 @@ func (dec *Decoder) decode(rv reflect.Value, opt *option) (err error) {
 		r, err = dec.ReadBool()
 		rv.SetBool(r)
 		return
+	case reflect.Interface:
+		// skip
+		return nil
 	}
 	switch rt.Kind() {
 	case reflect.Array:

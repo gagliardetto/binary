@@ -35,5 +35,10 @@ func parseFieldTag(tag reflect.StructTag) *fieldTag {
 			t.Skip = true
 		}
 	}
+
+	// TODO: parse other borsh tags
+	if tag.Get("borsh_skip") == "true" {
+		t.Skip = true
+	}
 	return t
 }

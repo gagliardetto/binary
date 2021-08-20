@@ -42,23 +42,13 @@ const (
 	EncodingBorsh
 )
 
-var Encodings = struct {
-	Bin       Encoding
-	Compact16 Encoding
-	Borsh     Encoding
-}{
-	Bin:       EncodingBin,
-	Compact16: EncodingCompact16,
-	Borsh:     EncodingBorsh,
-}
-
 func (enc Encoding) String() string {
 	switch enc {
-	case Encodings.Bin:
+	case EncodingBin:
 		return "Bin"
-	case Encodings.Compact16:
+	case EncodingCompact16:
 		return "Compact16"
-	case Encodings.Borsh:
+	case EncodingBorsh:
 		return "Borsh"
 	default:
 		return ""
@@ -66,20 +56,20 @@ func (enc Encoding) String() string {
 }
 
 func (en Encoding) IsBorsh() bool {
-	return en == Encodings.Borsh
+	return en == EncodingBorsh
 }
 
 func (en Encoding) IsBin() bool {
-	return en == Encodings.Bin
+	return en == EncodingBin
 }
 
 func (en Encoding) IsCompact16() bool {
-	return en == Encodings.Compact16
+	return en == EncodingCompact16
 }
 
 func isValidEncoding(enc Encoding) bool {
 	switch enc {
-	case Encodings.Bin, Encodings.Compact16, Encodings.Borsh:
+	case EncodingBin, EncodingCompact16, EncodingBorsh:
 		return true
 	default:
 		return false

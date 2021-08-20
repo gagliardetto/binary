@@ -34,6 +34,21 @@ func MarshalCompact16(v interface{}) ([]byte, error) {
 	return buf.Bytes(), err
 }
 
+func UnmarshalBin(v interface{}, b []byte) error {
+	decoder := NewBinDecoder(b)
+	return decoder.Decode(v)
+}
+
+func UnmarshalBorsh(v interface{}, b []byte) error {
+	decoder := NewBorshDecoder(b)
+	return decoder.Decode(v)
+}
+
+func UnmarshalCompact16(v interface{}, b []byte) error {
+	decoder := NewCompact16Decoder(b)
+	return decoder.Decode(v)
+}
+
 type byteCounter struct {
 	count uint64
 }

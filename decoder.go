@@ -87,15 +87,15 @@ func NewDecoderWithEncoding(data []byte, enc Encoding) *Decoder {
 }
 
 func NewBinDecoder(data []byte) *Decoder {
-	return NewDecoderWithEncoding(data, Encodings.Bin)
+	return NewDecoderWithEncoding(data, EncodingBin)
 }
 
 func NewBorshDecoder(data []byte) *Decoder {
-	return NewDecoderWithEncoding(data, Encodings.Borsh)
+	return NewDecoderWithEncoding(data, EncodingBorsh)
 }
 
 func NewCompact16Decoder(data []byte) *Decoder {
-	return NewDecoderWithEncoding(data, Encodings.Compact16)
+	return NewDecoderWithEncoding(data, EncodingCompact16)
 }
 
 func (dec *Decoder) Decode(v interface{}) (err error) {
@@ -363,9 +363,11 @@ func (dec *Decoder) ReadUint64(order binary.ByteOrder) (out uint64, err error) {
 		return
 	}
 
-	data := dec.data[dec.pos : dec.pos+TypeSize.Uint64]
+	data, err := dec.ReadNBytes(TypeSize.Uint64)
+	if err != nil {
+		return 0, err
+	}
 	out = order.Uint64(data)
-	dec.pos += TypeSize.Uint64
 	if traceEnabled {
 		zlog.Debug("decode: read uint64", zap.Uint64("val", out), zap.Stringer("hex", HexBytes(data)))
 	}

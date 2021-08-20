@@ -43,15 +43,15 @@ func NewEncoderWithEncoding(writer io.Writer, enc Encoding) *Encoder {
 }
 
 func NewBinEncoder(writer io.Writer) *Encoder {
-	return NewEncoderWithEncoding(writer, Encodings.Bin)
+	return NewEncoderWithEncoding(writer, EncodingBin)
 }
 
 func NewBorshEncoder(writer io.Writer) *Encoder {
-	return NewEncoderWithEncoding(writer, Encodings.Borsh)
+	return NewEncoderWithEncoding(writer, EncodingBorsh)
 }
 
 func NewCompact16Encoder(writer io.Writer) *Encoder {
-	return NewEncoderWithEncoding(writer, Encodings.Compact16)
+	return NewEncoderWithEncoding(writer, EncodingCompact16)
 }
 
 func (e *Encoder) Encode(v interface{}) (err error) {

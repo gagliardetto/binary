@@ -6,11 +6,11 @@ import (
 )
 
 type BinaryMarshaler interface {
-	MarshalBinary(encoder *Encoder) error
+	MarshalWithEncoder(encoder *Encoder) error
 }
 
 type BinaryUnmarshaler interface {
-	UnmarshalBinary(decoder *Decoder) error
+	UnmarshalWithDecoder(decoder *Decoder) error
 }
 
 type EncoderDecoder interface {

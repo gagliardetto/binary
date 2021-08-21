@@ -44,10 +44,11 @@ type NodeInner struct {
 	Key Uint128
 }
 
-func (n *Node) UnmarshalBinary(decoder *Decoder) error {
+func (n *Node) UnmarshalWithDecoder(decoder *Decoder) error {
 	return n.BaseVariant.UnmarshalBinaryVariant(decoder, NodeVariantDef)
 }
-func (n *Node) MarshalBinary(encoder *Encoder) error {
+
+func (n *Node) MarshalWithEncoder(encoder *Encoder) error {
 	err := encoder.WriteUint32(n.TypeID, LE())
 	if err != nil {
 		return err

@@ -12,7 +12,7 @@ type Example struct {
 	Value  uint32
 }
 
-func (e *Example) UnmarshalBinary(decoder *Decoder) (err error) {
+func (e *Example) UnmarshalWithDecoder(decoder *Decoder) (err error) {
 	if e.Prefix, err = decoder.ReadByte(); err != nil {
 		return err
 	}
@@ -22,14 +22,14 @@ func (e *Example) UnmarshalBinary(decoder *Decoder) (err error) {
 	return nil
 }
 
-func (e *Example) MarshalBinary(encoder *Encoder) error {
+func (e *Example) MarshalWithEncoder(encoder *Encoder) error {
 	if err := encoder.WriteByte(e.Prefix); err != nil {
 		return err
 	}
 	return encoder.WriteUint32(e.Value, BE())
 }
 
-func TestMarshalBinary(t *testing.T) {
+func TestMarshalWithEncoder(t *testing.T) {
 	buf := new(bytes.Buffer)
 	e := &Example{Value: 72, Prefix: 0xaa}
 	enc := NewBinEncoder(buf)
@@ -40,7 +40,7 @@ func TestMarshalBinary(t *testing.T) {
 	}, buf.Bytes())
 }
 
-func TestUnmarshalBinary(t *testing.T) {
+func TestUnmarshalWithDecoder(t *testing.T) {
 	buf := []byte{
 		0xaa, 0x00, 0x00, 0x00, 0x48,
 	}

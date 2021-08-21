@@ -39,7 +39,7 @@ func (e *Encoder) encodeBin(rv reflect.Value, opt *option) (err error) {
 		if traceEnabled {
 			zlog.Debug("encode: using MarshalerBinary method to encode type")
 		}
-		return marshaler.MarshalBinary(e)
+		return marshaler.MarshalWithEncoder(e)
 	}
 
 	switch rv.Kind() {

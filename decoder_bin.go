@@ -60,9 +60,9 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 
 	if unmarshaler != nil {
 		if traceEnabled {
-			zlog.Debug("decode: using UnmarshalBinary method to decode type")
+			zlog.Debug("decode: using UnmarshalWithDecoder method to decode type")
 		}
-		return unmarshaler.UnmarshalBinary(dec)
+		return unmarshaler.UnmarshalWithDecoder(dec)
 	}
 	rt := rv.Type()
 

@@ -48,7 +48,7 @@ type Example struct {
 	Value  uint32
 }
 
-func (e *Example) UnmarshalBinary(decoder *Decoder) (err error) {
+func (e *Example) UnmarshalWithDecoder(decoder *Decoder) (err error) {
 	if e.Prefix, err = decoder.ReadByte(); err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (e *Example) UnmarshalBinary(decoder *Decoder) (err error) {
 	return nil
 }
 
-func (e *Example) MarshalBinary(encoder *Encoder) error {
+func (e *Example) MarshalWithEncoder(encoder *Encoder) error {
 	if err := encoder.WriteByte(e.Prefix); err != nil {
 		return err
 	}

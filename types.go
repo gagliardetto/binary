@@ -13,11 +13,11 @@ import (
 
 type SafeString string
 
-func (ss SafeString) MarshalBinary(encoder *Encoder) error {
+func (ss SafeString) MarshalWithEncoder(encoder *Encoder) error {
 	return encoder.WriteString(string(ss))
 }
 
-func (ss *SafeString) UnmarshalBinary(d *Decoder) error {
+func (ss *SafeString) UnmarshalWithDecoder(d *Decoder) error {
 	s, e := d.SafeReadUTF8String()
 	if e != nil {
 		return e
@@ -46,7 +46,7 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (b *Bool) UnmarshalBinary(decoder *Decoder) error {
+func (b *Bool) UnmarshalWithDecoder(decoder *Decoder) error {
 	value, err := decoder.ReadBool()
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (b *Bool) UnmarshalBinary(decoder *Decoder) error {
 	return nil
 }
 
-func (b Bool) MarshalBinary(encoder *Encoder) error {
+func (b Bool) MarshalWithEncoder(encoder *Encoder) error {
 	return encoder.WriteBool(bool(b))
 }
 
@@ -81,7 +81,7 @@ func (t HexBytes) String() string {
 	return hex.EncodeToString(t)
 }
 
-func (o *HexBytes) UnmarshalBinary(decoder *Decoder) error {
+func (o *HexBytes) UnmarshalWithDecoder(decoder *Decoder) error {
 	value, err := decoder.ReadByteSlice()
 	if err != nil {
 		return fmt.Errorf("hex bytes: %s", err)
@@ -91,13 +91,13 @@ func (o *HexBytes) UnmarshalBinary(decoder *Decoder) error {
 	return nil
 }
 
-func (o HexBytes) MarshalBinary(encoder *Encoder) error {
+func (o HexBytes) MarshalWithEncoder(encoder *Encoder) error {
 	return encoder.WriteBytes([]byte(o), true)
 }
 
 type Varint16 int16
 
-func (o *Varint16) UnmarshalBinary(decoder *Decoder) error {
+func (o *Varint16) UnmarshalWithDecoder(decoder *Decoder) error {
 	value, err := decoder.ReadVarint16()
 	if err != nil {
 		return fmt.Errorf("varint16: %s", err)
@@ -107,13 +107,13 @@ func (o *Varint16) UnmarshalBinary(decoder *Decoder) error {
 	return nil
 }
 
-func (o Varint16) MarshalBinary(encoder *Encoder) error {
+func (o Varint16) MarshalWithEncoder(encoder *Encoder) error {
 	return encoder.WriteVarInt(int(o))
 }
 
 type Varuint16 uint16
 
-func (o *Varuint16) UnmarshalBinary(decoder *Decoder) error {
+func (o *Varuint16) UnmarshalWithDecoder(decoder *Decoder) error {
 	value, err := decoder.ReadUvarint16()
 	if err != nil {
 		return fmt.Errorf("varuint16: %s", err)
@@ -123,13 +123,13 @@ func (o *Varuint16) UnmarshalBinary(decoder *Decoder) error {
 	return nil
 }
 
-func (o Varuint16) MarshalBinary(encoder *Encoder) error {
+func (o Varuint16) MarshalWithEncoder(encoder *Encoder) error {
 	return encoder.WriteUVarInt(int(o))
 }
 
 type Varuint32 uint32
 
-func (o *Varuint32) UnmarshalBinary(decoder *Decoder) error {
+func (o *Varuint32) UnmarshalWithDecoder(decoder *Decoder) error {
 	value, err := decoder.ReadUvarint64()
 	if err != nil {
 		return fmt.Errorf("varuint32: %s", err)
@@ -139,13 +139,13 @@ func (o *Varuint32) UnmarshalBinary(decoder *Decoder) error {
 	return nil
 }
 
-func (o Varuint32) MarshalBinary(encoder *Encoder) error {
+func (o Varuint32) MarshalWithEncoder(encoder *Encoder) error {
 	return encoder.WriteUVarInt(int(o))
 }
 
 type Varint32 int32
 
-func (o *Varint32) UnmarshalBinary(decoder *Decoder) error {
+func (o *Varint32) UnmarshalWithDecoder(decoder *Decoder) error {
 	value, err := decoder.ReadVarint32()
 	if err != nil {
 		return err
@@ -155,7 +155,7 @@ func (o *Varint32) UnmarshalBinary(decoder *Decoder) error {
 	return nil
 }
 
-func (o Varint32) MarshalBinary(encoder *Encoder) error {
+func (o Varint32) MarshalWithEncoder(encoder *Encoder) error {
 	return encoder.WriteVarInt(int(o))
 }
 
@@ -192,7 +192,7 @@ func (f *JSONFloat64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (f *JSONFloat64) UnmarshalBinary(dec *Decoder) error {
+func (f *JSONFloat64) UnmarshalWithDecoder(dec *Decoder) error {
 	value, err := dec.ReadFloat64(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
@@ -202,7 +202,7 @@ func (f *JSONFloat64) UnmarshalBinary(dec *Decoder) error {
 	return nil
 }
 
-func (f JSONFloat64) MarshalBinary(enc *Encoder) error {
+func (f JSONFloat64) MarshalWithEncoder(enc *Encoder) error {
 	return enc.WriteFloat64(float64(f), enc.currentFieldOpt.Order)
 }
 
@@ -252,7 +252,7 @@ func (i *Int64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i *Int64) UnmarshalBinary(dec *Decoder) error {
+func (i *Int64) UnmarshalWithDecoder(dec *Decoder) error {
 	value, err := dec.ReadInt64(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
@@ -262,7 +262,7 @@ func (i *Int64) UnmarshalBinary(dec *Decoder) error {
 	return nil
 }
 
-func (i Int64) MarshalBinary(enc *Encoder) error {
+func (i Int64) MarshalWithEncoder(enc *Encoder) error {
 	return enc.WriteInt64(int64(i), enc.currentFieldOpt.Order)
 }
 
@@ -312,7 +312,7 @@ func (i *Uint64) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i *Uint64) UnmarshalBinary(dec *Decoder) error {
+func (i *Uint64) UnmarshalWithDecoder(dec *Decoder) error {
 	value, err := dec.ReadUint64(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
@@ -322,7 +322,7 @@ func (i *Uint64) UnmarshalBinary(dec *Decoder) error {
 	return nil
 }
 
-func (i Uint64) MarshalBinary(enc *Encoder) error {
+func (i Uint64) MarshalWithEncoder(enc *Encoder) error {
 	return enc.WriteUint64(uint64(i), enc.currentFieldOpt.Order)
 }
 
@@ -399,7 +399,7 @@ func (i *Uint128) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i *Uint128) UnmarshalBinary(dec *Decoder) error {
+func (i *Uint128) UnmarshalWithDecoder(dec *Decoder) error {
 	value, err := dec.ReadUint128(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
@@ -409,7 +409,7 @@ func (i *Uint128) UnmarshalBinary(dec *Decoder) error {
 	return nil
 }
 
-func (i Uint128) MarshalBinary(enc *Encoder) error {
+func (i Uint128) MarshalWithEncoder(enc *Encoder) error {
 	return enc.WriteUint128(i, enc.currentFieldOpt.Order)
 }
 
@@ -457,7 +457,7 @@ func (i *Int128) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i *Int128) UnmarshalBinary(dec *Decoder) error {
+func (i *Int128) UnmarshalWithDecoder(dec *Decoder) error {
 	value, err := dec.ReadInt128(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
@@ -467,7 +467,7 @@ func (i *Int128) UnmarshalBinary(dec *Decoder) error {
 	return nil
 }
 
-func (i Int128) MarshalBinary(enc *Encoder) error {
+func (i Int128) MarshalWithEncoder(enc *Encoder) error {
 	return enc.WriteInt128(i, enc.currentFieldOpt.Order)
 }
 
@@ -489,7 +489,7 @@ func (i *Float128) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (i *Float128) UnmarshalBinary(dec *Decoder) error {
+func (i *Float128) UnmarshalWithDecoder(dec *Decoder) error {
 	value, err := dec.ReadFloat128(dec.currentFieldOpt.Order)
 	if err != nil {
 		return err
@@ -499,6 +499,6 @@ func (i *Float128) UnmarshalBinary(dec *Decoder) error {
 	return nil
 }
 
-func (i Float128) MarshalBinary(enc *Encoder) error {
+func (i Float128) MarshalWithEncoder(enc *Encoder) error {
 	return enc.WriteUint128(Uint128(i), enc.currentFieldOpt.Order)
 }

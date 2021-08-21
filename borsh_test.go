@@ -1,6 +1,7 @@
 package bin
 
 import (
+	"bytes"
 	"math"
 	"reflect"
 	strings2 "strings"
@@ -8,6 +9,131 @@ import (
 
 	"github.com/stretchr/testify/require"
 )
+
+type Struct struct {
+	Foo string
+	Bar uint32
+}
+
+type AA struct {
+	A        int64
+	B        int32
+	C        bool
+	D        *bool
+	E        *uint64
+	M        map[string]string
+	EmptyMap map[int64]string
+	Array    [2]int64
+
+	Optional *Struct
+	Value    Struct
+
+	InterfaceEncoderDecoderByValue   CustomEncoding
+	InterfaceEncoderDecoderByPointer *CustomEncoding
+
+	InterfaceEncoderDecoderByValueEmpty   CustomEncoding
+	InterfaceEncoderDecoderByPointerEmpty *CustomEncoding
+
+	HighValuesInt64   []int64
+	HighValuesUint64  []uint64
+	HighValuesFloat64 []float64
+}
+
+type CustomEncoding struct {
+	Prefix byte
+	Value  uint32
+}
+
+func (e *CustomEncoding) MarshalBinary(encoder *Encoder) error {
+	if err := encoder.WriteByte(e.Prefix); err != nil {
+		return err
+	}
+	return encoder.WriteUint32(e.Value, LE())
+}
+
+func (e *CustomEncoding) UnmarshalBinary(decoder *Decoder) (err error) {
+	if e.Prefix, err = decoder.ReadByte(); err != nil {
+		return err
+	}
+	if e.Value, err = decoder.ReadUint32(LE()); err != nil {
+		return err
+	}
+	return nil
+}
+func TestBorsh_kitchenSink(t *testing.T) {
+	boolTrue := true
+	uint64Num := uint64(25464132585)
+	x := AA{
+		A:     1,
+		B:     32,
+		C:     true,
+		D:     &boolTrue,
+		E:     &uint64Num,
+		M:     map[string]string{"foo": "bar"},
+		Array: [2]int64{57, 88},
+		Optional: &Struct{
+			Foo: "optional foo",
+			Bar: 8888886,
+		},
+		Value: Struct{
+			Foo: "value foo",
+			Bar: 7777,
+		},
+		InterfaceEncoderDecoderByValue:   CustomEncoding{Prefix: byte('b'), Value: 72},
+		InterfaceEncoderDecoderByPointer: &CustomEncoding{Prefix: byte('c'), Value: 9999},
+
+		HighValuesInt64: []int64{
+			math.MaxInt8,
+			math.MaxInt16,
+			math.MaxInt32,
+			math.MaxInt64,
+
+			-math.MaxInt8,
+			-math.MaxInt16,
+			-math.MaxInt32,
+			-math.MaxInt64,
+
+			math.MaxUint8,
+			math.MaxUint16,
+			math.MaxUint32,
+			// math.MaxUint64,
+
+			-math.MaxUint8,
+			-math.MaxUint16,
+			-math.MaxUint32,
+			// -math.MaxUint64,
+		},
+
+		HighValuesUint64: []uint64{
+			math.MaxInt8,
+			math.MaxInt16,
+			math.MaxInt32,
+			math.MaxInt64,
+
+			math.MaxUint8,
+			math.MaxUint16,
+			math.MaxUint32,
+			math.MaxUint64,
+		},
+
+		HighValuesFloat64: []float64{
+			math.MaxFloat32,
+			math.MaxFloat64,
+
+			-math.MaxFloat32,
+			-math.MaxFloat64,
+		},
+	}
+	borshBuf := new(bytes.Buffer)
+	borshEnc := NewBorshEncoder(borshBuf)
+	err := borshEnc.Encode(x)
+	require.NoError(t, err)
+
+	y := new(AA)
+	err = UnmarshalBorsh(y, borshBuf.Bytes())
+	require.NoError(t, err)
+	require.Equal(t, x, *y)
+}
 
 type A struct {
 	A int64
@@ -127,7 +253,7 @@ func TestNested(t *testing.T) {
 			A3: [3]int{234, -123, 123},
 			S:  []int{21442, 421241241, 2424},
 			P:  ip,
-			M:  make(map[string]string),
+			M:  map[string]string{"foo": "bar"},
 		},
 	}
 	data, err := MarshalBorsh(x)

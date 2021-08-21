@@ -58,10 +58,10 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 	}
 
 	switch rv.Kind() {
-	case reflect.Int:
-		return e.WriteInt64(rv.Int(), LE())
-	case reflect.Uint:
-		return e.WriteUint64(rv.Uint(), LE())
+	// case reflect.Int:
+	// 	return e.WriteInt64(rv.Int(), LE())
+	// case reflect.Uint:
+	// 	return e.WriteUint64(rv.Uint(), LE())
 	case reflect.String:
 		return e.WriteString(rv.String())
 	case reflect.Uint8:

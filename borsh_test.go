@@ -204,18 +204,18 @@ func TestBasic(t *testing.T) {
 }
 
 type C struct {
-	A3 [3]int
-	S  []int
-	P  *int
+	A3 [3]int64
+	S  []int64
+	P  *int64
 	M  map[string]string
 }
 
 func TestBasicContainer(t *testing.T) {
-	ip := new(int)
+	ip := new(int64)
 	*ip = 213
 	x := C{
-		A3: [3]int{234, -123, 123},
-		S:  []int{21442, 421241241, 2424},
+		A3: [3]int64{234, -123, 123},
+		S:  []int64{21442, 421241241, 2424},
 		P:  ip,
 		M:  map[string]string{"foo": "bar"},
 	}
@@ -234,7 +234,7 @@ type N struct {
 }
 
 func TestNested(t *testing.T) {
-	ip := new(int)
+	ip := new(int64)
 	*ip = 213
 	x := N{
 		B: B{
@@ -250,8 +250,8 @@ func TestNested(t *testing.T) {
 			F64: 3121221.232,
 		},
 		C: C{
-			A3: [3]int{234, -123, 123},
-			S:  []int{21442, 421241241, 2424},
+			A3: [3]int64{234, -123, 123},
+			S:  []int64{21442, 421241241, 2424},
 			P:  ip,
 			M:  map[string]string{"foo": "bar"},
 		},
@@ -326,12 +326,12 @@ func TestComplexEnum(t *testing.T) {
 }
 
 type S struct {
-	S map[int]struct{}
+	S map[int64]struct{}
 }
 
 func TestSet(t *testing.T) {
 	x := S{
-		S: map[int]struct{}{124: struct{}{}, 214: struct{}{}, 24: struct{}{}, 53: struct{}{}},
+		S: map[int64]struct{}{124: struct{}{}, 214: struct{}{}, 24: struct{}{}, 53: struct{}{}},
 	}
 	data, err := MarshalBorsh(x)
 	require.NoError(t, err)
@@ -343,9 +343,9 @@ func TestSet(t *testing.T) {
 }
 
 type Skipped struct {
-	A int
-	B int `borsh_skip:"true"`
-	C int
+	A int64
+	B int64 `borsh_skip:"true"`
+	C int64
 }
 
 func TestSkipped(t *testing.T) {

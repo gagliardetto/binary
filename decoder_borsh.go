@@ -69,18 +69,18 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 
 	rt := rv.Type()
 	switch rv.Kind() {
-	case reflect.Int:
-		// TODO: check if is x32 or x64
-		var n int64
-		n, err = dec.ReadInt64(LE())
-		rv.SetInt(n)
-		return
-	case reflect.Uint:
-		// TODO: check if is x32 or x64
-		var n uint64
-		n, err = dec.ReadUint64(LE())
-		rv.SetUint(n)
-		return
+	// case reflect.Int:
+	// 	// TODO: check if is x32 or x64
+	// 	var n int64
+	// 	n, err = dec.ReadInt64(LE())
+	// 	rv.SetInt(n)
+	// 	return
+	// case reflect.Uint:
+	// 	// TODO: check if is x32 or x64
+	// 	var n uint64
+	// 	n, err = dec.ReadUint64(LE())
+	// 	rv.SetUint(n)
+	// 	return
 	case reflect.String:
 		s, e := dec.ReadString()
 		if e != nil {

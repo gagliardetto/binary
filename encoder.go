@@ -28,8 +28,8 @@ func (enc *Encoder) IsBin() bool {
 	return enc.encoding.IsBin()
 }
 
-func (enc *Encoder) IsCompact16() bool {
-	return enc.encoding.IsCompact16()
+func (enc *Encoder) IsCompactU16() bool {
+	return enc.encoding.IsCompactU16()
 }
 
 func NewEncoderWithEncoding(writer io.Writer, enc Encoding) *Encoder {
@@ -51,8 +51,8 @@ func NewBorshEncoder(writer io.Writer) *Encoder {
 	return NewEncoderWithEncoding(writer, EncodingBorsh)
 }
 
-func NewCompact16Encoder(writer io.Writer) *Encoder {
-	return NewEncoderWithEncoding(writer, EncodingCompact16)
+func NewCompactU16Encoder(writer io.Writer) *Encoder {
+	return NewEncoderWithEncoding(writer, EncodingCompactU16)
 }
 
 func (e *Encoder) Encode(v interface{}) (err error) {
@@ -61,6 +61,8 @@ func (e *Encoder) Encode(v interface{}) (err error) {
 		return e.encodeBin(reflect.ValueOf(v), nil)
 	case EncodingBorsh:
 		return e.encodeBorsh(reflect.ValueOf(v), nil)
+	case EncodingCompactU16:
+		return e.encodeCompactU16(reflect.ValueOf(v), nil)
 	default:
 		panic(fmt.Errorf("encoding not implemented: %s", e.encoding))
 	}
@@ -91,9 +93,9 @@ func (e *Encoder) WriteBytes(b []byte, writeLength bool) error {
 			if err := e.WriteUint32(uint32(len(b)), LE()); err != nil {
 				return err
 			}
-		case EncodingCompact16:
+		case EncodingCompactU16:
 			var buf []byte
-			EncodeCompact16Length(&buf, len(b))
+			EncodeCompactU16Length(&buf, len(b))
 			if err := e.WriteBytes(buf, false); err != nil {
 				return err
 			}
@@ -253,4 +255,13 @@ func (e *Encoder) WriteString(s string) (err error) {
 		zlog.Debug("encode: write string", zap.String("val", s))
 	}
 	return e.WriteBytes([]byte(s), true)
+}
+
+func (e *Encoder) WriteCompactU16Length(ln int) (err error) {
+	if traceEnabled {
+		zlog.Debug("encode: write compact-u16 length", zap.Int("val", ln))
+	}
+	buf := make([]byte, 0)
+	EncodeCompactU16Length(&buf, ln)
+	return e.toWriter(buf)
 }

@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (dec *Decoder) decodeWithOptionBin(v interface{}, option *option) (err error) {
+func (dec *Decoder) decodeWithOptionCompactU16(v interface{}, option *option) (err error) {
 	rv := reflect.ValueOf(v)
 	if rv.Kind() != reflect.Ptr {
 		return &InvalidDecoderError{reflect.TypeOf(v)}
@@ -15,14 +15,14 @@ func (dec *Decoder) decodeWithOptionBin(v interface{}, option *option) (err erro
 
 	// We decode rv not rv.Elem because the Unmarshaler interface
 	// test must be applied at the top level of the value.
-	err = dec.decodeBin(rv, option)
+	err = dec.decodeCompactU16(rv, option)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
+func (dec *Decoder) decodeCompactU16(rv reflect.Value, opt *option) (err error) {
 	if opt == nil {
 		opt = newDefaultOption()
 	}
@@ -141,7 +141,7 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 			zlog.Debug("decoding: reading array", zap.Int("length", length))
 		}
 		for i := 0; i < length; i++ {
-			if err = dec.decodeBin(rv.Index(i), opt); err != nil {
+			if err = dec.decodeCompactU16(rv.Index(i), opt); err != nil {
 				return
 			}
 		}
@@ -151,7 +151,7 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 		if opt.hasSizeOfSlice() {
 			l = opt.getSizeOfSlice()
 		} else {
-			length, err := dec.ReadUvarint64()
+			length, err := dec.ReadCompactU16Length()
 			if err != nil {
 				return err
 			}
@@ -164,18 +164,18 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 
 		rv.Set(reflect.MakeSlice(rt, l, l))
 		for i := 0; i < l; i++ {
-			if err = dec.decodeBin(rv.Index(i), opt); err != nil {
+			if err = dec.decodeCompactU16(rv.Index(i), opt); err != nil {
 				return
 			}
 		}
 
 	case reflect.Struct:
-		if err = dec.decodeStructBin(rt, rv); err != nil {
+		if err = dec.decodeStructCompactU16(rt, rv); err != nil {
 			return
 		}
 
 	case reflect.Map:
-		l, err := dec.ReadUvarint64()
+		l, err := dec.ReadCompactU16Length()
 		if err != nil {
 			return err
 		}
@@ -186,12 +186,12 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 		rv.Set(reflect.MakeMap(rt))
 		for i := 0; i < int(l); i++ {
 			key := reflect.New(rt.Key())
-			err := dec.decodeBin(key.Elem(), nil)
+			err := dec.decodeCompactU16(key.Elem(), nil)
 			if err != nil {
 				return err
 			}
 			val := reflect.New(rt.Elem())
-			err = dec.decodeBin(val.Elem(), nil)
+			err = dec.decodeCompactU16(val.Elem(), nil)
 			if err != nil {
 				return err
 			}
@@ -206,7 +206,7 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 	return
 }
 
-func (dec *Decoder) decodeStructBin(rt reflect.Type, rv reflect.Value) (err error) {
+func (dec *Decoder) decodeStructCompactU16(rt reflect.Type, rv reflect.Value) (err error) {
 	l := rv.NumField()
 
 	if traceEnabled {
@@ -290,7 +290,7 @@ func (dec *Decoder) decodeStructBin(rt reflect.Type, rv reflect.Value) (err erro
 			)
 		}
 
-		if err = dec.decodeBin(v, option); err != nil {
+		if err = dec.decodeCompactU16(v, option); err != nil {
 			return
 		}
 

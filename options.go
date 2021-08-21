@@ -38,7 +38,7 @@ type Encoding int
 
 const (
 	EncodingBin Encoding = iota
-	EncodingCompact16
+	EncodingCompactU16
 	EncodingBorsh
 )
 
@@ -46,8 +46,8 @@ func (enc Encoding) String() string {
 	switch enc {
 	case EncodingBin:
 		return "Bin"
-	case EncodingCompact16:
-		return "Compact16"
+	case EncodingCompactU16:
+		return "CompactU16"
 	case EncodingBorsh:
 		return "Borsh"
 	default:
@@ -63,13 +63,13 @@ func (en Encoding) IsBin() bool {
 	return en == EncodingBin
 }
 
-func (en Encoding) IsCompact16() bool {
-	return en == EncodingCompact16
+func (en Encoding) IsCompactU16() bool {
+	return en == EncodingCompactU16
 }
 
 func isValidEncoding(enc Encoding) bool {
 	switch enc {
-	case EncodingBin, EncodingCompact16, EncodingBorsh:
+	case EncodingBin, EncodingCompactU16, EncodingBorsh:
 		return true
 	default:
 		return false

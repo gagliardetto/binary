@@ -2,10 +2,10 @@ package bin
 
 import "io"
 
-// EncodeCompact16Length encodes a "Compact-u16" length into the provided slice pointer.
+// EncodeCompactU16Length encodes a "Compact-u16" length into the provided slice pointer.
 // See https://docs.solana.com/developing/programming-model/transactions#compact-u16-format
 // See https://github.com/solana-labs/solana/blob/2ef2b6daa05a7cff057e9d3ef95134cee3e4045d/web3.js/src/util/shortvec-encoding.ts
-func EncodeCompact16Length(bytes *[]byte, ln int) {
+func EncodeCompactU16Length(bytes *[]byte, ln int) {
 	rem_len := ln
 	for {
 		elem := rem_len & 0x7f
@@ -20,8 +20,8 @@ func EncodeCompact16Length(bytes *[]byte, ln int) {
 	}
 }
 
-// DecodeCompact16Length decodes a "Compact-u16" length from the provided byte slice.
-func DecodeCompact16Length(bytes []byte) int {
+// DecodeCompactU16Length decodes a "Compact-u16" length from the provided byte slice.
+func DecodeCompactU16Length(bytes []byte) int {
 	ln := 0
 	size := 0
 	for {
@@ -36,8 +36,8 @@ func DecodeCompact16Length(bytes []byte) int {
 	return ln
 }
 
-// DecodeCompact16LengthFromByteReader decodes a "Compact-u16" length from the provided io.ByteReader.
-func DecodeCompact16LengthFromByteReader(reader io.ByteReader) (int, error) {
+// DecodeCompactU16LengthFromByteReader decodes a "Compact-u16" length from the provided io.ByteReader.
+func DecodeCompactU16LengthFromByteReader(reader io.ByteReader) (int, error) {
 	ln := 0
 	size := 0
 	for {

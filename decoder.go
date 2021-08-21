@@ -72,8 +72,8 @@ func (dec *Decoder) IsBin() bool {
 	return dec.encoding.IsBin()
 }
 
-func (dec *Decoder) IsCompact16() bool {
-	return dec.encoding.IsCompact16()
+func (dec *Decoder) IsCompactU16() bool {
+	return dec.encoding.IsCompactU16()
 }
 
 func NewDecoderWithEncoding(data []byte, enc Encoding) *Decoder {
@@ -94,8 +94,8 @@ func NewBorshDecoder(data []byte) *Decoder {
 	return NewDecoderWithEncoding(data, EncodingBorsh)
 }
 
-func NewCompact16Decoder(data []byte) *Decoder {
-	return NewDecoderWithEncoding(data, EncodingCompact16)
+func NewCompactU16Decoder(data []byte) *Decoder {
+	return NewDecoderWithEncoding(data, EncodingCompactU16)
 }
 
 func (dec *Decoder) Decode(v interface{}) (err error) {
@@ -104,6 +104,8 @@ func (dec *Decoder) Decode(v interface{}) (err error) {
 		return dec.decodeWithOptionBin(v, nil)
 	case EncodingBorsh:
 		return dec.decodeWithOptionBorsh(v, nil)
+	case EncodingCompactU16:
+		return dec.decodeWithOptionCompactU16(v, nil)
 	default:
 		panic(fmt.Errorf("encoding not implemented: %s", dec.encoding))
 	}
@@ -216,8 +218,8 @@ func (dec *Decoder) ReadByteSlice() (out []byte, err error) {
 			return nil, err
 		}
 		length = int(val)
-	case EncodingCompact16:
-		val, err := DecodeCompact16LengthFromByteReader(dec)
+	case EncodingCompactU16:
+		val, err := DecodeCompactU16LengthFromByteReader(dec)
 		if err != nil {
 			return nil, err
 		}
@@ -479,6 +481,14 @@ func (dec *Decoder) ReadString() (out string, err error) {
 		zlog.Debug("read string", zap.String("val", out))
 	}
 	return
+}
+
+func (dec *Decoder) ReadCompactU16Length() (int, error) {
+	val, err := DecodeCompactU16LengthFromByteReader(dec)
+	if traceEnabled {
+		zlog.Debug("read compact-u16 length", zap.Int("val", val))
+	}
+	return val, err
 }
 
 func (dec *Decoder) SkipBytes(count uint) error {

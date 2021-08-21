@@ -93,7 +93,7 @@ func (e *Encoder) encodeBin(rv reflect.Value, opt *option) (err error) {
 		return nil
 	}
 
-	if marshaler, ok := rv.Interface().(MarshalerBinary); ok {
+	if marshaler, ok := rv.Interface().(BinaryMarshaler); ok {
 		if traceEnabled {
 			zlog.Debug("encode: using MarshalerBinary method to encode type")
 		}

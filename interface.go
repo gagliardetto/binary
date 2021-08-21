@@ -5,12 +5,17 @@ import (
 	"fmt"
 )
 
-type MarshalerBinary interface {
+type BinaryMarshaler interface {
 	MarshalBinary(encoder *Encoder) error
 }
 
-type UnmarshalerBinary interface {
+type BinaryUnmarshaler interface {
 	UnmarshalBinary(decoder *Decoder) error
+}
+
+type EncoderDecoder interface {
+	BinaryMarshaler
+	BinaryUnmarshaler
 }
 
 func MarshalBin(v interface{}) ([]byte, error) {

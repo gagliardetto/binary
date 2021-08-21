@@ -506,7 +506,7 @@ func (dec *Decoder) HasRemaining() bool {
 // *Note* This is a copy of `encoding/json/decoder.go#indirect` of Golang 1.14.
 //
 // See here: https://github.com/golang/go/blob/go1.14.2/src/encoding/json/decode.go#L439
-func indirect(v reflect.Value, decodingNull bool) (UnmarshalerBinary, reflect.Value) {
+func indirect(v reflect.Value, decodingNull bool) (BinaryUnmarshaler, reflect.Value) {
 	// Issue #24153 indicates that it is generally not a guaranteed property
 	// that you may round-trip a reflect.Value by calling Value.Addr().Elem()
 	// and expect the value to still be settable for values derived from
@@ -559,7 +559,7 @@ func indirect(v reflect.Value, decodingNull bool) (UnmarshalerBinary, reflect.Va
 			v.Set(reflect.New(v.Type().Elem()))
 		}
 		if v.Type().NumMethod() > 0 && v.CanInterface() {
-			if u, ok := v.Interface().(UnmarshalerBinary); ok {
+			if u, ok := v.Interface().(BinaryUnmarshaler); ok {
 				return u, reflect.Value{}
 			}
 		}

@@ -145,7 +145,8 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 		rv.SetBool(r)
 		return
 	case reflect.Interface:
-		// skip
+		// Skip: cannot know the concrete type of the interface.
+		// The parent container should implement a custom decoder.
 		return nil
 		// TODO: handle reflect.Ptr ???
 	}

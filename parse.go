@@ -12,6 +12,8 @@ type fieldTag struct {
 	Order           binary.ByteOrder
 	Optional        bool
 	BinaryExtension bool
+
+	IsBorshEnum bool
 }
 
 func parseFieldTag(tag reflect.StructTag) *fieldTag {
@@ -37,8 +39,11 @@ func parseFieldTag(tag reflect.StructTag) *fieldTag {
 	}
 
 	// TODO: parse other borsh tags
-	if tag.Get("borsh_skip") == "true" {
+	if strings.TrimSpace(tag.Get("borsh_skip")) == "true" {
 		t.Skip = true
+	}
+	if strings.TrimSpace(tag.Get("borsh_enum")) == "true" {
+		t.IsBorshEnum = true
 	}
 	return t
 }

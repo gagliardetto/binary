@@ -205,6 +205,10 @@ func (enc *Encoder) encodeComplexEnumBorsh(rv reflect.Value) error {
 		return errors.New("complex enum too large")
 	}
 	field := rv.Field(int(enum) + 1)
+
+	if field.Kind() == reflect.Ptr {
+		field = field.Elem()
+	}
 	if field.Kind() == reflect.Struct {
 		return enc.encodeStructBorsh(field.Type(), field)
 	}
@@ -225,8 +229,8 @@ func (e *Encoder) encodeStructBorsh(rt reflect.Type, rv reflect.Value) (err erro
 		// If the first field has type BorshEnum and is flagged with "borsh_enum"
 		// we have a complex enum:
 		firstField := rt.Field(0)
-		if firstField.Type.Kind() == reflect.Uint8 &&
-			firstField.Tag.Get("borsh_enum") == "true" {
+		if isTypeBorshEnum(firstField.Type) &&
+			parseFieldTag(firstField.Tag).IsBorshEnum {
 			return e.encodeComplexEnumBorsh(rv)
 		}
 	}

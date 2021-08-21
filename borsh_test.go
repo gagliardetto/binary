@@ -303,6 +303,11 @@ type ComplexEnum struct {
 	Bar  Bar
 }
 
+type ComplexEnumPointers struct {
+	Enum BorshEnum `borsh_enum:"true"`
+	Foo  *Foo
+	Bar  *Bar
+}
 type Foo struct {
 	FooA int32
 	FooB string
@@ -314,21 +319,40 @@ type Bar struct {
 }
 
 func TestComplexEnum(t *testing.T) {
-	x := ComplexEnum{
-		Enum: 0,
-		Foo: Foo{
-			FooA: 23,
-			FooB: "baz",
-		},
+	{
+		x := ComplexEnum{
+			Enum: 1,
+			Bar: Bar{
+				BarA: 23,
+				BarB: "baz",
+			},
+		}
+		data, err := MarshalBorsh(x)
+		require.NoError(t, err)
+
+		y := new(ComplexEnum)
+		err = UnmarshalBorsh(y, data)
+		require.NoError(t, err)
+
+		require.Equal(t, x, *y)
 	}
-	data, err := MarshalBorsh(x)
-	require.NoError(t, err)
+	{
+		x := ComplexEnumPointers{
+			Enum: 1,
+			Bar: &Bar{
+				BarA: 99999,
+				BarB: "hello world",
+			},
+		}
+		data, err := MarshalBorsh(x)
+		require.NoError(t, err)
 
-	y := new(ComplexEnum)
-	err = UnmarshalBorsh(y, data)
-	require.NoError(t, err)
+		y := new(ComplexEnumPointers)
+		err = UnmarshalBorsh(y, data)
+		require.NoError(t, err)
 
-	require.Equal(t, x, *y)
+		require.Equal(t, x, *y)
+	}
 }
 
 type S struct {

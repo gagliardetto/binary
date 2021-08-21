@@ -236,11 +236,19 @@ func (dec *Decoder) deserializeComplexEnum(rv reflect.Value) error {
 	}
 	enum := BorshEnum(tmp)
 	rv.Field(0).Set(reflect.ValueOf(enum).Convert(rv.Field(0).Type()))
+
+	field := rv.Field(int(enum) + 1)
 	// read enum field, if necessary
 	if int(enum)+1 >= rt.NumField() {
 		return errors.New("complex enum too large")
 	}
-	return dec.decodeBorsh(rv.Field(int(enum)+1), nil)
+	return dec.decodeBorsh(field, nil)
+}
+
+var borshEnumType = reflect.TypeOf(BorshEnum(0))
+
+func isTypeBorshEnum(typ reflect.Type) bool {
+	return typ.Kind() == reflect.Uint8 && typ == borshEnumType
 }
 
 func (dec *Decoder) decodeStructBorsh(rt reflect.Type, rv reflect.Value) (err error) {
@@ -255,8 +263,8 @@ func (dec *Decoder) decodeStructBorsh(rt reflect.Type, rv reflect.Value) (err er
 		// If the first field has type BorshEnum and is flagged with "borsh_enum"
 		// we have a complex enum:
 		firstField := rt.Field(0)
-		if firstField.Type.Kind() == reflect.Uint8 &&
-			firstField.Tag.Get("borsh_enum") == "true" {
+		if isTypeBorshEnum(firstField.Type) &&
+			parseFieldTag(firstField.Tag).IsBorshEnum {
 			return dec.deserializeComplexEnum(rv)
 		}
 	}

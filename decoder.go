@@ -418,6 +418,12 @@ func (dec *Decoder) ReadFloat32(order binary.ByteOrder) (out float32, err error)
 	if traceEnabled {
 		zlog.Debug("decode: read float32", zap.Float32("val", out))
 	}
+
+	if dec.IsBorsh() {
+		if math.IsNaN(float64(out)) {
+			return 0, errors.New("NaN for float not allowed")
+		}
+	}
 	return
 }
 
@@ -432,6 +438,11 @@ func (dec *Decoder) ReadFloat64(order binary.ByteOrder) (out float64, err error)
 	dec.pos += TypeSize.Float64
 	if traceEnabled {
 		zlog.Debug("decode: read Float64", zap.Float64("val", out))
+	}
+	if dec.IsBorsh() {
+		if math.IsNaN(out) {
+			return 0, errors.New("NaN for float not allowed")
+		}
 	}
 	return
 }

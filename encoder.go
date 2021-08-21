@@ -2,6 +2,7 @@ package bin
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -363,6 +364,13 @@ func (e *Encoder) WriteFloat32(f float32, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write float32", zap.Float32("val", f))
 	}
+
+	if e.IsBorsh() {
+		if float64(f) == math.NaN() {
+			return errors.New("NaN float value")
+		}
+	}
+
 	i := math.Float32bits(f)
 	buf := make([]byte, TypeSize.Uint32)
 	order.PutUint32(buf, i)
@@ -372,6 +380,12 @@ func (e *Encoder) WriteFloat32(f float32, order binary.ByteOrder) (err error) {
 func (e *Encoder) WriteFloat64(f float64, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write float64", zap.Float64("val", f))
+	}
+
+	if e.IsBorsh() {
+		if float64(f) == math.NaN() {
+			return errors.New("NaN float value")
+		}
 	}
 	i := math.Float64bits(f)
 	buf := make([]byte, TypeSize.Uint64)

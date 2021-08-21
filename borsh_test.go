@@ -16,14 +16,20 @@ type Struct struct {
 }
 
 type AA struct {
-	A        int64
-	B        int32
-	C        bool
-	D        *bool
-	E        *uint64
-	M        map[string]string
+	A int64
+	B int32
+	C bool
+	D *bool
+	E *uint64
+	// NOTE: multilevel pointers are not supported.
+	// DoublePointer **uint64
+
+	Map      map[string]string
 	EmptyMap map[int64]string
-	Array    [2]int64
+	// NOTE: pointers to map are not supported.
+	// PointerToMap      *map[string]string
+	// PointerToMapEmpty *map[string]string
+	Array [2]int64
 
 	Optional *Struct
 	Value    Struct
@@ -69,7 +75,7 @@ func TestBorsh_kitchenSink(t *testing.T) {
 		C:     true,
 		D:     &boolTrue,
 		E:     &uint64Num,
-		M:     map[string]string{"foo": "bar"},
+		Map:   map[string]string{"foo": "bar"},
 		Array: [2]int64{57, 88},
 		Optional: &Struct{
 			Foo: "optional foo",

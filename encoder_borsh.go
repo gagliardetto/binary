@@ -150,7 +150,6 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 		}
 
 	case reflect.Map:
-
 		keys := rv.MapKeys()
 		sort.Slice(keys, vComp(keys))
 

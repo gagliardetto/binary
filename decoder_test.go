@@ -19,22 +19,26 @@ func TestDecoder_Peek(t *testing.T) {
 	{
 		peeked, err := dec.Peek(8)
 		assert.NoError(t, err)
+		assert.Len(t, peeked, 8)
 		assert.Equal(t, buf, peeked)
 	}
 	{
 		peeked, err := dec.Peek(8)
 		assert.NoError(t, err)
+		assert.Len(t, peeked, 8)
 		assert.Equal(t, buf, peeked)
 	}
 	{
 		peeked, err := dec.Peek(1)
 		assert.NoError(t, err)
-		assert.Equal(t, buf[0], peeked)
+		assert.Len(t, peeked, 1)
+		assert.Equal(t, buf[0], peeked[0])
 	}
 	{
 		peeked, err := dec.Peek(2)
 		assert.NoError(t, err)
-		assert.Equal(t, buf[:1], peeked)
+		assert.Len(t, peeked, 2)
+		assert.Equal(t, buf[:2], peeked)
 	}
 	{
 		read, err := dec.ReadByte()
@@ -43,7 +47,8 @@ func TestDecoder_Peek(t *testing.T) {
 
 		peeked, err := dec.Peek(1)
 		assert.NoError(t, err)
-		assert.Equal(t, buf[1], peeked)
+		assert.Len(t, peeked, 1)
+		assert.Equal(t, buf[1], peeked[0])
 	}
 }
 

@@ -40,7 +40,7 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 	}
 
 	// TODO: is `rv.Kind() == reflect.Ptr` correct here???
-	if opt.isOptional() || rv.Kind() == reflect.Ptr {
+	if opt.isOptional() {
 		isPresent, e := dec.ReadByte()
 		if e != nil {
 			err = fmt.Errorf("decode: %t isPresent, %s", rv.Type(), e)
@@ -346,21 +346,46 @@ func (dec *Decoder) decodeStructBorsh(rt reflect.Type, rv reflect.Value) (err er
 			)
 		}
 
-		if structField.Type.Kind() == reflect.Ptr {
-			isPresent, e := dec.ReadByte()
-			if e != nil {
-				err = fmt.Errorf("decode: %t isPresent, %s", v.Type(), e)
-				return
+		rt := v.Type()
+		ptrImplements := reflect.PtrTo(rt).Implements(unmarshalableType)
+		vImplements := rt.Implements(unmarshalableType)
+		if ptrImplements || vImplements {
+			switch {
+			case ptrImplements:
+				m := reflect.New(rt)
+				val := m.Interface()
+				err := val.(BinaryUnmarshaler).UnmarshalWithDecoder(dec)
+				if err != nil {
+					return err
+				}
+				v.Set(reflect.ValueOf(val).Elem())
+			case vImplements:
+				m := reflect.New(rt.Elem())
+				val := m.Interface()
+				err := val.(BinaryUnmarshaler).UnmarshalWithDecoder(dec)
+				if err != nil {
+					return err
+				}
+				v.Set(reflect.ValueOf(val))
 			}
-
-			if isPresent == 0 {
-				if traceEnabled {
-					zlog.Debug("decode: skipping optional value", zap.Stringer("type", v.Kind()))
+		} else {
+			if structField.Type.Kind() == reflect.Ptr {
+				isPresent, e := dec.ReadByte()
+				if e != nil {
+					err = fmt.Errorf("decode: %t isPresent, %s", v.Type(), e)
+					return
 				}
 
-				v.Set(reflect.Zero(v.Type()))
-				continue
+				if isPresent == 0 {
+					if traceEnabled {
+						zlog.Debug("decode: skipping optional value", zap.Stringer("type", v.Kind()))
+					}
+
+					v.Set(reflect.Zero(v.Type()))
+					continue
+				}
 			}
+
 		}
 
 		if err = dec.decodeBorsh(v, option); err != nil {
@@ -380,3 +405,8 @@ func (dec *Decoder) decodeStructBorsh(rt reflect.Type, rv reflect.Value) (err er
 	}
 	return
 }
+
+var (
+	marshalableType   = reflect.TypeOf((*BinaryMarshaler)(nil)).Elem()
+	unmarshalableType = reflect.TypeOf((*BinaryUnmarshaler)(nil)).Elem()
+)

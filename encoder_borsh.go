@@ -38,18 +38,8 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 	}
 
 	if marshaler, ok := rv.Interface().(BinaryMarshaler); ok {
-		if rv.Kind() == reflect.Ptr {
-			if rv.IsZero() {
-				if traceEnabled {
-					zlog.Debug("encode: skipping optional value with", zap.Stringer("type", rv.Kind()))
-				}
-				e.WriteBool(false)
-				return nil
-			}
-			err = e.WriteBool(true)
-			if err != nil {
-				return
-			}
+		if rv.Kind() == reflect.Ptr && rv.IsZero() {
+			return nil
 		}
 		if traceEnabled {
 			zlog.Debug("encode: using MarshalerBinary method to encode type")
@@ -88,13 +78,10 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 		return e.WriteBool(rv.Bool())
 	case reflect.Ptr:
 		if rv.IsNil() {
-			err = e.WriteByte(0)
+			el := reflect.New(rv.Type().Elem()).Elem()
+			return e.encodeBorsh(el, nil)
 		} else {
-			err = e.WriteByte(1)
-			if err != nil {
-				return err
-			}
-			return e.encodeBorsh(rv.Elem(), opt)
+			return e.encodeBorsh(rv.Elem(), nil)
 		}
 	case reflect.Interface:
 		// skip
@@ -177,16 +164,12 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 				return
 			}
 		}
-	case reflect.Ptr:
-		if rv.IsNil() {
-			err = e.WriteByte(0)
-		} else {
-			err = e.WriteByte(1)
-			if err != nil {
-				return err
-			}
-			return e.encodeBorsh(rv.Elem(), opt)
-		}
+	// TODO:
+	// case reflect.Ptr:
+	// 	if rv.IsNil() {
+	// 	} else {
+	// 		return e.encodeBorsh(rv.Elem(), opt)
+	// 	}
 	default:
 		return fmt.Errorf("encode: unsupported type %q", rt)
 	}

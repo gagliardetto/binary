@@ -103,6 +103,9 @@ func (e *Encoder) WriteBytes(b []byte, writeLength bool) error {
 			panic(fmt.Errorf("encoding not implemented: %s", e.encoding))
 		}
 	}
+	if len(b) == 0 {
+		return nil
+	}
 	return e.toWriter(b)
 }
 

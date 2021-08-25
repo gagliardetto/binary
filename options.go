@@ -18,6 +18,14 @@ func newDefaultOption() *option {
 	}
 }
 
+func (o *option) clone() *option {
+	out := &option{
+		OptionalField: o.OptionalField,
+		SizeOfSlice:   o.SizeOfSlice,
+		Order:         o.Order,
+	}
+	return out
+}
 func (o *option) isOptional() bool {
 	return o.OptionalField
 }
@@ -30,8 +38,13 @@ func (o *option) getSizeOfSlice() int {
 	return *o.SizeOfSlice
 }
 
-func (o *option) setSizeOfSlice(size int) {
+func (o *option) setSizeOfSlice(size int) *option {
 	o.SizeOfSlice = &size
+	return o
+}
+func (o *option) setIsOptional(isOptional bool) *option {
+	o.OptionalField = isOptional
+	return o
 }
 
 type Encoding int

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/tidwall/gjson"
@@ -30,22 +29,6 @@ type VariantDefinition struct {
 	typeIDToName   map[TypeID]string
 	typeNameToID   map[string]TypeID
 	typeIDEncoding TypeIDEncoding
-}
-
-// FormatByteSlice formats the given byte slice into a readable format.
-func FormatByteSlice(buf []byte) string {
-	elems := make([]string, 0)
-	for _, v := range buf {
-		elems = append(elems, strconv.Itoa(int(v)))
-	}
-
-	return "[" + strings.Join(elems, ", ") + "]" + fmt.Sprintf("(len=%v)", len(elems))
-}
-
-// IsByteSlice returns true if the provided element is a []byte.
-func IsByteSlice(v interface{}) bool {
-	_, ok := v.([]byte)
-	return ok
 }
 
 type TypeID [8]byte

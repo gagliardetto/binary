@@ -359,6 +359,7 @@ func (dec *Decoder) decodeStructBorsh(rt reflect.Type, rv reflect.Value) (err er
 					return err
 				}
 				v.Set(reflect.ValueOf(val).Elem())
+				continue
 			case vImplements:
 				m := reflect.New(rt.Elem())
 				val := m.Interface()
@@ -367,25 +368,8 @@ func (dec *Decoder) decodeStructBorsh(rt reflect.Type, rv reflect.Value) (err er
 					return err
 				}
 				v.Set(reflect.ValueOf(val))
+				continue
 			}
-		} else {
-			if structField.Type.Kind() == reflect.Ptr {
-				isPresent, e := dec.ReadByte()
-				if e != nil {
-					err = fmt.Errorf("decode: %t isPresent, %s", v.Type(), e)
-					return
-				}
-
-				if isPresent == 0 {
-					if traceEnabled {
-						zlog.Debug("decode: skipping optional value", zap.Stringer("type", v.Kind()))
-					}
-
-					v.Set(reflect.Zero(v.Type()))
-					continue
-				}
-			}
-
 		}
 
 		if err = dec.decodeBorsh(v, option); err != nil {

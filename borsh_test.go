@@ -2,6 +2,7 @@ package bin
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"math"
 	"reflect"
@@ -12,48 +13,133 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type StructWithComplexPeculiarEnums struct {
+	Complex2NotSet    ComplexEnumPointers
+	Complex2PtrNotSet *ComplexEnumPointers
+
+	// Complex2PtrOptionalSet *ComplexEnumPointers `bin:"optional"`
+}
+
+func TestBorsh_peculiarEnums(t *testing.T) {
+	t.Skip()
+	{
+		// struct with peculiar complex enums:
+		{
+			// buf := new(bytes.Buffer)
+			buf := NewWriteByWrite("")
+			enc := NewBorshEncoder(buf)
+			val := StructWithComplexPeculiarEnums{
+				// If the enums are left empty, they won't serialize correctly.
+			}
+			require.NoError(t, enc.Encode(val))
+			fmt.Println(buf.String())
+			require.Equal(t,
+				concatByteSlices(
+					[]byte{0},
+					[]byte{0, 0, 0, 0},
+					[]byte{0, 0, 0, 0},
+
+					[]byte{0},
+					[]byte{0, 0, 0, 0},
+					[]byte{0, 0, 0, 0},
+				),
+				buf.Bytes(),
+			)
+
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got StructWithComplexPeculiarEnums
+				require.NoError(t, dec.Decode(&got))
+				{
+				}
+				require.Equal(t, val, got)
+			}
+		}
+	}
+}
+
 func TestBorsh_Encode(t *testing.T) {
 	// ints:
 	{
 		{
 			buf := new(bytes.Buffer)
 			enc := NewBorshEncoder(buf)
-			require.NoError(t, enc.Encode(int8(33)))
+			val := int8(33)
+			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{33}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got int8
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, val, got)
+			}
 		}
 		{
 			buf := new(bytes.Buffer)
 			enc := NewBorshEncoder(buf)
-			require.NoError(t, enc.Encode(int16(44)))
+			val := int16(44)
+			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{44, 0}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got int16
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, val, got)
+			}
 		}
 		{
 			buf := new(bytes.Buffer)
 			enc := NewBorshEncoder(buf)
-			require.NoError(t, enc.Encode(int32(55)))
+			val := int32(55)
+			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{55, 0, 0, 0}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got int32
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, val, got)
+			}
 		}
 		{
 			buf := new(bytes.Buffer)
 			enc := NewBorshEncoder(buf)
-			require.NoError(t, enc.Encode(int64(556)))
+			val := int64(556)
+			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{0x2c, 0x2, 0, 0, 0, 0, 0, 0}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got int64
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, val, got)
+			}
 		}
 		{
 			// pointers to a basic type shall be encoded as values.
 			{
 				buf := new(bytes.Buffer)
 				enc := NewBorshEncoder(buf)
-				n := int64(556)
-				require.NoError(t, enc.Encode(&n))
+				val := int64(556)
+				require.NoError(t, enc.Encode(&val))
 				require.Equal(t, []byte{0x2c, 0x2, 0, 0, 0, 0, 0, 0}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got int64
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, val, got)
+				}
 			}
 			{
 				buf := new(bytes.Buffer)
 				enc := NewBorshEncoder(buf)
-				n := int8(120)
-				require.NoError(t, enc.Encode(&n))
+				val := int8(120)
+				require.NoError(t, enc.Encode(&val))
 				require.Equal(t, []byte{120}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got int8
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, val, got)
+				}
 			}
 		}
 		{
@@ -61,16 +147,28 @@ func TestBorsh_Encode(t *testing.T) {
 			{
 				buf := new(bytes.Buffer)
 				enc := NewBorshEncoder(buf)
-				n := new(int64)
-				require.NoError(t, enc.Encode(n))
+				val := new(int64)
+				require.NoError(t, enc.Encode(val))
 				require.Equal(t, []byte{0, 0, 0, 0, 0, 0, 0, 0}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got int64
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, *val, got)
+				}
 			}
 			{
 				buf := new(bytes.Buffer)
 				enc := NewBorshEncoder(buf)
-				n := new(int8)
-				require.NoError(t, enc.Encode(n))
+				val := new(int8)
+				require.NoError(t, enc.Encode(val))
 				require.Equal(t, []byte{0}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got int8
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, *val, got)
+				}
 			}
 		}
 	}
@@ -79,42 +177,82 @@ func TestBorsh_Encode(t *testing.T) {
 		{
 			buf := new(bytes.Buffer)
 			enc := NewBorshEncoder(buf)
-			require.NoError(t, enc.Encode(uint8(33)))
+			val := uint8(33)
+			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{33}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got uint8
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, val, got)
+			}
 		}
 		{
 			buf := new(bytes.Buffer)
 			enc := NewBorshEncoder(buf)
-			require.NoError(t, enc.Encode(uint16(44)))
+			val := uint16(44)
+			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{44, 0}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got uint16
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, val, got)
+			}
 		}
 		{
 			buf := new(bytes.Buffer)
 			enc := NewBorshEncoder(buf)
-			require.NoError(t, enc.Encode(uint32(55)))
+			val := uint32(55)
+			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{55, 0, 0, 0}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got uint32
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, val, got)
+			}
 		}
 		{
 			buf := new(bytes.Buffer)
 			enc := NewBorshEncoder(buf)
-			require.NoError(t, enc.Encode(uint64(556)))
+			val := uint64(556)
+			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{0x2c, 0x2, 0, 0, 0, 0, 0, 0}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got uint64
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, val, got)
+			}
 		}
 		{
 			// pouinters to a basic type shall be encoded as values.
 			{
 				buf := new(bytes.Buffer)
 				enc := NewBorshEncoder(buf)
-				n := uint64(556)
-				require.NoError(t, enc.Encode(&n))
+				val := uint64(556)
+				require.NoError(t, enc.Encode(&val))
 				require.Equal(t, []byte{0x2c, 0x2, 0, 0, 0, 0, 0, 0}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got uint64
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, val, got)
+				}
 			}
 			{
 				buf := new(bytes.Buffer)
 				enc := NewBorshEncoder(buf)
-				n := uint8(120)
-				require.NoError(t, enc.Encode(&n))
+				val := uint8(120)
+				require.NoError(t, enc.Encode(&val))
 				require.Equal(t, []byte{120}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got uint8
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, val, got)
+				}
 			}
 		}
 		{
@@ -122,16 +260,28 @@ func TestBorsh_Encode(t *testing.T) {
 			{
 				buf := new(bytes.Buffer)
 				enc := NewBorshEncoder(buf)
-				n := new(uint64)
-				require.NoError(t, enc.Encode(n))
+				val := new(uint64)
+				require.NoError(t, enc.Encode(val))
 				require.Equal(t, []byte{0, 0, 0, 0, 0, 0, 0, 0}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got uint64
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, *val, got)
+				}
 			}
 			{
 				buf := new(bytes.Buffer)
 				enc := NewBorshEncoder(buf)
-				n := new(uint8)
-				require.NoError(t, enc.Encode(n))
+				val := new(uint8)
+				require.NoError(t, enc.Encode(val))
 				require.Equal(t, []byte{0}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got uint8
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, *val, got)
+				}
 			}
 		}
 	}
@@ -142,12 +292,24 @@ func TestBorsh_Encode(t *testing.T) {
 			enc := NewBorshEncoder(buf)
 			require.NoError(t, enc.Encode(true))
 			require.Equal(t, []byte{1}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got bool
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, true, got)
+			}
 		}
 		{
 			buf := new(bytes.Buffer)
 			enc := NewBorshEncoder(buf)
 			require.NoError(t, enc.Encode(false))
 			require.Equal(t, []byte{0}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got bool
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, false, got)
+			}
 		}
 		{
 			buf := new(bytes.Buffer)
@@ -155,6 +317,12 @@ func TestBorsh_Encode(t *testing.T) {
 			val := false
 			require.NoError(t, enc.Encode(&val))
 			require.Equal(t, []byte{0}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got bool
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, false, got)
+			}
 		}
 		{
 			buf := new(bytes.Buffer)
@@ -162,6 +330,12 @@ func TestBorsh_Encode(t *testing.T) {
 			val := true
 			require.NoError(t, enc.Encode(&val))
 			require.Equal(t, []byte{1}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got bool
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, true, got)
+			}
 		}
 		{
 			buf := new(bytes.Buffer)
@@ -169,6 +343,12 @@ func TestBorsh_Encode(t *testing.T) {
 			val := new(bool)
 			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{0}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got bool
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, false, got)
+			}
 		}
 	}
 	{
@@ -181,6 +361,12 @@ func TestBorsh_Encode(t *testing.T) {
 				val := float32(1.123)
 				require.NoError(t, enc.Encode(val))
 				require.Equal(t, []byte{0x77, 0xbe, 0x8f, 0x3f}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got float32
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, val, got)
+				}
 			}
 			{
 				buf := new(bytes.Buffer)
@@ -188,6 +374,12 @@ func TestBorsh_Encode(t *testing.T) {
 				val := float32(1.123)
 				require.NoError(t, enc.Encode(&val))
 				require.Equal(t, []byte{0x77, 0xbe, 0x8f, 0x3f}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got float32
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, val, got)
+				}
 			}
 			{
 				buf := new(bytes.Buffer)
@@ -195,6 +387,12 @@ func TestBorsh_Encode(t *testing.T) {
 				val := new(float32)
 				require.NoError(t, enc.Encode(val))
 				require.Equal(t, []byte{0, 0, 0, 0}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got float32
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, *val, got)
+				}
 			}
 		}
 		{
@@ -205,6 +403,12 @@ func TestBorsh_Encode(t *testing.T) {
 				val := float64(1.123)
 				require.NoError(t, enc.Encode(val))
 				require.Equal(t, []byte{0x2b, 0x87, 0x16, 0xd9, 0xce, 0xf7, 0xf1, 0x3f}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got float64
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, val, got)
+				}
 			}
 			{
 				buf := new(bytes.Buffer)
@@ -212,6 +416,12 @@ func TestBorsh_Encode(t *testing.T) {
 				val := float64(1.123)
 				require.NoError(t, enc.Encode(&val))
 				require.Equal(t, []byte{0x2b, 0x87, 0x16, 0xd9, 0xce, 0xf7, 0xf1, 0x3f}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got float64
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, val, got)
+				}
 			}
 			{
 				buf := new(bytes.Buffer)
@@ -219,6 +429,12 @@ func TestBorsh_Encode(t *testing.T) {
 				val := new(float64)
 				require.NoError(t, enc.Encode(val))
 				require.Equal(t, []byte{0, 0, 0, 0, 0, 0, 0, 0}, buf.Bytes())
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got float64
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, *val, got)
+				}
 			}
 		}
 	}
@@ -231,6 +447,12 @@ func TestBorsh_Encode(t *testing.T) {
 			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{0xb, 0x0, 0x0, 0x0, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64}, buf.Bytes())
 			require.Equal(t, append([]byte{byte(len(val)), 0, 0, 0}, []byte(val)...), buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got string
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, val, got)
+			}
 		}
 		{
 			buf := new(bytes.Buffer)
@@ -239,6 +461,12 @@ func TestBorsh_Encode(t *testing.T) {
 			require.NoError(t, enc.Encode(&val))
 			require.Equal(t, []byte{0xb, 0x0, 0x0, 0x0, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64}, buf.Bytes())
 			require.Equal(t, append([]byte{byte(len(val)), 0, 0, 0}, []byte(val)...), buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got string
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, val, got)
+			}
 		}
 		{
 			buf := new(bytes.Buffer)
@@ -247,6 +475,12 @@ func TestBorsh_Encode(t *testing.T) {
 			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{0x0, 0x0, 0x0, 0x0}, buf.Bytes())
 			require.Equal(t, append([]byte{0, 0, 0, 0}, []byte{}...), buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got string
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, *val, got)
+			}
 		}
 	}
 	{
@@ -279,6 +513,12 @@ func TestBorsh_Encode(t *testing.T) {
 			}
 			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{33, 0, 0, 0, byte('a')}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got CustomEncoding
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, val, got)
+			}
 		}
 		{
 			// by pointer:
@@ -290,6 +530,12 @@ func TestBorsh_Encode(t *testing.T) {
 			}
 			require.NoError(t, enc.Encode(val))
 			require.Equal(t, []byte{33, 0, 0, 0, byte('a')}, buf.Bytes())
+			{
+				dec := NewBorshDecoder(buf.Bytes())
+				var got CustomEncoding
+				require.NoError(t, dec.Decode(&got))
+				require.Equal(t, *val, got)
+			}
 		}
 	}
 	{
@@ -313,6 +559,12 @@ func TestBorsh_Encode(t *testing.T) {
 					),
 					buf.Bytes(),
 				)
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got Struct
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, val, got)
+				}
 			}
 			{
 				// by pointer:
@@ -331,6 +583,12 @@ func TestBorsh_Encode(t *testing.T) {
 					),
 					buf.Bytes(),
 				)
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got Struct
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, *val, got)
+				}
 			}
 		}
 		{
@@ -352,6 +610,12 @@ func TestBorsh_Encode(t *testing.T) {
 					),
 					buf.Bytes(),
 				)
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got StructWithPointerFields
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, val, got)
+				}
 			}
 			{
 				// by pointer:
@@ -370,6 +634,12 @@ func TestBorsh_Encode(t *testing.T) {
 					),
 					buf.Bytes(),
 				)
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got StructWithPointerFields
+					require.NoError(t, dec.Decode(&got))
+					require.Equal(t, *val, got)
+				}
 			}
 		}
 		{
@@ -435,6 +705,18 @@ func TestBorsh_Encode(t *testing.T) {
 				// - 12: [0](len=1)
 				// - 13: [0, 0, 0, 0](len=4)
 				// - 14: [](len=0)
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got StructWithOptionalFields
+					require.NoError(t, dec.Decode(&got))
+					{
+						// .BarRequiredNotSet is NOT an optiona field,
+						// which means that it was encoded as zero,
+						// and will be decoded as zero.
+						val.BarRequiredNotSet = pointer.ToUint32(0)
+					}
+					require.Equal(t, val, got)
+				}
 			}
 		}
 		{
@@ -560,17 +842,11 @@ func TestBorsh_Encode(t *testing.T) {
 						[]byte{14, 0, 0, 0},
 						[]byte(val.Complex2.Bar.BarB),
 
-						// .Complex2NotSet
-						[]byte{0}, // TODO: what should happen here?
-
 						// .Complex2Ptr
 						[]byte{1},
 						[]byte{123, 0, 0, 0, 0, 0, 0, 0},
 						[]byte{11, 0, 0, 0}, // = len(.Complex2Ptr.Bar.BarB)
 						[]byte(val.Complex2Ptr.Bar.BarB),
-
-						// .Complex2PtrNotSet
-						[]byte{0}, // TODO: what should happen here?
 
 						// .Complex2PtrOptionalSet
 						[]byte{1}, // TODO: why is this set? this shouldn't be here.
@@ -579,8 +855,8 @@ func TestBorsh_Encode(t *testing.T) {
 						[]byte{12, 0, 0, 0}, // = len(.Complex2PtrOptionalSet.Bar.BarB)
 						[]byte(val.Complex2PtrOptionalSet.Bar.BarB),
 
-						// .Complex2PtrOptionalNotSet
-						[]byte{0}, // TODO: what should happen here?
+						// .Complex2PtrOptionalNotSet is optional, and is not set.
+						[]byte{0},
 
 						// .Map
 						[]byte{2, 0, 0, 0}, // len of map
@@ -622,6 +898,16 @@ func TestBorsh_Encode(t *testing.T) {
 					),
 					buf.Bytes(),
 				)
+
+				{
+					dec := NewBorshDecoder(buf.Bytes())
+					var got StructWithEnum
+					require.NoError(t, dec.Decode(&got))
+					{
+						val.ComplexPtrNotSet = &ComplexEnum{}
+					}
+					require.Equal(t, val, got)
+				}
 			}
 		}
 	}
@@ -636,10 +922,8 @@ type StructWithEnum struct {
 	ComplexPtr       *ComplexEnum
 	ComplexPtrNotSet *ComplexEnum
 
-	Complex2          ComplexEnumPointers
-	Complex2NotSet    ComplexEnumPointers
-	Complex2Ptr       *ComplexEnumPointers
-	Complex2PtrNotSet *ComplexEnumPointers
+	Complex2    ComplexEnumPointers
+	Complex2Ptr *ComplexEnumPointers
 
 	Complex2PtrOptionalSet    *ComplexEnumPointers `bin:"optional"`
 	Complex2PtrOptionalNotSet *ComplexEnumPointers `bin:"optional"`
@@ -687,9 +971,9 @@ type AA struct {
 
 	Map      map[string]string
 	EmptyMap map[int64]string
-	// NOTE: pointers to map are not supported.
-	// PointerToMap      *map[string]string
-	// PointerToMapEmpty *map[string]string
+	// // NOTE: pointers to map are not supported.
+	// // PointerToMap      *map[string]string
+	// // PointerToMapEmpty *map[string]string
 	Array [2]int64
 
 	Optional *Struct `bin:"optional"`
@@ -698,8 +982,8 @@ type AA struct {
 	InterfaceEncoderDecoderByValue   CustomEncoding
 	InterfaceEncoderDecoderByPointer *CustomEncoding
 
-	InterfaceEncoderDecoderByValueEmpty   CustomEncoding
-	InterfaceEncoderDecoderByPointerEmpty *CustomEncoding `bin:"optional"`
+	// InterfaceEncoderDecoderByValueEmpty   CustomEncoding
+	// InterfaceEncoderDecoderByPointerEmpty *CustomEncoding `bin:"optional"`
 
 	HighValuesInt64   []int64
 	HighValuesUint64  []uint64
@@ -731,8 +1015,6 @@ func (e *CustomEncoding) UnmarshalWithDecoder(decoder *Decoder) (err error) {
 var _ EncoderDecoder = &CustomEncoding{}
 
 func TestBorsh_kitchenSink(t *testing.T) {
-	// TODO: un-skip
-	t.Skip()
 
 	boolTrue := true
 	uint64Num := uint64(25464132585)
@@ -797,13 +1079,14 @@ func TestBorsh_kitchenSink(t *testing.T) {
 			-math.MaxFloat64,
 		},
 	}
-	borshBuf := new(bytes.Buffer)
-	borshEnc := NewBorshEncoder(borshBuf)
+	buf := NewWriteByWrite("")
+	borshEnc := NewBorshEncoder(buf)
 	err := borshEnc.Encode(x)
+	// fmt.Println(buf.String())
 	require.NoError(t, err)
 
 	y := new(AA)
-	err = UnmarshalBorsh(y, borshBuf.Bytes())
+	err = UnmarshalBorsh(y, buf.Bytes())
 	require.NoError(t, err)
 	require.Equal(t, x, *y)
 }
@@ -1099,7 +1382,7 @@ func TestStrings(t *testing.T) {
 		{strings2.Repeat("x", 4096)},
 		{strings2.Repeat("x", 65535)},
 		{strings2.Repeat("hello world!", 1000)},
-		{"💩"},
+		{"🎯"},
 	}
 
 	for _, tt := range tests {

@@ -265,3 +265,15 @@ func (e *Encoder) WriteCompactU16Length(ln int) (err error) {
 	EncodeCompactU16Length(&buf, ln)
 	return e.toWriter(buf)
 }
+
+// TODO: add rust string.
+// https://github.com/bmresearch/Solnet/blob/7826cc93ec6c997fc997a7a3c6be0f3511ca0c63/src/Solnet.Programs/Utilities/Serialization.cs#L219
+// public static byte[] EncodeRustString(string data)
+// {
+//     byte[] stringBytes = Encoding.ASCII.GetBytes(data);
+//     byte[] encoded = new byte[stringBytes.Length + sizeof(uint)];
+
+//     encoded.WriteU32((uint) stringBytes.Length, 0);
+//     encoded.WriteSpan(stringBytes, sizeof(uint));
+//     return encoded;
+// }

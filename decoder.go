@@ -240,7 +240,12 @@ func (dec *Decoder) ReadByteSlice() (out []byte, err error) {
 	return
 }
 
-func readNBytes(n int, reader io.ByteReader) ([]byte, error) {
+type peekAbleByteReader interface {
+	io.ByteReader
+	Peek(n int) ([]byte, error)
+}
+
+func readNBytes(n int, reader peekAbleByteReader) ([]byte, error) {
 	buf := make([]byte, n)
 	for i := 0; i < n; i++ {
 		b, err := reader.ReadByte()
@@ -255,6 +260,25 @@ func readNBytes(n int, reader io.ByteReader) ([]byte, error) {
 
 func (dec *Decoder) ReadNBytes(n int) (out []byte, err error) {
 	return readNBytes(n, dec)
+}
+
+func (dec *Decoder) Peek(n int) (out []byte, err error) {
+	if n < 0 {
+		err = fmt.Errorf("n not valid: %d", n)
+		return
+	}
+
+	requiredSize := TypeSize.Byte * n
+	if dec.Remaining() < requiredSize {
+		err = fmt.Errorf("required [%d] bytes, remaining [%d]", requiredSize, dec.Remaining())
+		return
+	}
+
+	out = dec.data[dec.pos : dec.pos+n]
+	if traceEnabled {
+		zlog.Debug("decode: peek", zap.Int("n", n), zap.Binary("out", out))
+	}
+	return
 }
 
 func (dec *Decoder) ReadByte() (out byte, err error) {

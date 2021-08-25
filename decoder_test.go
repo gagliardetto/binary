@@ -10,6 +10,43 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestDecoder_Peek(t *testing.T) {
+	buf := []byte{
+		0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0, 0x0,
+	}
+
+	dec := NewBinDecoder(buf)
+	{
+		peeked, err := dec.Peek(8)
+		assert.NoError(t, err)
+		assert.Equal(t, buf, peeked)
+	}
+	{
+		peeked, err := dec.Peek(8)
+		assert.NoError(t, err)
+		assert.Equal(t, buf, peeked)
+	}
+	{
+		peeked, err := dec.Peek(1)
+		assert.NoError(t, err)
+		assert.Equal(t, buf[0], peeked)
+	}
+	{
+		peeked, err := dec.Peek(2)
+		assert.NoError(t, err)
+		assert.Equal(t, buf[:1], peeked)
+	}
+	{
+		read, err := dec.ReadByte()
+		assert.Equal(t, buf[0], read)
+		assert.NoError(t, err)
+
+		peeked, err := dec.Peek(1)
+		assert.NoError(t, err)
+		assert.Equal(t, buf[1], peeked)
+	}
+}
+
 func TestDecoder_AliastTestType(t *testing.T) {
 	buf := []byte{
 		0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0, 0x0,

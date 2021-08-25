@@ -2,11 +2,51 @@ package bin
 
 import (
 	"bytes"
+	"encoding/binary"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestTypeID(t *testing.T) {
+	{
+		ha := Sighash(SIGHASH_GLOBAL_NAMESPACE, "hello")
+		vid := TypeIDFromSighash(ha)
+		require.Equal(t, ha, vid.Bytes())
+	}
+	{
+		expected := uint32(66)
+		vid := TypeIDFromUint32(expected, binary.LittleEndian)
+
+		got := Uint32FromTypeID(vid, binary.LittleEndian)
+		require.Equal(t, expected, got)
+	}
+	{
+		expected := uint32(66)
+		vid := TypeIDFromUvarint32(expected)
+
+		got := Uvarint32FromTypeID(vid)
+		require.Equal(t, expected, got)
+	}
+	{
+		vid := SliceToTypeID([]byte{})
+		expected := []byte{0, 0, 0, 0, 0, 0, 0, 0}
+		require.Equal(t, expected, vid.Bytes())
+	}
+	{
+		m := map[TypeID]string{
+			TypeIDFromSighash(Sighash(SIGHASH_GLOBAL_NAMESPACE, "hello")): "hello",
+			TypeIDFromSighash(Sighash(SIGHASH_GLOBAL_NAMESPACE, "world")): "world",
+		}
+
+		expected := "world"
+		require.Equal(t,
+			expected,
+			m[TypeIDFromSighash(Sighash(SIGHASH_GLOBAL_NAMESPACE, "world"))],
+		)
+	}
+}
 
 type Forest struct {
 	T Tree
@@ -19,11 +59,14 @@ type Tree struct {
 	Nodes     []*Node
 }
 
-var NodeVariantDef = NewVariantDefinition(Uint32TypeIDEncoding, []VariantType{
-	{"left_node", (*NodeLeft)(nil)},
-	{"right_node", (*NodeRight)(nil)},
-	{"inner_node", (*NodeInner)(nil)},
-})
+var NodeVariantDef = NewVariantDefinition(
+	Uint32TypeIDEncoding,
+
+	[]VariantType{
+		{"left_node", (*NodeLeft)(nil)},
+		{"right_node", (*NodeRight)(nil)},
+		{"inner_node", (*NodeInner)(nil)},
+	})
 
 type Node struct {
 	BaseVariant
@@ -49,7 +92,7 @@ func (n *Node) UnmarshalWithDecoder(decoder *Decoder) error {
 }
 
 func (n *Node) MarshalWithEncoder(encoder *Encoder) error {
-	err := encoder.WriteUint32(n.TypeID, LE())
+	err := encoder.WriteUint32(n.TypeID.AsUint32(), binary.LittleEndian)
 	if err != nil {
 		return err
 	}
@@ -80,7 +123,7 @@ func TestDecode_Variant(t *testing.T) {
 		Nodes: []*Node{
 			{
 				BaseVariant: BaseVariant{
-					TypeID: 0,
+					TypeID: TypeIDFromUint32(0, binary.LittleEndian),
 					Impl: &NodeLeft{
 						Key:         3,
 						Description: "abc",
@@ -89,7 +132,7 @@ func TestDecode_Variant(t *testing.T) {
 			},
 			{
 				BaseVariant: BaseVariant{
-					TypeID: 1,
+					TypeID: TypeIDFromUint32(1, binary.LittleEndian),
 					Impl: &NodeRight{
 						Owner:    3,
 						Padding:  [2]byte{0x00, 0x00},
@@ -99,7 +142,7 @@ func TestDecode_Variant(t *testing.T) {
 			},
 			{
 				BaseVariant: BaseVariant{
-					TypeID: 1,
+					TypeID: TypeIDFromUint32(1, binary.LittleEndian),
 					Impl: &NodeRight{
 						Owner:    82,
 						Padding:  [2]byte{0x00, 0x00},
@@ -109,7 +152,7 @@ func TestDecode_Variant(t *testing.T) {
 			},
 			{
 				BaseVariant: BaseVariant{
-					TypeID: 2,
+					TypeID: TypeIDFromUint32(2, binary.LittleEndian),
 					Impl: &NodeInner{
 						Key: Uint128{
 							Lo: 999999999999999,
@@ -120,7 +163,7 @@ func TestDecode_Variant(t *testing.T) {
 			},
 			{
 				BaseVariant: BaseVariant{
-					TypeID: 2,
+					TypeID: TypeIDFromUint32(2, binary.LittleEndian),
 					Impl: &NodeInner{
 						Key: Uint128{
 							Lo: 983623123129123,
@@ -156,7 +199,7 @@ func TestEncode_Variant(t *testing.T) {
 		Nodes: []*Node{
 			{
 				BaseVariant: BaseVariant{
-					TypeID: 0,
+					TypeID: TypeIDFromUint32(0, binary.LittleEndian),
 					Impl: &NodeLeft{
 						Key:         3,
 						Description: "abc",
@@ -165,7 +208,7 @@ func TestEncode_Variant(t *testing.T) {
 			},
 			{
 				BaseVariant: BaseVariant{
-					TypeID: 1,
+					TypeID: TypeIDFromUint32(1, binary.LittleEndian),
 					Impl: &NodeRight{
 						Owner:    3,
 						Padding:  [2]byte{0x00, 0x00},
@@ -175,7 +218,7 @@ func TestEncode_Variant(t *testing.T) {
 			},
 			{
 				BaseVariant: BaseVariant{
-					TypeID: 1,
+					TypeID: TypeIDFromUint32(1, binary.LittleEndian),
 					Impl: &NodeRight{
 						Owner:    82,
 						Padding:  [2]byte{0x00, 0x00},
@@ -185,7 +228,7 @@ func TestEncode_Variant(t *testing.T) {
 			},
 			{
 				BaseVariant: BaseVariant{
-					TypeID: 2,
+					TypeID: TypeIDFromUint32(2, binary.LittleEndian),
 					Impl: &NodeInner{
 						Key: Uint128{
 							Lo: 999999999999999,
@@ -196,7 +239,7 @@ func TestEncode_Variant(t *testing.T) {
 			},
 			{
 				BaseVariant: BaseVariant{
-					TypeID: 2,
+					TypeID: TypeIDFromUint32(2, binary.LittleEndian),
 					Impl: &NodeInner{
 						Key: Uint128{
 							Lo: 983623123129123,

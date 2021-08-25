@@ -1,9 +1,11 @@
 package bin
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/tidwall/gjson"
@@ -14,8 +16,8 @@ import (
 //
 
 type Variant interface {
-	Assign(typeID uint, impl interface{})
-	Obtain() (typeID uint, impl interface{})
+	Assign(typeID TypeID, impl interface{})
+	Obtain(*VariantDefinition) (typeID TypeID, typeName string, impl interface{})
 }
 
 type VariantType struct {
@@ -24,10 +26,92 @@ type VariantType struct {
 }
 
 type VariantDefinition struct {
-	typeIDToType   map[uint32]reflect.Type
-	typeIDToName   map[uint32]string
-	typeNameToID   map[string]uint32
+	typeIDToType   map[TypeID]reflect.Type
+	typeIDToName   map[TypeID]string
+	typeNameToID   map[string]TypeID
 	typeIDEncoding TypeIDEncoding
+}
+
+// FormatByteSlice formats the given byte slice into a readable format.
+func FormatByteSlice(buf []byte) string {
+	elems := make([]string, 0)
+	for _, v := range buf {
+		elems = append(elems, strconv.Itoa(int(v)))
+	}
+
+	return "[" + strings.Join(elems, ", ") + "]" + fmt.Sprintf("(len=%v)", len(elems))
+}
+
+// IsByteSlice returns true if the provided element is a []byte.
+func IsByteSlice(v interface{}) bool {
+	_, ok := v.([]byte)
+	return ok
+}
+
+type TypeID [8]byte
+
+func (vid TypeID) Bytes() []byte {
+	return vid[:]
+}
+
+func (vid TypeID) AsUvarint32() uint32 {
+	return Uvarint32FromTypeID(vid)
+}
+func (vid TypeID) AsUint32() uint32 {
+	return Uint32FromTypeID(vid, binary.LittleEndian)
+}
+func (vid TypeID) AsUint8() uint8 {
+	return Uint8FromTypeID(vid)
+}
+
+// SliceToTypeID converts a []byte to a TypeID.
+// The provided slice must be 8 bytes long or less.
+func SliceToTypeID(slice []byte) (id TypeID) {
+	// TODO: panic if len(slice) > 8 ???
+	copy(id[:], slice)
+	return id
+}
+
+// TypeIDFromSighash converts a sighash bytes to a TypeID.
+func TypeIDFromSighash(sh []byte) TypeID {
+	return SliceToTypeID(sh)
+}
+
+// TypeIDFromUvarint32 converts a Uvarint to a TypeID.
+func TypeIDFromUvarint32(v uint32) TypeID {
+	buf := make([]byte, 8)
+	l := binary.PutUvarint(buf, uint64(v))
+	return SliceToTypeID(buf[:l])
+}
+
+// TypeIDFromUint32 converts a uint32 to a TypeID.
+func TypeIDFromUint32(v uint32, bo binary.ByteOrder) TypeID {
+	out := make([]byte, TypeSize.Uint32)
+	bo.PutUint32(out, v)
+	return SliceToTypeID(out)
+}
+
+// TypeIDFromUint32 converts a uint8 to a TypeID.
+func TypeIDFromUint8(v uint8) TypeID {
+	return SliceToTypeID([]byte{v})
+}
+
+// Uvarint32FromTypeID parses a TypeID bytes to a uvarint 32.
+func Uvarint32FromTypeID(vid TypeID) (out uint32) {
+	l, _ := binary.Uvarint(vid[:])
+	out = uint32(l)
+	return out
+}
+
+// Uint32FromTypeID parses a TypeID bytes to a uint32.
+func Uint32FromTypeID(vid TypeID, order binary.ByteOrder) (out uint32) {
+	out = order.Uint32(vid[:])
+	return out
+}
+
+// Uint32FromTypeID parses a TypeID bytes to a uint8.
+func Uint8FromTypeID(vid TypeID) (out uint8) {
+	return vid[0]
 }
 
 type TypeIDEncoding uint32
@@ -36,12 +120,18 @@ const (
 	Uvarint32TypeIDEncoding TypeIDEncoding = iota
 	Uint32TypeIDEncoding
 	Uint8TypeIDEncoding
+	// AnchorTypeIDEncoding is the instruction ID encoding used by programs
+	// written using the anchor SDK.
+	// The typeID is the sighash of the instruction.
+	AnchorTypeIDEncoding
 )
 
 // NewVariantDefinition creates a variant definition based on the *ordered* provided types.
-// It's the ordering that defines the binary variant value just like in native `nodeos` C++
-// and in Smart Contract via the `std::variant` type. It's important to pass the entries
-// in the right order!
+//
+// - For anchor instructions, it's the name that defines the binary variant value.
+// - For all other types, it's the ordering that defines the binary variant value just like in native `nodeos` C++
+//   and in Smart Contract via the `std::variant` type. It's important to pass the entries
+//   in the right order!
 //
 // This variant definition can now be passed to functions of `BaseVariant` to implement
 // marshal/unmarshaling functionalities for binary & JSON.
@@ -53,28 +143,73 @@ func NewVariantDefinition(typeIDEncoding TypeIDEncoding, types []VariantType) (o
 	typeCount := len(types)
 	out = &VariantDefinition{
 		typeIDEncoding: typeIDEncoding,
-		typeIDToType:   make(map[uint32]reflect.Type, typeCount),
-		typeIDToName:   make(map[uint32]string, typeCount),
-		typeNameToID:   make(map[string]uint32, typeCount),
+		typeIDToType:   make(map[TypeID]reflect.Type, typeCount),
+		typeIDToName:   make(map[TypeID]string, typeCount),
+		typeNameToID:   make(map[string]TypeID, typeCount),
 	}
 
-	for i, typeDef := range types {
-		typeID := uint32(i)
+	switch typeIDEncoding {
+	case Uvarint32TypeIDEncoding:
+		for i, typeDef := range types {
+			typeID := TypeIDFromUvarint32(uint32(i))
 
-		// FIXME: Check how the reflect.Type is used and cache all its usage in the definition.
-		//        Right now, on each Unmarshal, we re-compute some expensive stuff that can be
-		//        re-used like the `typeGo.Elem()` which is always the same. It would be preferable
-		//        to have those already pre-defined here so we can actually speed up the
-		//        Unmarshal code.
-		out.typeIDToType[typeID] = reflect.TypeOf(typeDef.Type)
-		out.typeIDToName[typeID] = typeDef.Name
-		out.typeNameToID[typeDef.Name] = typeID
+			// FIXME: Check how the reflect.Type is used and cache all its usage in the definition.
+			//        Right now, on each Unmarshal, we re-compute some expensive stuff that can be
+			//        re-used like the `typeGo.Elem()` which is always the same. It would be preferable
+			//        to have those already pre-defined here so we can actually speed up the
+			//        Unmarshal code.
+			out.typeIDToType[typeID] = reflect.TypeOf(typeDef.Type)
+			out.typeIDToName[typeID] = typeDef.Name
+			out.typeNameToID[typeDef.Name] = typeID
+		}
+	case Uint32TypeIDEncoding:
+		for i, typeDef := range types {
+			typeID := TypeIDFromUint32(uint32(i), binary.LittleEndian)
+
+			// FIXME: Check how the reflect.Type is used and cache all its usage in the definition.
+			//        Right now, on each Unmarshal, we re-compute some expensive stuff that can be
+			//        re-used like the `typeGo.Elem()` which is always the same. It would be preferable
+			//        to have those already pre-defined here so we can actually speed up the
+			//        Unmarshal code.
+			out.typeIDToType[typeID] = reflect.TypeOf(typeDef.Type)
+			out.typeIDToName[typeID] = typeDef.Name
+			out.typeNameToID[typeDef.Name] = typeID
+		}
+	case Uint8TypeIDEncoding:
+		for i, typeDef := range types {
+			typeID := TypeIDFromUint8(uint8(i))
+
+			// FIXME: Check how the reflect.Type is used and cache all its usage in the definition.
+			//        Right now, on each Unmarshal, we re-compute some expensive stuff that can be
+			//        re-used like the `typeGo.Elem()` which is always the same. It would be preferable
+			//        to have those already pre-defined here so we can actually speed up the
+			//        Unmarshal code.
+			out.typeIDToType[typeID] = reflect.TypeOf(typeDef.Type)
+			out.typeIDToName[typeID] = typeDef.Name
+			out.typeNameToID[typeDef.Name] = typeID
+		}
+	case AnchorTypeIDEncoding:
+		for _, typeDef := range types {
+			typeID := TypeIDFromSighash(Sighash(SIGHASH_GLOBAL_NAMESPACE, typeDef.Name))
+
+			// FIXME: Check how the reflect.Type is used and cache all its usage in the definition.
+			//        Right now, on each Unmarshal, we re-compute some expensive stuff that can be
+			//        re-used like the `typeGo.Elem()` which is always the same. It would be preferable
+			//        to have those already pre-defined here so we can actually speed up the
+			//        Unmarshal code.
+			out.typeIDToType[typeID] = reflect.TypeOf(typeDef.Type)
+			out.typeIDToName[typeID] = typeDef.Name
+			out.typeNameToID[typeDef.Name] = typeID
+		}
+
+	default:
+		panic(fmt.Errorf("unsupported TypeIDEncoding: %v", typeIDEncoding))
 	}
 
 	return out
 }
 
-func (d *VariantDefinition) TypeID(name string) uint32 {
+func (d *VariantDefinition) TypeID(name string) TypeID {
 	id, found := d.typeNameToID[name]
 	if !found {
 		knownNames := make([]string, len(d.typeNameToID))
@@ -94,16 +229,18 @@ type VariantImplFactory = func() interface{}
 type OnVariant = func(impl interface{}) error
 
 type BaseVariant struct {
-	TypeID uint32
+	TypeID TypeID
 	Impl   interface{}
 }
 
-func (a *BaseVariant) Assign(typeID uint32, impl interface{}) {
+var _ Variant = &BaseVariant{}
+
+func (a *BaseVariant) Assign(typeID TypeID, impl interface{}) {
 	a.TypeID = typeID
 	a.Impl = impl
 }
 
-func (a *BaseVariant) Obtain(def *VariantDefinition) (typeID uint32, typeName string, impl interface{}) {
+func (a *BaseVariant) Obtain(def *VariantDefinition) (typeID TypeID, typeName string, impl interface{}) {
 	return a.TypeID, def.typeIDToName[a.TypeID], a.Impl
 }
 
@@ -176,24 +313,32 @@ func (a *BaseVariant) UnmarshalJSON(data []byte, def *VariantDefinition) error {
 }
 
 func (a *BaseVariant) UnmarshalBinaryVariant(decoder *Decoder, def *VariantDefinition) (err error) {
-	var typeID uint32
+	var typeID TypeID
 	switch def.typeIDEncoding {
 	case Uvarint32TypeIDEncoding:
-		typeID, err = decoder.ReadUvarint32()
+		val, err := decoder.ReadUvarint32()
 		if err != nil {
 			return fmt.Errorf("uvarint32: unable to read variant type id: %s", err)
 		}
+		typeID = TypeIDFromUvarint32(val)
 	case Uint32TypeIDEncoding:
-		typeID, err = decoder.ReadUint32(LE())
+		val, err := decoder.ReadUint32(binary.LittleEndian)
 		if err != nil {
 			return fmt.Errorf("uint32: unable to read variant type id: %s", err)
 		}
+		typeID = TypeIDFromUint32(val, binary.LittleEndian)
 	case Uint8TypeIDEncoding:
 		id, err := decoder.ReadUint8()
 		if err != nil {
 			return fmt.Errorf("uint8: unable to read variant type id: %s", err)
 		}
-		typeID = uint32(id)
+		typeID = SliceToTypeID([]byte{id})
+	case AnchorTypeIDEncoding:
+		val, err := decoder.ReadNBytes(8)
+		if err != nil {
+			return fmt.Errorf("anchor: unable to read variant type id: %s", err)
+		}
+		typeID = SliceToTypeID(val)
 	}
 
 	a.TypeID = typeID

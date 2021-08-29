@@ -33,9 +33,16 @@ func TestTypeID(t *testing.T) {
 		require.Equal(t, expected, vid.Uvarint32())
 	}
 	{
-		vid := SliceToTypeID([]byte{})
-		expected := []byte{0, 0, 0, 0, 0, 0, 0, 0}
-		require.Equal(t, expected, vid.Bytes())
+		{
+			vid := TypeIDFromBytes([]byte{})
+			expected := []byte{0, 0, 0, 0, 0, 0, 0, 0}
+			require.Equal(t, expected, vid.Bytes())
+		}
+		{
+			expected := []byte{1, 2, 3, 4, 5, 6, 7, 8}
+			vid := TypeIDFromBytes(expected)
+			require.Equal(t, expected, vid.Bytes())
+		}
 	}
 	{
 		expected := uint8(33)

@@ -62,9 +62,9 @@ func (vid TypeID) Equal(b []byte) bool {
 	return bytes.Equal(vid.Bytes(), b)
 }
 
-// SliceToTypeID converts a []byte to a TypeID.
+// TypeIDFromBytes converts a []byte to a TypeID.
 // The provided slice must be 8 bytes long or less.
-func SliceToTypeID(slice []byte) (id TypeID) {
+func TypeIDFromBytes(slice []byte) (id TypeID) {
 	// TODO: panic if len(slice) > 8 ???
 	copy(id[:], slice)
 	return id
@@ -72,26 +72,26 @@ func SliceToTypeID(slice []byte) (id TypeID) {
 
 // TypeIDFromSighash converts a sighash bytes to a TypeID.
 func TypeIDFromSighash(sh []byte) TypeID {
-	return SliceToTypeID(sh)
+	return TypeIDFromBytes(sh)
 }
 
 // TypeIDFromUvarint32 converts a Uvarint to a TypeID.
 func TypeIDFromUvarint32(v uint32) TypeID {
 	buf := make([]byte, 8)
 	l := binary.PutUvarint(buf, uint64(v))
-	return SliceToTypeID(buf[:l])
+	return TypeIDFromBytes(buf[:l])
 }
 
 // TypeIDFromUint32 converts a uint32 to a TypeID.
 func TypeIDFromUint32(v uint32, bo binary.ByteOrder) TypeID {
 	out := make([]byte, TypeSize.Uint32)
 	bo.PutUint32(out, v)
-	return SliceToTypeID(out)
+	return TypeIDFromBytes(out)
 }
 
 // TypeIDFromUint32 converts a uint8 to a TypeID.
 func TypeIDFromUint8(v uint8) TypeID {
-	return SliceToTypeID([]byte{v})
+	return TypeIDFromBytes([]byte{v})
 }
 
 // Uvarint32FromTypeID parses a TypeID bytes to a uvarint 32.
@@ -330,13 +330,12 @@ func (a *BaseVariant) UnmarshalBinaryVariant(decoder *Decoder, def *VariantDefin
 		if err != nil {
 			return fmt.Errorf("uint8: unable to read variant type id: %s", err)
 		}
-		typeID = SliceToTypeID([]byte{id})
+		typeID = TypeIDFromBytes([]byte{id})
 	case AnchorTypeIDEncoding:
-		val, err := decoder.ReadNBytes(8)
+		typeID, err = decoder.ReadTypeID()
 		if err != nil {
 			return fmt.Errorf("anchor: unable to read variant type id: %s", err)
 		}
-		typeID = SliceToTypeID(val)
 	}
 
 	a.TypeID = typeID

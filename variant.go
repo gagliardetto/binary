@@ -1,6 +1,7 @@
 package bin
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -31,20 +32,34 @@ type VariantDefinition struct {
 	typeIDEncoding TypeIDEncoding
 }
 
+// TypeID defines the internal representation of an instruction type ID
+// (or account type, etc. in anchor programs)
+// and it's used to associate instructions to decoders in the variant tracker.
 type TypeID [8]byte
 
 func (vid TypeID) Bytes() []byte {
 	return vid[:]
 }
 
-func (vid TypeID) AsUvarint32() uint32 {
+// Uvarint32 parses the TypeID to a uint32.
+func (vid TypeID) Uvarint32() uint32 {
 	return Uvarint32FromTypeID(vid)
 }
-func (vid TypeID) AsUint32() uint32 {
+
+// Uint32 parses the TypeID to a uint32.
+func (vid TypeID) Uint32() uint32 {
 	return Uint32FromTypeID(vid, binary.LittleEndian)
 }
-func (vid TypeID) AsUint8() uint8 {
+
+// Uint8 parses the TypeID to a Uint8.
+func (vid TypeID) Uint8() uint8 {
 	return Uint8FromTypeID(vid)
+}
+
+// Equal returns true if the provided bytes are equal to
+// the bytes of the TypeID.
+func (vid TypeID) Equal(b []byte) bool {
+	return bytes.Equal(vid.Bytes(), b)
 }
 
 // SliceToTypeID converts a []byte to a TypeID.

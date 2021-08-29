@@ -14,6 +14,7 @@ func TestTypeID(t *testing.T) {
 		ha := Sighash(SIGHASH_GLOBAL_NAMESPACE, "hello")
 		vid := TypeIDFromSighash(ha)
 		require.Equal(t, ha, vid.Bytes())
+		require.True(t, vid.Equal(ha))
 	}
 	{
 		expected := uint32(66)
@@ -21,6 +22,7 @@ func TestTypeID(t *testing.T) {
 
 		got := Uint32FromTypeID(vid, binary.LittleEndian)
 		require.Equal(t, expected, got)
+		require.Equal(t, expected, vid.Uint32())
 	}
 	{
 		expected := uint32(66)
@@ -28,11 +30,19 @@ func TestTypeID(t *testing.T) {
 
 		got := Uvarint32FromTypeID(vid)
 		require.Equal(t, expected, got)
+		require.Equal(t, expected, vid.Uvarint32())
 	}
 	{
 		vid := SliceToTypeID([]byte{})
 		expected := []byte{0, 0, 0, 0, 0, 0, 0, 0}
 		require.Equal(t, expected, vid.Bytes())
+	}
+	{
+		expected := uint8(33)
+		vid := TypeIDFromUint8(expected)
+		got := Uint8FromTypeID(vid)
+		require.Equal(t, expected, got)
+		require.Equal(t, expected, vid.Uint8())
 	}
 	{
 		m := map[TypeID]string{
@@ -92,7 +102,7 @@ func (n *Node) UnmarshalWithDecoder(decoder *Decoder) error {
 }
 
 func (n *Node) MarshalWithEncoder(encoder *Encoder) error {
-	err := encoder.WriteUint32(n.TypeID.AsUint32(), binary.LittleEndian)
+	err := encoder.WriteUint32(n.TypeID.Uint32(), binary.LittleEndian)
 	if err != nil {
 		return err
 	}

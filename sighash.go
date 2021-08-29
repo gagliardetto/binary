@@ -12,6 +12,10 @@ func Sighash(namespace string, name string) []byte {
 	return sum[0:8]
 }
 
+func SighashTypeID(namespace string, name string) TypeID {
+	return TypeIDFromBytes(Sighash(namespace, name))
+}
+
 // Namespace for calculating state instruction sighash signatures.
 const SIGHASH_STATE_NAMESPACE string = "state"
 

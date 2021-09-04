@@ -10,10 +10,10 @@ import (
 var zlog = zap.NewNop()
 
 func init() {
-	logging.Register("github.com/dfuse-io/binary", &zlog)
+	logging.Register("github.com/gagliardetto/binary", &zlog)
 }
 
-var traceEnabled = logging.IsTraceEnabled("binary", "github.com/dfuse-io/binary")
+var traceEnabled = logging.IsTraceEnabled("binary", "github.com/gagliardetto/binary")
 
 type logStringerFunc func() string
 

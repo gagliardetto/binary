@@ -39,7 +39,6 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 		)
 	}
 
-	// TODO: is `rv.Kind() == reflect.Ptr` correct here???
 	if opt.isOptional() {
 		isPresent, e := dec.ReadByte()
 		if e != nil {
@@ -59,6 +58,8 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 		// we have ptr here we should not go get the element
 		unmarshaler, rv = indirect(rv, false)
 	}
+	// Reset optionality so it won't propagate to child types:
+	opt = opt.clone().setIsOptional(false)
 
 	if unmarshaler != nil {
 		if traceEnabled {

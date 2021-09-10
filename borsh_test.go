@@ -13,6 +13,95 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type OptionalPointerFields struct {
+	Good uint8
+	Arr  *Arr `bin:"optional"`
+}
+
+type Arr []string
+
+func TestOptionWithPointer(t *testing.T) {
+	// nil (optional not present)
+	{
+		buf := new(bytes.Buffer)
+		enc := NewBorshEncoder(buf)
+		val := OptionalPointerFields{
+			Good: 9,
+			// Will be decoded as nil pointer.
+			Arr: nil,
+		}
+		require.NoError(t, enc.Encode(val))
+		require.Equal(t,
+			concatByteSlices(
+				[]byte{9},
+				[]byte{0},
+			),
+			buf.Bytes())
+		{
+			dec := NewBorshDecoder(buf.Bytes())
+			var got OptionalPointerFields
+			require.NoError(t, dec.Decode(&got))
+			require.Equal(t, val, got)
+		}
+	}
+	// optional is present but has zero elements
+	{
+		buf := new(bytes.Buffer)
+		enc := NewBorshEncoder(buf)
+		val := OptionalPointerFields{
+			Good: 9,
+			// Will be decoded as pointer to nil Arr.
+			Arr: &Arr{},
+		}
+		require.NoError(t, enc.Encode(val))
+		require.Equal(t,
+			concatByteSlices(
+				[]byte{9},
+				[]byte{1},
+				[]byte{0, 0, 0, 0},
+			),
+			buf.Bytes(),
+		)
+		{
+			dec := NewBorshDecoder(buf.Bytes())
+			var got OptionalPointerFields
+			require.NoError(t, dec.Decode(&got))
+			// an empty slice is decoded as nil.
+			po := (Arr)(nil)
+			val.Arr = &po
+			require.Equal(t,
+				val, got)
+		}
+	}
+	// optional is present and has elements
+	{
+		buf := new(bytes.Buffer)
+		enc := NewBorshEncoder(buf)
+		val := OptionalPointerFields{
+			Good: 9,
+			Arr:  &Arr{"foo"},
+		}
+		require.NoError(t, enc.Encode(val))
+		require.Equal(t,
+			concatByteSlices(
+				[]byte{9},
+				[]byte{1},
+				[]byte{1, 0, 0, 0},
+
+				[]byte{3, 0, 0, 0},
+				[]byte("foo"),
+			),
+			buf.Bytes(),
+		)
+		{
+			dec := NewBorshDecoder(buf.Bytes())
+			var got OptionalPointerFields
+			require.NoError(t, dec.Decode(&got))
+			require.Equal(t, val, got)
+		}
+	}
+}
+
 type StructWithComplexPeculiarEnums struct {
 	Complex2NotSet    ComplexEnumPointers
 	Complex2PtrNotSet *ComplexEnumPointers

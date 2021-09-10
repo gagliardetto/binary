@@ -23,7 +23,7 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 	}
 
 	if opt.isOptional() {
-		if rv.IsZero() {
+		if rv.IsZero() || (rv.Kind() == reflect.Ptr && rv.IsNil()) {
 			if traceEnabled {
 				zlog.Debug("encode: skipping optional value with", zap.Stringer("type", rv.Kind()))
 			}
@@ -78,8 +78,8 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 		return e.WriteBool(rv.Bool())
 	case reflect.Ptr:
 		if rv.IsNil() {
-			el := reflect.New(rv.Type().Elem()).Elem()
-			return e.encodeBorsh(el, nil)
+			// el := reflect.New(rv.Type().Elem()).Elem()
+			// return e.encodeBorsh(el, nil)
 		} else {
 			return e.encodeBorsh(rv.Elem(), nil)
 		}

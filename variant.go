@@ -122,7 +122,11 @@ const (
 	// written using the anchor SDK.
 	// The typeID is the sighash of the instruction.
 	AnchorTypeIDEncoding
+	// No type ID; ONLY ONE VARIANT PER PROGRAM.
+	NoTypeIDEncoding
 )
+
+var NoTypeIDDefaultID = TypeIDFromUint8(0)
 
 // NewVariantDefinition creates a variant definition based on the *ordered* provided types.
 //
@@ -199,6 +203,22 @@ func NewVariantDefinition(typeIDEncoding TypeIDEncoding, types []VariantType) (o
 			out.typeIDToName[typeID] = typeDef.Name
 			out.typeNameToID[typeDef.Name] = typeID
 		}
+	case NoTypeIDEncoding:
+		if len(types) != 1 {
+			panic(fmt.Sprintf("NoTypeIDEncoding can only have one variant type definition, got %v", len(types)))
+		}
+		typeDef := types[0]
+
+		typeID := NoTypeIDDefaultID
+
+		// FIXME: Check how the reflect.Type is used and cache all its usage in the definition.
+		//        Right now, on each Unmarshal, we re-compute some expensive stuff that can be
+		//        re-used like the `typeGo.Elem()` which is always the same. It would be preferable
+		//        to have those already pre-defined here so we can actually speed up the
+		//        Unmarshal code.
+		out.typeIDToType[typeID] = reflect.TypeOf(typeDef.Type)
+		out.typeIDToName[typeID] = typeDef.Name
+		out.typeNameToID[typeDef.Name] = typeID
 
 	default:
 		panic(fmt.Errorf("unsupported TypeIDEncoding: %v", typeIDEncoding))
@@ -336,6 +356,8 @@ func (a *BaseVariant) UnmarshalBinaryVariant(decoder *Decoder, def *VariantDefin
 		if err != nil {
 			return fmt.Errorf("anchor: unable to read variant type id: %s", err)
 		}
+	case NoTypeIDEncoding:
+		typeID = NoTypeIDDefaultID
 	}
 
 	a.TypeID = typeID

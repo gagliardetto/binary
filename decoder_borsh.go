@@ -238,11 +238,11 @@ func (dec *Decoder) deserializeComplexEnum(rv reflect.Value) error {
 	enum := BorshEnum(tmp)
 	rv.Field(0).Set(reflect.ValueOf(enum).Convert(rv.Field(0).Type()))
 
-	field := rv.Field(int(enum) + 1)
 	// read enum field, if necessary
 	if int(enum)+1 >= rt.NumField() {
 		return errors.New("complex enum too large")
 	}
+	field := rv.Field(int(enum) + 1)
 	return dec.decodeBorsh(field, nil)
 }
 

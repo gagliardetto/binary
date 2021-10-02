@@ -79,6 +79,11 @@ func (e *Encoder) toWriter(bytes []byte) (err error) {
 	return
 }
 
+// Size returns the count of bytes written.
+func (e *Encoder) Size() int {
+	return e.count
+}
+
 func (e *Encoder) WriteBytes(b []byte, writeLength bool) error {
 	if traceEnabled {
 		zlog.Debug("encode: write byte array", zap.Int("len", len(b)))

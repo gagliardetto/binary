@@ -10,6 +10,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestEncoder_Size(t *testing.T) {
+	{
+		buf := new(bytes.Buffer)
+
+		enc := NewBinEncoder(buf)
+		assert.Equal(t, enc.Size(), 0)
+		enc.Encode(SafeString("hello"))
+
+		assert.Equal(t, enc.Size(), 6)
+		enc.WriteBool(true)
+		assert.Equal(t, enc.Size(), 7)
+	}
+	{
+		buf := new(bytes.Buffer)
+
+		enc := NewBorshEncoder(buf)
+		assert.Equal(t, enc.Size(), 0)
+		enc.WriteByte(123)
+
+		assert.Equal(t, enc.Size(), 1)
+		enc.WriteBool(true)
+		assert.Equal(t, enc.Size(), 2)
+	}
+}
+
 func TestEncoder_AliastTestType(t *testing.T) {
 	buf := new(bytes.Buffer)
 	enc := NewBinEncoder(buf)

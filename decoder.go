@@ -221,28 +221,9 @@ func (dec *Decoder) ReadUvarint16() (out uint16, err error) {
 }
 
 func (dec *Decoder) ReadByteSlice() (out []byte, err error) {
-	var length int
-	switch dec.encoding {
-	case EncodingBin:
-		val, err := dec.ReadUvarint64()
-		if err != nil {
-			return nil, err
-		}
-		length = int(val)
-	case EncodingBorsh:
-		val, err := dec.ReadUint32(LE())
-		if err != nil {
-			return nil, err
-		}
-		length = int(val)
-	case EncodingCompactU16:
-		val, err := DecodeCompactU16LengthFromByteReader(dec)
-		if err != nil {
-			return nil, err
-		}
-		length = val
-	default:
-		panic(fmt.Errorf("encoding not implemented: %s", dec.encoding))
+	length, err := dec.ReadLength()
+	if err != nil {
+		return nil, err
 	}
 
 	if len(dec.data) < dec.pos+length {
@@ -253,6 +234,32 @@ func (dec *Decoder) ReadByteSlice() (out []byte, err error) {
 	dec.pos += length
 	if traceEnabled {
 		zlog.Debug("decode: read byte array", zap.Stringer("hex", HexBytes(out)))
+	}
+	return
+}
+
+func (dec *Decoder) ReadLength() (length int, err error) {
+	switch dec.encoding {
+	case EncodingBin:
+		val, err := dec.ReadUvarint64()
+		if err != nil {
+			return 0, err
+		}
+		length = int(val)
+	case EncodingBorsh:
+		val, err := dec.ReadUint32(LE())
+		if err != nil {
+			return 0, err
+		}
+		length = int(val)
+	case EncodingCompactU16:
+		val, err := DecodeCompactU16LengthFromByteReader(dec)
+		if err != nil {
+			return 0, err
+		}
+		length = val
+	default:
+		panic(fmt.Errorf("encoding not implemented: %s", dec.encoding))
 	}
 	return
 }

@@ -106,29 +106,39 @@ func (e *Encoder) WriteBytes(b []byte, writeLength bool) error {
 		zlog.Debug("encode: write byte array", zap.Int("len", len(b)))
 	}
 	if writeLength {
-		switch e.encoding {
-		case EncodingBin:
-			if err := e.WriteUVarInt(len(b)); err != nil {
-				return err
-			}
-		case EncodingBorsh:
-			if err := e.WriteUint32(uint32(len(b)), LE()); err != nil {
-				return err
-			}
-		case EncodingCompactU16:
-			var buf []byte
-			EncodeCompactU16Length(&buf, len(b))
-			if err := e.WriteBytes(buf, false); err != nil {
-				return err
-			}
-		default:
-			panic(fmt.Errorf("encoding not implemented: %s", e.encoding))
+		if err := e.WriteLength(len(b)); err != nil {
+			return err
 		}
 	}
 	if len(b) == 0 {
 		return nil
 	}
 	return e.toWriter(b)
+}
+
+func (e *Encoder) WriteLength(length int) error {
+	if traceEnabled {
+		zlog.Debug("encode: write length", zap.Int("len", length))
+	}
+	switch e.encoding {
+	case EncodingBin:
+		if err := e.WriteUVarInt(length); err != nil {
+			return err
+		}
+	case EncodingBorsh:
+		if err := e.WriteUint32(uint32(length), LE()); err != nil {
+			return err
+		}
+	case EncodingCompactU16:
+		var buf []byte
+		EncodeCompactU16Length(&buf, length)
+		if err := e.WriteBytes(buf, false); err != nil {
+			return err
+		}
+	default:
+		panic(fmt.Errorf("encoding not implemented: %s", e.encoding))
+	}
+	return nil
 }
 
 func (e *Encoder) WriteUVarInt(v int) (err error) {

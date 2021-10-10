@@ -32,23 +32,23 @@ func TestEncoder_Size(t *testing.T) {
 		buf := new(bytes.Buffer)
 
 		enc := NewBinEncoder(buf)
-		assert.Equal(t, enc.Size(), 0)
+		assert.Equal(t, enc.Written(), 0)
 		enc.Encode(SafeString("hello"))
 
-		assert.Equal(t, enc.Size(), 6)
+		assert.Equal(t, enc.Written(), 6)
 		enc.WriteBool(true)
-		assert.Equal(t, enc.Size(), 7)
+		assert.Equal(t, enc.Written(), 7)
 	}
 	{
 		buf := new(bytes.Buffer)
 
 		enc := NewBorshEncoder(buf)
-		assert.Equal(t, enc.Size(), 0)
+		assert.Equal(t, enc.Written(), 0)
 		enc.WriteByte(123)
 
-		assert.Equal(t, enc.Size(), 1)
+		assert.Equal(t, enc.Written(), 1)
 		enc.WriteBool(true)
-		assert.Equal(t, enc.Size(), 2)
+		assert.Equal(t, enc.Written(), 2)
 	}
 }
 

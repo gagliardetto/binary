@@ -96,8 +96,8 @@ func (e *Encoder) toWriter(bytes []byte) (err error) {
 	return
 }
 
-// Size returns the count of bytes written.
-func (e *Encoder) Size() int {
+// Written returns the count of bytes written.
+func (e *Encoder) Written() int {
 	return e.count
 }
 

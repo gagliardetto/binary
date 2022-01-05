@@ -396,7 +396,7 @@ func Test_OptionalPointerToPrimitiveType(t *testing.T) {
 		ID *Uint64 `bin:"optional"`
 	}
 
-	expect := []byte{0x00}
+	expect := []byte{0x00, 0x00, 0x00, 0x00}
 
 	out, err := MarshalBin(test{ID: nil})
 	require.NoError(t, err)
@@ -405,13 +405,13 @@ func Test_OptionalPointerToPrimitiveType(t *testing.T) {
 	id := Uint64(0)
 	out, err = MarshalBin(test{ID: &id})
 	require.NoError(t, err)
-	assert.Equal(t, []byte{0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, out)
+	assert.Equal(t, []byte{0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, out)
 
 	id = Uint64(10)
 	out, err = MarshalBin(test{ID: &id})
 	require.NoError(t, err)
 
-	assert.Equal(t, []byte{0x1, 0xa, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, out)
+	assert.Equal(t, []byte{0x1, 0x0, 0x0, 0x0, 0xa, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, out)
 }
 
 func TestEncoder_Uint128(t *testing.T) {
@@ -486,7 +486,7 @@ func TestEncoder_BinaryStruct(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t,
-		"03616263b5ff630019ffffffe703000051ccffffffffffff9f860100000000003d0ab9c15c8fc2f5285c0f4002036465660337383903666f6f03626172ff05010203040501e9ffffffffffffff17000000000000001f85eb51b81e09400a000000000000005200000000000000070000000000000003000000000000000a000000000000005200000000000000e707cd0f01050102030405",
+		"0300000000000000616263b5ff630019ffffffe703000051ccffffffffffff9f860100000000003d0ab9c15c8fc2f5285c0f4002030000000000000064656603000000000000003738390300000000000000666f6f0300000000000000626172ff05010203040501e9ffffffffffffff17000000000000001f85eb51b81e09400a000000000000005200000000000000070000000000000003000000000000000a000000000000005200000000000000e707cd0f01050102030405",
 		hex.EncodeToString(buf.Bytes()),
 	)
 }
@@ -511,7 +511,7 @@ func TestEncoder_BinaryTestStructWithTags(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t,
-		"ffb50063ffffff19000003e7ffffffffffffcc51000000000001869fc1b90a3d400f5c28f5c28f5c0100",
+		"ffb50063ffffff19000003e7ffffffffffffcc51000000000001869fc1b90a3d400f5c28f5c28f5c0100000000",
 		hex.EncodeToString(buf.Bytes()),
 	)
 }

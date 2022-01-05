@@ -501,14 +501,15 @@ func TestDecoder_string(t *testing.T) {
 
 func TestDecoder_Decode_String_Err(t *testing.T) {
 	buf := []byte{
-		0x0a,
+		0x01, 0x00, 0x00, 0x00,
+		byte('a'),
 	}
 
 	decoder := NewBinDecoder(buf)
 
 	var s string
 	err := decoder.Decode(&s)
-	assert.EqualError(t, err, "byte array: varlen=10, missing 10 bytes")
+	assert.EqualError(t, err, "decode: uint64 required [8] bytes, remaining [5]")
 }
 
 func TestDecoder_Byte(t *testing.T) {
@@ -592,13 +593,13 @@ func TestDecoder_Slice_Err(t *testing.T) {
 	decoder := NewBinDecoder(buf)
 	var s []string
 	err := decoder.Decode(&s)
-	assert.Equal(t, err, ErrVarIntBufferSize)
+	assert.Equal(t, ErrVarIntBufferSize, err)
 
 	buf = []byte{0x01}
 
 	decoder = NewBinDecoder(buf)
 	err = decoder.Decode(&s)
-	assert.Equal(t, err, ErrVarIntBufferSize)
+	assert.EqualError(t, err, "decode: uint64 required [8] bytes, remaining [0]")
 }
 
 func TestDecoder_Int64(t *testing.T) {
@@ -666,12 +667,12 @@ func TestDecoder_Uint128_2(t *testing.T) {
 }
 
 func TestDecoder_BinaryStruct(t *testing.T) {
-	cnt, err := hex.DecodeString("03616263b5ff630019ffffffe703000051ccffffffffffff9f860100000000003d0ab9c15c8fc2f5285c0f4002036465660337383903666f6f03626172ff05010203040501e9ffffffffffffff17000000000000001f85eb51b81e09400a000000000000005200000000000000070000000000000003000000000000000a000000000000005200000000000000e707cd0f01050102030405")
+	cnt, err := hex.DecodeString("0300000000000000616263b5ff630019ffffffe703000051ccffffffffffff9f860100000000003d0ab9c15c8fc2f5285c0f4002030000000000000064656603000000000000003738390300000000000000666f6f0300000000000000626172ff05010203040501e9ffffffffffffff17000000000000001f85eb51b81e09400a000000000000005200000000000000070000000000000003000000000000000a000000000000005200000000000000e707cd0f01050102030405")
 	require.NoError(t, err)
 
-	s := &binaryTestStruct{}
+	s := binaryTestStruct{}
 	decoder := NewBinDecoder(cnt)
-	assert.NoError(t, decoder.Decode(s))
+	assert.NoError(t, decoder.Decode(&s))
 
 	assert.Equal(t, "abc", s.F1)
 	assert.Equal(t, int16(-75), s.F2)
@@ -715,7 +716,7 @@ func TestDecoder_Decode_No_Ptr(t *testing.T) {
 }
 
 func TestDecoder_BinaryTestStructWithTags(t *testing.T) {
-	cnt, err := hex.DecodeString("ffb50063ffffff19000003e7ffffffffffffcc51000000000001869fc1b90a3d400f5c28f5c28f5c0100")
+	cnt, err := hex.DecodeString("ffb50063ffffff19000003e7ffffffffffffcc51000000000001869fc1b90a3d400f5c28f5c28f5c0100000000")
 	require.NoError(t, err)
 
 	s := &binaryTestStructWithTags{}

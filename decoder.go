@@ -539,6 +539,22 @@ func (dec *Decoder) ReadString() (out string, err error) {
 	return
 }
 
+func (dec *Decoder) ReadRustString() (out string, err error) {
+	length, err := dec.ReadUint64(binary.LittleEndian)
+	if err != nil {
+		return "", err
+	}
+	bytes, err := dec.ReadNBytes(int(length))
+	if err != nil {
+		return "", err
+	}
+	out = string(bytes)
+	if traceEnabled {
+		zlog.Debug("read Rust string", zap.String("val", out))
+	}
+	return
+}
+
 func (dec *Decoder) ReadCompactU16Length() (int, error) {
 	val, err := DecodeCompactU16LengthFromByteReader(dec)
 	if traceEnabled {

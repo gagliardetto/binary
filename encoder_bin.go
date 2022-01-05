@@ -61,7 +61,7 @@ func (e *Encoder) encodeBin(rv reflect.Value, opt *option) (err error) {
 
 	switch rv.Kind() {
 	case reflect.String:
-		return e.WriteString(rv.String())
+		return e.WriteRustString(rv.String())
 	case reflect.Uint8:
 		return e.WriteByte(byte(rv.Uint()))
 	case reflect.Int8:

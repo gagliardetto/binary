@@ -292,6 +292,17 @@ func (e *Encoder) WriteString(s string) (err error) {
 	return e.WriteBytes([]byte(s), true)
 }
 
+func (e *Encoder) WriteRustString(s string) (err error) {
+	err = e.WriteUint64(uint64(len(s)), binary.LittleEndian)
+	if err != nil {
+		return err
+	}
+	if traceEnabled {
+		zlog.Debug("encode: write Rust string", zap.String("val", s))
+	}
+	return e.WriteBytes([]byte(s), false)
+}
+
 func (e *Encoder) WriteCompactU16Length(ln int) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write compact-u16 length", zap.Int("val", ln))

@@ -85,7 +85,7 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 
 	switch rv.Kind() {
 	case reflect.String:
-		s, e := dec.ReadString()
+		s, e := dec.ReadRustString()
 		if e != nil {
 			err = e
 			return

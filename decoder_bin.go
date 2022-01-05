@@ -59,7 +59,7 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 	if opt.isOptional() {
 		isPresent, e := dec.ReadUint32(binary.LittleEndian)
 		if e != nil {
-			err = fmt.Errorf("decode: %t isPresent, %s", rv.Type(), e)
+			err = fmt.Errorf("decode: %s isPresent, %s", rv.Type().String(), e)
 			return
 		}
 
@@ -159,7 +159,7 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 			zlog.Debug("decoding: reading array", zap.Int("length", length))
 		}
 		for i := 0; i < length; i++ {
-			if err = dec.decodeBin(rv.Index(i), opt); err != nil {
+			if err = dec.decodeBin(rv.Index(i), nil); err != nil {
 				return
 			}
 		}
@@ -169,6 +169,7 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 		if opt.hasSizeOfSlice() {
 			l = opt.getSizeOfSlice()
 		} else {
+			// TODO: what type is length? Is it really Uvarint64?
 			length, err := dec.ReadUvarint64()
 			if err != nil {
 				return err
@@ -182,7 +183,7 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 
 		rv.Set(reflect.MakeSlice(rt, l, l))
 		for i := 0; i < l; i++ {
-			if err = dec.decodeBin(rv.Index(i), opt); err != nil {
+			if err = dec.decodeBin(rv.Index(i), nil); err != nil {
 				return
 			}
 		}
@@ -193,6 +194,7 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 		}
 
 	case reflect.Map:
+		// TODO: what type is length? Is it really Uvarint64?
 		l, err := dec.ReadUvarint64()
 		if err != nil {
 			return err
@@ -309,7 +311,7 @@ func (dec *Decoder) decodeStructBin(rt reflect.Type, rv reflect.Value) (err erro
 		}
 
 		if err = dec.decodeBin(v, option); err != nil {
-			return
+			return fmt.Errorf("error while decoding %q field: %w", structField.Name, err)
 		}
 
 		if fieldTag.SizeOf != "" {

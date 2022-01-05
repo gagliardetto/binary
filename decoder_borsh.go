@@ -175,7 +175,7 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 			zlog.Debug("decoding: reading array", zap.Int("length", length))
 		}
 		for i := 0; i < length; i++ {
-			if err = dec.decodeBorsh(rv.Index(i), opt); err != nil {
+			if err = dec.decodeBorsh(rv.Index(i), nil); err != nil {
 				return
 			}
 		}
@@ -203,7 +203,7 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 
 		rv.Set(reflect.MakeSlice(rt, l, l))
 		for i := 0; i < l; i++ {
-			if err = dec.decodeBorsh(rv.Index(i), opt); err != nil {
+			if err = dec.decodeBorsh(rv.Index(i), nil); err != nil {
 				return
 			}
 		}
@@ -391,7 +391,7 @@ func (dec *Decoder) decodeStructBorsh(rt reflect.Type, rv reflect.Value) (err er
 		}
 
 		if err = dec.decodeBorsh(v, option); err != nil {
-			return
+			return fmt.Errorf("error while decoding %q field: %w", structField.Name, err)
 		}
 
 		if fieldTag.SizeOf != "" {

@@ -158,7 +158,7 @@ func (dec *Decoder) decodeCompactU16(rv reflect.Value, opt *option) (err error) 
 			zlog.Debug("decoding: reading array", zap.Int("length", length))
 		}
 		for i := 0; i < length; i++ {
-			if err = dec.decodeCompactU16(rv.Index(i), opt); err != nil {
+			if err = dec.decodeCompactU16(rv.Index(i), nil); err != nil {
 				return
 			}
 		}
@@ -181,7 +181,7 @@ func (dec *Decoder) decodeCompactU16(rv reflect.Value, opt *option) (err error) 
 
 		rv.Set(reflect.MakeSlice(rt, l, l))
 		for i := 0; i < l; i++ {
-			if err = dec.decodeCompactU16(rv.Index(i), opt); err != nil {
+			if err = dec.decodeCompactU16(rv.Index(i), nil); err != nil {
 				return
 			}
 		}
@@ -308,7 +308,7 @@ func (dec *Decoder) decodeStructCompactU16(rt reflect.Type, rv reflect.Value) (e
 		}
 
 		if err = dec.decodeCompactU16(v, option); err != nil {
-			return
+			return fmt.Errorf("error while decoding %q field: %w", structField.Name, err)
 		}
 
 		if fieldTag.SizeOf != "" {

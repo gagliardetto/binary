@@ -503,6 +503,7 @@ func TestEncoder_BinaryTestStructWithTags(t *testing.T) {
 		F8:  -23.13,
 		F9:  3.92,
 		F10: true,
+		F12: []int64{99, 33},
 	}
 
 	buf := new(bytes.Buffer)
@@ -511,7 +512,7 @@ func TestEncoder_BinaryTestStructWithTags(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t,
-		"ffb50063ffffff19000003e7ffffffffffffcc51000000000001869fc1b90a3d400f5c28f5c28f5c0100000000",
+		"ffb50063ffffff19000003e7ffffffffffffcc51000000000001869fc1b90a3d400f5c28f5c28f5c01000000000100000002010000006300000000000000010000002100000000000000",
 		hex.EncodeToString(buf.Bytes()),
 	)
 }

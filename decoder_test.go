@@ -716,7 +716,7 @@ func TestDecoder_Decode_No_Ptr(t *testing.T) {
 }
 
 func TestDecoder_BinaryTestStructWithTags(t *testing.T) {
-	cnt, err := hex.DecodeString("ffb50063ffffff19000003e7ffffffffffffcc51000000000001869fc1b90a3d400f5c28f5c28f5c0100000000")
+	cnt, err := hex.DecodeString("ffb50063ffffff19000003e7ffffffffffffcc51000000000001869fc1b90a3d400f5c28f5c28f5c010000000000000000")
 	require.NoError(t, err)
 
 	s := &binaryTestStructWithTags{}

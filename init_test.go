@@ -69,8 +69,8 @@ type binaryTestStructWithTags struct {
 	F8  float32 `bin:"big"`
 	F9  float64 `bin:"big"`
 	F10 bool
-	F11 *Int64  `bin:"optional"`
-	F12 []int64 `bin:"optional"`
+	F11 *Int64   `bin:"optional"`
+	F12 *[]int64 `bin:"optional"`
 }
 
 func setupBench(b *testing.B) {

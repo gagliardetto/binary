@@ -49,6 +49,8 @@ func (e *Encoder) encodeBin(rv reflect.Value, opt *option) (err error) {
 		if err != nil {
 			return err
 		}
+		// The optionality has been used; stop its propagation:
+		opt.setIsOptional(false)
 	}
 
 	if isZero(rv) {
@@ -104,9 +106,21 @@ func (e *Encoder) encodeBin(rv reflect.Value, opt *option) (err error) {
 			zlog = zlog.Named("array")
 			zlog.Debug("encode: array", zap.Int("length", l), zap.Stringer("type", rv.Kind()))
 		}
-		for i := 0; i < l; i++ {
-			if err = e.encodeBin(rv.Index(i), opt); err != nil {
-				return
+
+		if rv.Type().Elem().Kind() == reflect.Uint8 {
+			// if it's a [n]byte, accumulate and write in one command:
+			arr := make([]byte, l)
+			for i := 0; i < l; i++ {
+				arr[i] = byte(rv.Index(i).Uint())
+			}
+			if err := e.WriteBytes(arr, false); err != nil {
+				return err
+			}
+		} else {
+			for i := 0; i < l; i++ {
+				if err = e.encodeBin(rv.Index(i), nil); err != nil {
+					return
+				}
 			}
 		}
 	case reflect.Slice:
@@ -131,7 +145,7 @@ func (e *Encoder) encodeBin(rv reflect.Value, opt *option) (err error) {
 		// we would want to skip to the correct head_offset
 
 		for i := 0; i < l; i++ {
-			if err = e.encodeBin(rv.Index(i), opt); err != nil {
+			if err = e.encodeBin(rv.Index(i), nil); err != nil {
 				return
 			}
 		}
@@ -238,7 +252,7 @@ func (e *Encoder) encodeStructBin(rt reflect.Type, rv reflect.Value) (err error)
 		}
 
 		if err := e.encodeBin(rv, option); err != nil {
-			return err
+			return fmt.Errorf("error while encoding %q field: %w", structField.Name, err)
 		}
 	}
 	return nil

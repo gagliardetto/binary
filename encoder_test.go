@@ -19,6 +19,7 @@ package bin
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"math"
 	"testing"
@@ -492,6 +493,7 @@ func TestEncoder_BinaryStruct(t *testing.T) {
 }
 
 func TestEncoder_BinaryTestStructWithTags(t *testing.T) {
+
 	s := &binaryTestStructWithTags{
 		F1:  "abc",
 		F2:  -75,
@@ -503,7 +505,120 @@ func TestEncoder_BinaryTestStructWithTags(t *testing.T) {
 		F8:  -23.13,
 		F9:  3.92,
 		F10: true,
-		F12: []int64{99, 33},
+		F12: (*[]int64)(&[]int64{99, 33}),
+	}
+
+	expected := []byte{
+		255, 181, // F2
+		0, 99, // F3
+		255, 255, 255, 25, // F4
+		0, 0, 3, 231, // F5
+		255, 255, 255, 255, 255, 255, 204, 81, // F6
+		0, 0, 0, 0, 0, 1, 134, 159, // F7
+		193, 185, 10, 61, // F8
+		64, 15, 92, 40, 245, 194, 143, 92, // F9
+		1, // F10
+
+		0, 0, 0, 0, // F11 is optional, and NOT SET (meaning uint32(0))
+
+		1, 0, 0, 0, // F12 is optional, and IS SET (meaning uint32(1))
+		2, // F12 is a slice, and the len is encoded as WriteUVarInt)
+		99, 0, 0, 0, 0, 0, 0, 0,
+		33, 0, 0, 0, 0, 0, 0, 0,
+	}
+	{
+		buf := new(bytes.Buffer)
+		enc := NewBinEncoder(buf)
+		{
+			err := enc.WriteInt16(s.F2, binary.BigEndian) // [255, 181](len=2)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteUint16(s.F3, binary.BigEndian) // [0, 99](len=2)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteInt32(s.F4, binary.BigEndian) // [255, 255, 255, 25](len=4)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteUint32(s.F5, binary.BigEndian) // [0, 0, 3, 231](len=4)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteInt64(s.F6, binary.BigEndian) // [255, 255, 255, 255, 255, 255, 204, 81](len=8)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteUint64(s.F7, binary.BigEndian) // [0, 0, 0, 0, 0, 1, 134, 159](len=8)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteFloat32(s.F8, binary.BigEndian) // [193, 185, 10, 61](len=4)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteFloat64(s.F9, binary.BigEndian) // [64, 15, 92, 40, 245, 194, 143, 92](len=8)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteBool(s.F10) // [1](len=1)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteUint32(0, binary.LittleEndian) // [0, 0, 0, 0](len=4)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteUint32(1, binary.LittleEndian) // [1, 0, 0, 0](len=4)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteUVarInt(2) // [2](len=1)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteInt64((*s.F12)[0], binary.LittleEndian) // [99, 0, 0, 0, 0, 0, 0, 0](len=8)
+			if err != nil {
+				panic(err)
+			}
+		}
+		{
+			err := enc.WriteInt64((*s.F12)[1], binary.LittleEndian) // [33, 0, 0, 0, 0, 0, 0, 0](len=8)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		assert.Equal(t,
+			expected,
+			buf.Bytes(),
+			FormatByteSlice(buf.Bytes()),
+		)
 	}
 
 	buf := new(bytes.Buffer)
@@ -512,8 +627,9 @@ func TestEncoder_BinaryTestStructWithTags(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t,
-		"ffb50063ffffff19000003e7ffffffffffffcc51000000000001869fc1b90a3d400f5c28f5c28f5c01000000000100000002010000006300000000000000010000002100000000000000",
-		hex.EncodeToString(buf.Bytes()),
+		expected,
+		buf.Bytes(),
+		FormatByteSlice(buf.Bytes()),
 	)
 }
 

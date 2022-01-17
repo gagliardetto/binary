@@ -226,11 +226,12 @@ func (dec *Decoder) ReadByteSlice() (out []byte, err error) {
 		return nil, err
 	}
 
+	end := dec.pos + length
 	if len(dec.data) < dec.pos+length {
-		return nil, fmt.Errorf("byte array: varlen=%d, missing %d bytes", length, dec.pos+length-len(dec.data))
+		end = len(dec.data)
 	}
 
-	out = dec.data[dec.pos : dec.pos+length]
+	out = dec.data[dec.pos:end]
 	dec.pos += length
 	if traceEnabled {
 		zlog.Debug("decode: read byte array", zap.Stringer("hex", HexBytes(out)))

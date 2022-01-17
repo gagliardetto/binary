@@ -566,17 +566,6 @@ func TestDecoder_ByteArray(t *testing.T) {
 	assert.Equal(t, 0, d.Remaining())
 }
 
-func TestDecoder_ByteArray_MissingData(t *testing.T) {
-	buf := []byte{
-		0x0a,
-	}
-
-	d := NewBinDecoder(buf)
-
-	_, err := d.ReadByteSlice()
-	assert.EqualError(t, err, "byte array: varlen=10, missing 10 bytes")
-}
-
 func TestDecoder_Array(t *testing.T) {
 	buf := []byte{1, 2, 4}
 

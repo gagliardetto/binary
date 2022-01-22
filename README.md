@@ -1,75 +1,27 @@
-# dfuse binary
-[![reference](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square)](https://pkg.go.dev/github.com/gagliardetto/binary)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+# binary
 
-Binary Encoder and Decoder library
 
-Usage
-----
+### Borsh
 
-#### Struct Field Tags
-- `_` will skip the field when encoding & deocode a struc
-- `sizeof=` indicates this field is a number used to track the length of a another field.
-- `little` indicates this field will be encoded as little endian
-- `big` indicates this field will be encoded as big endian
-- `optional` indicates this field is optional. An optional field will have an initial byte either `0x00` or `0x01` indicating whether the field is present. If the field is present it will be followed by the value.
-- Bare values will be parsed as type and little endian when necessary
+#### Decoding borsh
 
-#### Supported Types
- - `int8`, `int16`, `int32`, `int64`, `Int128`
- - `uint8`, `uint16`,`uint32`,`uint64`, `Uint128`
- - `float32`, `float64`, `Float128`
- - `string`, `bool`
- - `Varint16`, `Varint32`
- - `Varuint16`, `Varuint32`
-
-#### Custom Types
-To implement custom types, your types would need to implement the `MarshalerBinary` & `UnmarshalerBinary` interfaces
-
-Example
-----
-
-#### Basic Implementation
-```Go
-type Example struct {
-    Var      uint32 `bin:"_"`
-    Str      string
-    IntCount uint32 `bin:"sizeof=Var"`
-    Weird    [8]byte
-    Var      []int
-}
+```golang
+ dec := bin.NewBorshDecoder(data)
+ var meta token_metadata.Metadata
+ err = dec.Decode(&meta)
+ if err != nil {
+   panic(err)
+ }
 ```
 
+#### Encoding borsh
 
-#### Custom Implementation
-```Go
-type Example struct {
-	Prefix byte
-	Value  uint32
+```golang
+buf := new(bytes.Buffer)
+enc := bin.NewBorshEncoder(buf)
+err := enc.Encode(meta)
+if err != nil {
+  panic(err)
 }
-
-func (e *Example) UnmarshalWithDecoder(decoder *Decoder) (err error) {
-	if e.Prefix, err = decoder.ReadByte(); err != nil {
-		return err
-	}
-	if e.Value, err = decoder.ReadUint32(BE()); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (e *Example) MarshalWithEncoder(encoder *Encoder) error {
-	if err := encoder.WriteByte(e.Prefix); err != nil {
-		return err
-	}
-	return encoder.WriteUint32(e.Value, BE())
-}
+// fmt.Print(buf.Bytes())
 ```
-
-# Contributing
-
-Any contributions are welcome, use your standard GitHub-fu to pitch in and improve.
-
-# License
-
-[Apache 2.0](LICENSE)

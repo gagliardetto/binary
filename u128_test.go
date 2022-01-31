@@ -30,7 +30,7 @@ func TestUint128(t *testing.T) {
 	}
 	{
 		u128 := NewUint128BigEndian()
-		reverseBytes(data)
+		ReverseBytes(data)
 		err := u128.UnmarshalWithDecoder(NewBorshDecoder(data))
 		require.NoError(t, err)
 		require.Equal(t, uint64(3102), u128.Hi)

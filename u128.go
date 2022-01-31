@@ -67,7 +67,7 @@ func (i Uint128) Bytes() []byte {
 	if order == binary.LittleEndian {
 		order.PutUint64(buf[:8], i.Lo)
 		order.PutUint64(buf[8:], i.Hi)
-		reverseBytes(buf)
+		ReverseBytes(buf)
 	} else {
 		order.PutUint64(buf[:8], i.Hi)
 		order.PutUint64(buf[8:], i.Lo)
@@ -99,7 +99,7 @@ func (i Uint128) MarshalJSON() (data []byte, err error) {
 	return []byte(`"` + i.String() + `"`), nil
 }
 
-func reverseBytes(s []byte) {
+func ReverseBytes(s []byte) {
 	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
 		s[i], s[j] = s[j], s[i]
 	}
@@ -112,7 +112,7 @@ func (i *Uint128) unmarshalJSON_decimal(s string) error {
 		panic(err)
 	}
 	oo := orderID.BigInt().FillBytes(make([]byte, 16))
-	reverseBytes(oo)
+	ReverseBytes(oo)
 
 	dec := NewBinDecoder(oo)
 

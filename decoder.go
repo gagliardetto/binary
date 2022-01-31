@@ -247,7 +247,7 @@ func (dec *Decoder) ReadLength() (length int, err error) {
 		}
 		length = int(val)
 	case EncodingBorsh:
-		val, err := dec.ReadUint32(LE())
+		val, err := dec.ReadUint32(LE)
 		if err != nil {
 			return 0, err
 		}

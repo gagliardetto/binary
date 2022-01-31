@@ -30,7 +30,7 @@ func (e *Example) UnmarshalWithDecoder(decoder *Decoder) (err error) {
 	if e.Prefix, err = decoder.ReadByte(); err != nil {
 		return err
 	}
-	if e.Value, err = decoder.ReadUint32(BE()); err != nil {
+	if e.Value, err = decoder.ReadUint32(BE); err != nil {
 		return err
 	}
 	return nil
@@ -40,7 +40,7 @@ func (e *Example) MarshalWithEncoder(encoder *Encoder) error {
 	if err := encoder.WriteByte(e.Prefix); err != nil {
 		return err
 	}
-	return encoder.WriteUint32(e.Value, BE())
+	return encoder.WriteUint32(e.Value, BE)
 }
 
 func TestMarshalWithEncoder(t *testing.T) {

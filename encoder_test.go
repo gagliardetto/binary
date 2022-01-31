@@ -94,8 +94,8 @@ func TestEncoder_int16(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewBinEncoder(buf)
-	enc.WriteInt16(int16(-82), LE())
-	enc.WriteInt16(int16(73), LE())
+	enc.WriteInt16(int16(-82), LE)
+	enc.WriteInt16(int16(73), LE)
 
 	assert.Equal(t, []byte{
 		0xae, 0xff, // -82
@@ -106,8 +106,8 @@ func TestEncoder_int16(t *testing.T) {
 	buf = new(bytes.Buffer)
 
 	enc = NewBinEncoder(buf)
-	enc.WriteInt16(int16(-82), BE())
-	enc.WriteInt16(int16(73), BE())
+	enc.WriteInt16(int16(-82), BE)
+	enc.WriteInt16(int16(73), BE)
 
 	assert.Equal(t, []byte{
 		0xff, 0xae, // -82
@@ -120,8 +120,8 @@ func TestEncoder_int32(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewBinEncoder(buf)
-	enc.WriteInt32(int32(-276132392), LE())
-	enc.WriteInt32(int32(237391), LE())
+	enc.WriteInt32(int32(-276132392), LE)
+	enc.WriteInt32(int32(237391), LE)
 
 	assert.Equal(t, []byte{
 		0xd8, 0x8d, 0x8a, 0xef,
@@ -132,8 +132,8 @@ func TestEncoder_int32(t *testing.T) {
 	buf = new(bytes.Buffer)
 
 	enc = NewBinEncoder(buf)
-	enc.WriteInt32(int32(-276132392), BE())
-	enc.WriteInt32(int32(237391), BE())
+	enc.WriteInt32(int32(-276132392), BE)
+	enc.WriteInt32(int32(237391), BE)
 
 	assert.Equal(t, []byte{
 		0xef, 0x8a, 0x8d, 0xd8,
@@ -146,8 +146,8 @@ func TestEncoder_int64(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewBinEncoder(buf)
-	enc.WriteInt64(int64(-819823), LE())
-	enc.WriteInt64(int64(72931), LE())
+	enc.WriteInt64(int64(-819823), LE)
+	enc.WriteInt64(int64(72931), LE)
 
 	assert.Equal(t, []byte{
 		0x91, 0x7d, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, //-819823
@@ -158,8 +158,8 @@ func TestEncoder_int64(t *testing.T) {
 	buf = new(bytes.Buffer)
 
 	enc = NewBinEncoder(buf)
-	enc.WriteInt64(int64(-819823), BE())
-	enc.WriteInt64(int64(72931), BE())
+	enc.WriteInt64(int64(-819823), BE)
+	enc.WriteInt64(int64(72931), BE)
 
 	assert.Equal(t, []byte{
 		0xff, 0xff, 0xff, 0xff, 0xff, 0xf3, 0x7d, 0x91, //-819823
@@ -185,8 +185,8 @@ func TestEncoder_uint16(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewBinEncoder(buf)
-	enc.WriteUint16(uint16(82), LE())
-	enc.WriteUint16(uint16(73), LE())
+	enc.WriteUint16(uint16(82), LE)
+	enc.WriteUint16(uint16(73), LE)
 
 	assert.Equal(t, []byte{
 		0x52, 0x00, // 82
@@ -197,8 +197,8 @@ func TestEncoder_uint16(t *testing.T) {
 	buf = new(bytes.Buffer)
 
 	enc = NewBinEncoder(buf)
-	enc.WriteUint16(uint16(82), BE())
-	enc.WriteUint16(uint16(73), BE())
+	enc.WriteUint16(uint16(82), BE)
+	enc.WriteUint16(uint16(73), BE)
 
 	assert.Equal(t, []byte{
 		0x00, 0x52, // 82
@@ -211,8 +211,8 @@ func TestEncoder_uint32(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewBinEncoder(buf)
-	enc.WriteUint32(uint32(276132392), LE())
-	enc.WriteUint32(uint32(237391), LE())
+	enc.WriteUint32(uint32(276132392), LE)
+	enc.WriteUint32(uint32(237391), LE)
 
 	assert.Equal(t, []byte{
 		0x28, 0x72, 0x75, 0x10, // 276132392 as LE
@@ -223,8 +223,8 @@ func TestEncoder_uint32(t *testing.T) {
 	buf = new(bytes.Buffer)
 
 	enc = NewBinEncoder(buf)
-	enc.WriteUint32(uint32(276132392), BE())
-	enc.WriteUint32(uint32(237391), BE())
+	enc.WriteUint32(uint32(276132392), BE)
+	enc.WriteUint32(uint32(237391), BE)
 
 	assert.Equal(t, []byte{
 		0x10, 0x75, 0x72, 0x28, // 276132392 as LE
@@ -237,8 +237,8 @@ func TestEncoder_uint64(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewBinEncoder(buf)
-	enc.WriteUint64(uint64(819823), LE())
-	enc.WriteUint64(uint64(72931), LE())
+	enc.WriteUint64(uint64(819823), LE)
+	enc.WriteUint64(uint64(72931), LE)
 
 	assert.Equal(t, []byte{
 		0x6f, 0x82, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, //819823
@@ -249,8 +249,8 @@ func TestEncoder_uint64(t *testing.T) {
 	buf = new(bytes.Buffer)
 
 	enc = NewBinEncoder(buf)
-	enc.WriteUint64(uint64(819823), BE())
-	enc.WriteUint64(uint64(72931), BE())
+	enc.WriteUint64(uint64(819823), BE)
+	enc.WriteUint64(uint64(72931), BE)
 
 	assert.Equal(t, []byte{
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x82, 0x6f, //819823
@@ -263,8 +263,8 @@ func TestEncoder_float32(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewBinEncoder(buf)
-	enc.WriteFloat32(float32(1.32), LE())
-	enc.WriteFloat32(float32(-3.21), LE())
+	enc.WriteFloat32(float32(1.32), LE)
+	enc.WriteFloat32(float32(-3.21), LE)
 
 	assert.Equal(t, []byte{
 		0xc3, 0xf5, 0xa8, 0x3f,
@@ -275,8 +275,8 @@ func TestEncoder_float32(t *testing.T) {
 	buf = new(bytes.Buffer)
 
 	enc = NewBinEncoder(buf)
-	enc.WriteFloat32(float32(1.32), BE())
-	enc.WriteFloat32(float32(-3.21), BE())
+	enc.WriteFloat32(float32(1.32), BE)
+	enc.WriteFloat32(float32(-3.21), BE)
 	assert.Equal(t, []byte{
 		0x3f, 0xa8, 0xf5, 0xc3,
 		0xc0, 0x4d, 0x70, 0xa4,
@@ -288,10 +288,10 @@ func TestEncoder_float64(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewBinEncoder(buf)
-	enc.WriteFloat64(float64(-62.23), LE())
-	enc.WriteFloat64(float64(23.239), LE())
-	enc.WriteFloat64(float64(math.Inf(1)), LE())
-	enc.WriteFloat64(float64(math.Inf(-1)), LE())
+	enc.WriteFloat64(float64(-62.23), LE)
+	enc.WriteFloat64(float64(23.239), LE)
+	enc.WriteFloat64(float64(math.Inf(1)), LE)
+	enc.WriteFloat64(float64(math.Inf(-1)), LE)
 
 	assert.Equal(t, []byte{
 		0x3d, 0x0a, 0xd7, 0xa3, 0x70, 0x1d, 0x4f, 0xc0,
@@ -304,10 +304,10 @@ func TestEncoder_float64(t *testing.T) {
 	buf = new(bytes.Buffer)
 
 	enc = NewBinEncoder(buf)
-	enc.WriteFloat64(float64(-62.23), BE())
-	enc.WriteFloat64(float64(23.239), BE())
-	enc.WriteFloat64(float64(math.Inf(1)), BE())
-	enc.WriteFloat64(float64(math.Inf(-1)), BE())
+	enc.WriteFloat64(float64(-62.23), BE)
+	enc.WriteFloat64(float64(23.239), BE)
+	enc.WriteFloat64(float64(math.Inf(1)), BE)
+	enc.WriteFloat64(float64(math.Inf(-1)), BE)
 
 	assert.Equal(t, []byte{
 		0xc0, 0x4f, 0x1d, 0x70, 0xa3, 0xd7, 0x0a, 0x3d,
@@ -425,7 +425,7 @@ func TestEncoder_Uint128(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	enc := NewBinEncoder(buf)
-	enc.WriteUint128(u, LE())
+	enc.WriteUint128(u, LE)
 
 	assert.Equal(t, []byte{
 		0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -436,7 +436,7 @@ func TestEncoder_Uint128(t *testing.T) {
 	buf = new(bytes.Buffer)
 
 	enc = NewBinEncoder(buf)
-	enc.WriteUint128(u, BE())
+	enc.WriteUint128(u, BE)
 
 	assert.Equal(t, []byte{
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07,

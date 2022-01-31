@@ -72,9 +72,9 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 
 	switch rv.Kind() {
 	// case reflect.Int:
-	// 	return e.WriteInt64(rv.Int(), LE())
+	// 	return e.WriteInt64(rv.Int(), LE)
 	// case reflect.Uint:
-	// 	return e.WriteUint64(rv.Uint(), LE())
+	// 	return e.WriteUint64(rv.Uint(), LE)
 	case reflect.String:
 		return e.WriteString(rv.String())
 	case reflect.Uint8:
@@ -82,21 +82,21 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 	case reflect.Int8:
 		return e.WriteByte(byte(rv.Int()))
 	case reflect.Int16:
-		return e.WriteInt16(int16(rv.Int()), LE())
+		return e.WriteInt16(int16(rv.Int()), LE)
 	case reflect.Uint16:
-		return e.WriteUint16(uint16(rv.Uint()), LE())
+		return e.WriteUint16(uint16(rv.Uint()), LE)
 	case reflect.Int32:
-		return e.WriteInt32(int32(rv.Int()), LE())
+		return e.WriteInt32(int32(rv.Int()), LE)
 	case reflect.Uint32:
-		return e.WriteUint32(uint32(rv.Uint()), LE())
+		return e.WriteUint32(uint32(rv.Uint()), LE)
 	case reflect.Uint64:
-		return e.WriteUint64(rv.Uint(), LE())
+		return e.WriteUint64(rv.Uint(), LE)
 	case reflect.Int64:
-		return e.WriteInt64(rv.Int(), LE())
+		return e.WriteInt64(rv.Int(), LE)
 	case reflect.Float32:
-		return e.WriteFloat32(float32(rv.Float()), LE())
+		return e.WriteFloat32(float32(rv.Float()), LE)
 	case reflect.Float64:
-		return e.WriteFloat64(rv.Float(), LE())
+		return e.WriteFloat64(rv.Float(), LE)
 	case reflect.Bool:
 		return e.WriteBool(rv.Bool())
 	case reflect.Ptr:
@@ -149,7 +149,7 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 			}
 		} else {
 			l = rv.Len()
-			if err = e.WriteUint32(uint32(l), LE()); err != nil {
+			if err = e.WriteUint32(uint32(l), LE); err != nil {
 				return
 			}
 		}
@@ -186,7 +186,7 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 			zlog = zlog.Named("struct")
 		}
 
-		if err = e.WriteUint32(uint32(keyCount), LE()); err != nil {
+		if err = e.WriteUint32(uint32(keyCount), LE); err != nil {
 			return
 		}
 

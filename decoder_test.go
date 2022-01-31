@@ -87,12 +87,12 @@ func TestDecoder_Remaining(t *testing.T) {
 
 	d := NewBinDecoder(b)
 
-	n, err := d.ReadUint16(LE())
+	n, err := d.ReadUint16(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint16(1), n)
 	assert.Equal(t, 2, d.Remaining())
 
-	n, err = d.ReadUint16(LE())
+	n, err = d.ReadUint16(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint16(2), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -126,12 +126,12 @@ func TestDecoder_int16(t *testing.T) {
 
 	d := NewBinDecoder(buf)
 
-	n, err := d.ReadInt16(LE())
+	n, err := d.ReadInt16(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, int16(-82), n)
 	assert.Equal(t, 2, d.Remaining())
 
-	n, err = d.ReadInt16(LE())
+	n, err = d.ReadInt16(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, int16(73), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -144,12 +144,12 @@ func TestDecoder_int16(t *testing.T) {
 
 	d = NewBinDecoder(buf)
 
-	n, err = d.ReadInt16(BE())
+	n, err = d.ReadInt16(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, int16(-82), n)
 	assert.Equal(t, 2, d.Remaining())
 
-	n, err = d.ReadInt16(BE())
+	n, err = d.ReadInt16(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, int16(73), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -164,12 +164,12 @@ func TestDecoder_int32(t *testing.T) {
 
 	d := NewBinDecoder(buf)
 
-	n, err := d.ReadInt32(LE())
+	n, err := d.ReadInt32(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, int32(-276132392), n)
 	assert.Equal(t, 4, d.Remaining())
 
-	n, err = d.ReadInt32(LE())
+	n, err = d.ReadInt32(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, int32(237391), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -182,12 +182,12 @@ func TestDecoder_int32(t *testing.T) {
 
 	d = NewBinDecoder(buf)
 
-	n, err = d.ReadInt32(BE())
+	n, err = d.ReadInt32(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, int32(-276132392), n)
 	assert.Equal(t, 4, d.Remaining())
 
-	n, err = d.ReadInt32(BE())
+	n, err = d.ReadInt32(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, int32(237391), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -202,12 +202,12 @@ func TestDecoder_int64(t *testing.T) {
 
 	d := NewBinDecoder(buf)
 
-	n, err := d.ReadInt64(LE())
+	n, err := d.ReadInt64(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(-819823), n)
 	assert.Equal(t, 8, d.Remaining())
 
-	n, err = d.ReadInt64(LE())
+	n, err = d.ReadInt64(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(72931), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -220,12 +220,12 @@ func TestDecoder_int64(t *testing.T) {
 
 	d = NewBinDecoder(buf)
 
-	n, err = d.ReadInt64(BE())
+	n, err = d.ReadInt64(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(-819823), n)
 	assert.Equal(t, 8, d.Remaining())
 
-	n, err = d.ReadInt64(BE())
+	n, err = d.ReadInt64(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(72931), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -259,12 +259,12 @@ func TestDecoder_uint16(t *testing.T) {
 
 	d := NewBinDecoder(buf)
 
-	n, err := d.ReadUint16(LE())
+	n, err := d.ReadUint16(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint16(82), n)
 	assert.Equal(t, 2, d.Remaining())
 
-	n, err = d.ReadUint16(LE())
+	n, err = d.ReadUint16(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint16(73), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -277,12 +277,12 @@ func TestDecoder_uint16(t *testing.T) {
 
 	d = NewBinDecoder(buf)
 
-	n, err = d.ReadUint16(BE())
+	n, err = d.ReadUint16(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint16(82), n)
 	assert.Equal(t, 2, d.Remaining())
 
-	n, err = d.ReadUint16(BE())
+	n, err = d.ReadUint16(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint16(73), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -297,12 +297,12 @@ func TestDecoder_uint32(t *testing.T) {
 
 	d := NewBinDecoder(buf)
 
-	n, err := d.ReadUint32(LE())
+	n, err := d.ReadUint32(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(276132392), n)
 	assert.Equal(t, 4, d.Remaining())
 
-	n, err = d.ReadUint32(LE())
+	n, err = d.ReadUint32(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(237391), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -315,12 +315,12 @@ func TestDecoder_uint32(t *testing.T) {
 
 	d = NewBinDecoder(buf)
 
-	n, err = d.ReadUint32(BE())
+	n, err = d.ReadUint32(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(276132392), n)
 	assert.Equal(t, 4, d.Remaining())
 
-	n, err = d.ReadUint32(BE())
+	n, err = d.ReadUint32(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(237391), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -335,12 +335,12 @@ func TestDecoder_uint64(t *testing.T) {
 
 	d := NewBinDecoder(buf)
 
-	n, err := d.ReadUint64(LE())
+	n, err := d.ReadUint64(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(819823), n)
 	assert.Equal(t, 8, d.Remaining())
 
-	n, err = d.ReadUint64(LE())
+	n, err = d.ReadUint64(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(72931), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -353,12 +353,12 @@ func TestDecoder_uint64(t *testing.T) {
 
 	d = NewBinDecoder(buf)
 
-	n, err = d.ReadUint64(BE())
+	n, err = d.ReadUint64(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(819823), n)
 	assert.Equal(t, 8, d.Remaining())
 
-	n, err = d.ReadUint64(BE())
+	n, err = d.ReadUint64(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(72931), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -373,12 +373,12 @@ func TestDecoder_float32(t *testing.T) {
 
 	d := NewBinDecoder(buf)
 
-	n, err := d.ReadFloat32(LE())
+	n, err := d.ReadFloat32(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, float32(1.32), n)
 	assert.Equal(t, 4, d.Remaining())
 
-	n, err = d.ReadFloat32(LE())
+	n, err = d.ReadFloat32(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, float32(-3.21), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -391,12 +391,12 @@ func TestDecoder_float32(t *testing.T) {
 
 	d = NewBinDecoder(buf)
 
-	n, err = d.ReadFloat32(BE())
+	n, err = d.ReadFloat32(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, float32(1.32), n)
 	assert.Equal(t, 4, d.Remaining())
 
-	n, err = d.ReadFloat32(BE())
+	n, err = d.ReadFloat32(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, float32(-3.21), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -414,27 +414,27 @@ func TestDecoder_float64(t *testing.T) {
 
 	d := NewBinDecoder(buf)
 
-	n, err := d.ReadFloat64(LE())
+	n, err := d.ReadFloat64(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(-62.23), n)
 	assert.Equal(t, 32, d.Remaining())
 
-	n, err = d.ReadFloat64(LE())
+	n, err = d.ReadFloat64(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(23.239), n)
 	assert.Equal(t, 24, d.Remaining())
 
-	n, err = d.ReadFloat64(LE())
+	n, err = d.ReadFloat64(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, math.Inf(1), n)
 	assert.Equal(t, 16, d.Remaining())
 
-	n, err = d.ReadFloat64(LE())
+	n, err = d.ReadFloat64(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, math.Inf(-1), n)
 	assert.Equal(t, 8, d.Remaining())
 
-	n, err = d.ReadFloat64(LE())
+	n, err = d.ReadFloat64(LE)
 	assert.NoError(t, err)
 	assert.True(t, math.IsNaN(n))
 
@@ -449,27 +449,27 @@ func TestDecoder_float64(t *testing.T) {
 
 	d = NewBinDecoder(buf)
 
-	n, err = d.ReadFloat64(BE())
+	n, err = d.ReadFloat64(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(-62.23), n)
 	assert.Equal(t, 32, d.Remaining())
 
-	n, err = d.ReadFloat64(BE())
+	n, err = d.ReadFloat64(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, float64(23.239), n)
 	assert.Equal(t, 24, d.Remaining())
 
-	n, err = d.ReadFloat64(BE())
+	n, err = d.ReadFloat64(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, math.Inf(1), n)
 	assert.Equal(t, 16, d.Remaining())
 
-	n, err = d.ReadFloat64(BE())
+	n, err = d.ReadFloat64(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, math.Inf(-1), n)
 	assert.Equal(t, 8, d.Remaining())
 
-	n, err = d.ReadFloat64(BE())
+	n, err = d.ReadFloat64(BE)
 	assert.NoError(t, err)
 	assert.True(t, math.IsNaN(n))
 }
@@ -611,12 +611,12 @@ func TestDecoder_Int64(t *testing.T) {
 
 	d := NewBinDecoder(buf)
 
-	n, err := d.ReadInt64(LE())
+	n, err := d.ReadInt64(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(-819823), n)
 	assert.Equal(t, 8, d.Remaining())
 
-	n, err = d.ReadInt64(LE())
+	n, err = d.ReadInt64(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(72931), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -629,12 +629,12 @@ func TestDecoder_Int64(t *testing.T) {
 
 	d = NewBinDecoder(buf)
 
-	n, err = d.ReadInt64(BE())
+	n, err = d.ReadInt64(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(-819823), n)
 	assert.Equal(t, 8, d.Remaining())
 
-	n, err = d.ReadInt64(BE())
+	n, err = d.ReadInt64(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(72931), n)
 	assert.Equal(t, 0, d.Remaining())
@@ -649,7 +649,7 @@ func TestDecoder_Uint128_2(t *testing.T) {
 
 	d := NewBinDecoder(buf)
 
-	n, err := d.ReadUint128(LE())
+	n, err := d.ReadUint128(LE)
 	assert.NoError(t, err)
 	assert.Equal(t, Uint128{Hi: 0xb6d, Lo: 0xffffffffffd3880d}, n)
 
@@ -660,7 +660,7 @@ func TestDecoder_Uint128_2(t *testing.T) {
 
 	d = NewBinDecoder(buf)
 
-	n, err = d.ReadUint128(BE())
+	n, err = d.ReadUint128(BE)
 	assert.NoError(t, err)
 	assert.Equal(t, Uint128{Hi: 0x00000000000008bb, Lo: 0xffffffffffacdcad}, n)
 

@@ -25,8 +25,8 @@ type option struct {
 	Order         binary.ByteOrder
 }
 
-func LE() binary.ByteOrder { return binary.LittleEndian }
-func BE() binary.ByteOrder { return binary.BigEndian }
+var LE binary.ByteOrder = binary.LittleEndian
+var BE binary.ByteOrder = binary.BigEndian
 
 var defaultByteOrder = binary.LittleEndian
 

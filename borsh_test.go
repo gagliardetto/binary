@@ -1099,14 +1099,14 @@ type CustomEncoding struct {
 }
 
 func (e CustomEncoding) MarshalWithEncoder(encoder *Encoder) error {
-	if err := encoder.WriteUint32(e.Value, LE()); err != nil {
+	if err := encoder.WriteUint32(e.Value, LE); err != nil {
 		return err
 	}
 	return encoder.WriteByte(e.Prefix)
 }
 
 func (e *CustomEncoding) UnmarshalWithDecoder(decoder *Decoder) (err error) {
-	if e.Value, err = decoder.ReadUint32(LE()); err != nil {
+	if e.Value, err = decoder.ReadUint32(LE); err != nil {
 		return err
 	}
 	if e.Prefix, err = decoder.ReadByte(); err != nil {

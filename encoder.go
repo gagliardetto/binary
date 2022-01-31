@@ -126,7 +126,7 @@ func (e *Encoder) WriteLength(length int) error {
 			return err
 		}
 	case EncodingBorsh:
-		if err := e.WriteUint32(uint32(length), LE()); err != nil {
+		if err := e.WriteUint32(uint32(length), LE); err != nil {
 			return err
 		}
 	case EncodingCompactU16:

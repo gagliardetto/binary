@@ -1522,7 +1522,7 @@ func TestSlices(t *testing.T) {
 	}
 }
 
-func TestUint128(t *testing.T) {
+func TestUint128_old(t *testing.T) {
 	tests := []struct {
 		in Int128
 	}{

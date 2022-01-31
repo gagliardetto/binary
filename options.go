@@ -28,10 +28,12 @@ type option struct {
 func LE() binary.ByteOrder { return binary.LittleEndian }
 func BE() binary.ByteOrder { return binary.BigEndian }
 
+var defaultByteOrder = binary.LittleEndian
+
 func newDefaultOption() *option {
 	return &option{
 		OptionalField: false,
-		Order:         LE(),
+		Order:         defaultByteOrder,
 	}
 }
 
@@ -43,6 +45,7 @@ func (o *option) clone() *option {
 	}
 	return out
 }
+
 func (o *option) isOptional() bool {
 	return o.OptionalField
 }

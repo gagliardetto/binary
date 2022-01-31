@@ -35,7 +35,7 @@ type fieldTag struct {
 
 func parseFieldTag(tag reflect.StructTag) *fieldTag {
 	t := &fieldTag{
-		Order: binary.LittleEndian,
+		Order: defaultByteOrder,
 	}
 	tagStr := tag.Get("bin")
 	for _, s := range strings.Split(tagStr, " ") {

@@ -24,8 +24,6 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
-
-	"github.com/shopspring/decimal"
 )
 
 // uint128
@@ -105,13 +103,29 @@ func ReverseBytes(s []byte) {
 	}
 }
 
-func (i *Uint128) unmarshalJSON_decimal(s string) error {
-
-	orderID, err := decimal.NewFromString(s)
-	if err != nil {
-		panic(err)
+func (i *Uint128) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		return nil
 	}
-	oo := orderID.BigInt().FillBytes(make([]byte, 16))
+
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+
+	if strings.HasPrefix(s, "0x") || strings.HasPrefix(s, "0X") {
+		return i.unmarshalJSON_hex(s)
+	}
+
+	return i.unmarshalJSON_decimal(s)
+}
+
+func (i *Uint128) unmarshalJSON_decimal(s string) error {
+	parsed, ok := (&big.Int{}).SetString(s, 0)
+	if !ok {
+		return fmt.Errorf("could not parse %q", s)
+	}
+	oo := parsed.FillBytes(make([]byte, 16))
 	ReverseBytes(oo)
 
 	dec := NewBinDecoder(oo)
@@ -127,7 +141,6 @@ func (i *Uint128) unmarshalJSON_decimal(s string) error {
 }
 
 func (i *Uint128) unmarshalJSON_hex(s string) error {
-
 	truncatedVal := s[2:]
 	if len(truncatedVal) != 16 {
 		return fmt.Errorf("uint128 expects 16 characters after 0x, had %v", len(truncatedVal))
@@ -148,23 +161,6 @@ func (i *Uint128) unmarshalJSON_hex(s string) error {
 	}
 
 	return nil
-}
-
-func (i *Uint128) UnmarshalJSON(data []byte) error {
-	if string(data) == "null" {
-		return nil
-	}
-
-	var s string
-	if err := json.Unmarshal(data, &s); err != nil {
-		return err
-	}
-
-	if strings.HasPrefix(s, "0x") || strings.HasPrefix(s, "0X") {
-		return i.unmarshalJSON_hex(s)
-	}
-
-	return i.unmarshalJSON_decimal(s)
 }
 
 func (i *Uint128) UnmarshalWithDecoder(dec *Decoder) error {

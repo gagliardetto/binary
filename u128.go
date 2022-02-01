@@ -26,30 +26,30 @@ import (
 	"strings"
 )
 
-// uint128
+// Uint128
 type Uint128 struct {
 	Lo         uint64
 	Hi         uint64
-	endianness binary.ByteOrder
+	Endianness binary.ByteOrder
 }
 
 func NewUint128BigEndian() *Uint128 {
 	return &Uint128{
-		endianness: binary.BigEndian,
+		Endianness: binary.BigEndian,
 	}
 }
 
 func NewUint128LittleEndian() *Uint128 {
 	return &Uint128{
-		endianness: binary.LittleEndian,
+		Endianness: binary.LittleEndian,
 	}
 }
 
 func (i Uint128) getByteOrder() binary.ByteOrder {
-	if i.endianness == nil {
+	if i.Endianness == nil {
 		return defaultByteOrder
 	}
-	return i.endianness
+	return i.Endianness
 }
 
 func (i Int128) getByteOrder() binary.ByteOrder {

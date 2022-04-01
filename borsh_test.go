@@ -857,8 +857,8 @@ func TestBorsh_Encode(t *testing.T) {
 					},
 
 					ComplexPrimitives2: ComplexEnumPrimitives{
-						Enum: 0,
-						Foo: 20,
+						Enum: 1,
+						Bar: 11,
 					},
 
 					Complex2: ComplexEnumPointers{
@@ -961,8 +961,8 @@ func TestBorsh_Encode(t *testing.T) {
 						[]byte{20, 0, 0, 0},
 
 						// .ComplexPrimitives2
-						[]byte{0},
-						[]byte{20, 0, 0, 0},
+						[]byte{1},
+						[]byte{11, 0},
 
 						// .Complex2
 						[]byte{1},

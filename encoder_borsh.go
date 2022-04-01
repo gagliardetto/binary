@@ -37,7 +37,7 @@ func (e *Encoder) encodePrimitive(rv reflect.Value, opt *option) (isPrimitive bo
 		err = e.WriteString(rv.String())
 		break
 	case reflect.Uint8:
-		err =  e.WriteByte(byte(rv.Uint()))
+		err = e.WriteByte(byte(rv.Uint()))
 		break
 	case reflect.Int8:
 		err = e.WriteByte(byte(rv.Int()))
@@ -273,7 +273,7 @@ func (enc *Encoder) encodeComplexEnumBorsh(rv reflect.Value) error {
 }
 
 type BorshEnum uint8
-type BorshEnumEmpty struct {}
+type BorshEnumEmpty struct{}
 
 func (e *Encoder) encodeStructBorsh(rt reflect.Type, rv reflect.Value) (err error) {
 	l := rv.NumField()

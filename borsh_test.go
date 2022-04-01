@@ -848,17 +848,17 @@ func TestBorsh_Encode(t *testing.T) {
 					},
 					ComplexEmpty: ComplexEnumEmpty{
 						Enum: 0,
-						Foo: BorshEnumEmpty{},
+						Foo:  BorshEnumEmpty{},
 					},
 
 					ComplexPrimitives1: ComplexEnumPrimitives{
 						Enum: 0,
-						Foo: 20,
+						Foo:  20,
 					},
 
 					ComplexPrimitives2: ComplexEnumPrimitives{
 						Enum: 1,
-						Bar: 11,
+						Bar:  11,
 					},
 
 					Complex2: ComplexEnumPointers{
@@ -1050,7 +1050,7 @@ type StructWithEnum struct {
 	ComplexPtr       *ComplexEnum
 	ComplexPtrNotSet *ComplexEnum
 
-	ComplexEmpty	  ComplexEnumEmpty
+	ComplexEmpty       ComplexEnumEmpty
 	ComplexPrimitives1 ComplexEnumPrimitives
 	ComplexPrimitives2 ComplexEnumPrimitives
 
@@ -1468,7 +1468,7 @@ func TestComplexEnum(t *testing.T) {
 	{
 		x := ComplexEnumPrimitives{
 			Enum: 1,
-			Bar: 22,
+			Bar:  22,
 		}
 		data, err := MarshalBorsh(x)
 		require.NoError(t, err)

@@ -270,6 +270,7 @@ func (enc *Encoder) encodeComplexEnumBorsh(rv reflect.Value) error {
 }
 
 type BorshEnum uint8
+
 // EmptyVariant is an empty borsh enum variant.
 type EmptyVariant struct{}
 

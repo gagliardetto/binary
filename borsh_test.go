@@ -848,7 +848,7 @@ func TestBorsh_Encode(t *testing.T) {
 					},
 					ComplexEmpty: ComplexEnumEmpty{
 						Enum: 0,
-						Foo:  BorshEnumEmpty{},
+						Foo:  EmptyVariant{},
 					},
 
 					ComplexPrimitives1: ComplexEnumPrimitives{
@@ -1393,7 +1393,7 @@ type ComplexEnumPointers struct {
 
 type ComplexEnumEmpty struct {
 	Enum BorshEnum `borsh_enum:"true"`
-	Foo  BorshEnumEmpty
+	Foo  EmptyVariant
 	Bar  Bar
 }
 

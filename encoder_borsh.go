@@ -273,7 +273,7 @@ func (enc *Encoder) encodeComplexEnumBorsh(rv reflect.Value) error {
 }
 
 type BorshEnum uint8
-type BorshEnumEmpty struct{}
+type EmptyVariant struct{}
 
 func (e *Encoder) encodeStructBorsh(rt reflect.Type, rv reflect.Value) (err error) {
 	l := rv.NumField()

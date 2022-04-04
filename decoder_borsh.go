@@ -86,10 +86,6 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 	}
 
 	rt := rv.Type()
-	if isTypeBorshEnumEmpty(rt) {
-		// Empty enum type, nothing to deserialize
-		return
-	}
 	switch rv.Kind() {
 	// case reflect.Int:
 	// 	// TODO: check if is x32 or x64
@@ -270,10 +266,6 @@ func (dec *Decoder) deserializeComplexEnum(rv reflect.Value) error {
 var borshEnumType = reflect.TypeOf(BorshEnum(0))
 
 func isTypeBorshEnum(typ reflect.Type) bool {
-	return typ.Kind() == reflect.Uint8 && typ == borshEnumType
-}
-
-func isTypeBorshEnumEmpty(typ reflect.Type) bool {
 	return typ.Kind() == reflect.Uint8 && typ == borshEnumType
 }
 

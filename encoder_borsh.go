@@ -253,9 +253,6 @@ func (enc *Encoder) encodeComplexEnumBorsh(rv reflect.Value) error {
 	}
 	// Enum is empty
 	field := rv.Field(int(enum) + 1)
-	if isTypeBorshEnumEmpty(field.Type()) {
-		return nil
-	}
 	if field.Kind() == reflect.Ptr {
 		field = field.Elem()
 	}
@@ -273,7 +270,16 @@ func (enc *Encoder) encodeComplexEnumBorsh(rv reflect.Value) error {
 }
 
 type BorshEnum uint8
+// EmptyVariant is an empty borsh enum variant.
 type EmptyVariant struct{}
+
+func (_ *EmptyVariant) MarshalWithEncoder(_ *Encoder) error {
+	return nil
+}
+
+func (_ *EmptyVariant) UnmarshalWithEncoder(_ *Encoder) error {
+	return nil
+}
 
 func (e *Encoder) encodeStructBorsh(rt reflect.Type, rv reflect.Value) (err error) {
 	l := rv.NumField()

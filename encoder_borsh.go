@@ -122,8 +122,6 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 	// Encode the value if it's a primitive type
 	isPrimitive, err := e.encodePrimitive(rv, nil)
 	if isPrimitive {
-		return
-	} else if err != nil {
 		return err
 	}
 
@@ -262,8 +260,6 @@ func (enc *Encoder) encodeComplexEnumBorsh(rv reflect.Value) error {
 	// Encode the value if it's a primitive type
 	isPrimitive, err := enc.encodePrimitive(field, nil)
 	if isPrimitive {
-		return nil
-	} else if err != nil {
 		return err
 	}
 	return nil

@@ -35,40 +35,28 @@ func (e *Encoder) encodePrimitive(rv reflect.Value, opt *option) (isPrimitive bo
 	// 	err = e.WriteUint64(rv.Uint(), LE)
 	case reflect.String:
 		err = e.WriteString(rv.String())
-		break
 	case reflect.Uint8:
 		err = e.WriteByte(byte(rv.Uint()))
-		break
 	case reflect.Int8:
 		err = e.WriteByte(byte(rv.Int()))
-		break
 	case reflect.Int16:
 		err = e.WriteInt16(int16(rv.Int()), LE)
-		break
 	case reflect.Uint16:
 		err = e.WriteUint16(uint16(rv.Uint()), LE)
-		break
 	case reflect.Int32:
 		err = e.WriteInt32(int32(rv.Int()), LE)
-		break
 	case reflect.Uint32:
 		err = e.WriteUint32(uint32(rv.Uint()), LE)
-		break
 	case reflect.Uint64:
 		err = e.WriteUint64(rv.Uint(), LE)
-		break
 	case reflect.Int64:
 		err = e.WriteInt64(rv.Int(), LE)
-		break
 	case reflect.Float32:
 		err = e.WriteFloat32(float32(rv.Float()), LE)
-		break
 	case reflect.Float64:
 		err = e.WriteFloat64(rv.Float(), LE)
-		break
 	case reflect.Bool:
 		err = e.WriteBool(rv.Bool())
-		break
 	default:
 		isPrimitive = false
 	}

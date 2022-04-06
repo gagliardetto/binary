@@ -26,6 +26,43 @@ import (
 	"go.uber.org/zap"
 )
 
+func (e *Encoder) encodePrimitive(rv reflect.Value, opt *option) (isPrimitive bool, err error) {
+	isPrimitive = true
+	switch rv.Kind() {
+	// case reflect.Int:
+	// 	err = e.WriteInt64(rv.Int(), LE)
+	// case reflect.Uint:
+	// 	err = e.WriteUint64(rv.Uint(), LE)
+	case reflect.String:
+		err = e.WriteString(rv.String())
+	case reflect.Uint8:
+		err = e.WriteByte(byte(rv.Uint()))
+	case reflect.Int8:
+		err = e.WriteByte(byte(rv.Int()))
+	case reflect.Int16:
+		err = e.WriteInt16(int16(rv.Int()), LE)
+	case reflect.Uint16:
+		err = e.WriteUint16(uint16(rv.Uint()), LE)
+	case reflect.Int32:
+		err = e.WriteInt32(int32(rv.Int()), LE)
+	case reflect.Uint32:
+		err = e.WriteUint32(uint32(rv.Uint()), LE)
+	case reflect.Uint64:
+		err = e.WriteUint64(rv.Uint(), LE)
+	case reflect.Int64:
+		err = e.WriteInt64(rv.Int(), LE)
+	case reflect.Float32:
+		err = e.WriteFloat32(float32(rv.Float()), LE)
+	case reflect.Float64:
+		err = e.WriteFloat64(rv.Float(), LE)
+	case reflect.Bool:
+		err = e.WriteBool(rv.Bool())
+	default:
+		isPrimitive = false
+	}
+	return
+}
+
 func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 	if opt == nil {
 		opt = newDefaultOption()
@@ -70,35 +107,13 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 		return marshaler.MarshalWithEncoder(e)
 	}
 
+	// Encode the value if it's a primitive type
+	isPrimitive, err := e.encodePrimitive(rv, nil)
+	if isPrimitive {
+		return err
+	}
+
 	switch rv.Kind() {
-	// case reflect.Int:
-	// 	return e.WriteInt64(rv.Int(), LE)
-	// case reflect.Uint:
-	// 	return e.WriteUint64(rv.Uint(), LE)
-	case reflect.String:
-		return e.WriteString(rv.String())
-	case reflect.Uint8:
-		return e.WriteByte(byte(rv.Uint()))
-	case reflect.Int8:
-		return e.WriteByte(byte(rv.Int()))
-	case reflect.Int16:
-		return e.WriteInt16(int16(rv.Int()), LE)
-	case reflect.Uint16:
-		return e.WriteUint16(uint16(rv.Uint()), LE)
-	case reflect.Int32:
-		return e.WriteInt32(int32(rv.Int()), LE)
-	case reflect.Uint32:
-		return e.WriteUint32(uint32(rv.Uint()), LE)
-	case reflect.Uint64:
-		return e.WriteUint64(rv.Uint(), LE)
-	case reflect.Int64:
-		return e.WriteInt64(rv.Int(), LE)
-	case reflect.Float32:
-		return e.WriteFloat32(float32(rv.Float()), LE)
-	case reflect.Float64:
-		return e.WriteFloat64(rv.Float(), LE)
-	case reflect.Bool:
-		return e.WriteBool(rv.Bool())
 	case reflect.Ptr:
 		if rv.IsNil() {
 			el := reflect.New(rv.Type().Elem()).Elem()
@@ -222,18 +237,34 @@ func (enc *Encoder) encodeComplexEnumBorsh(rv reflect.Value) error {
 	if int(enum)+1 >= t.NumField() {
 		return errors.New("complex enum too large")
 	}
+	// Enum is empty
 	field := rv.Field(int(enum) + 1)
-
 	if field.Kind() == reflect.Ptr {
 		field = field.Elem()
 	}
 	if field.Kind() == reflect.Struct {
 		return enc.encodeStructBorsh(field.Type(), field)
 	}
+	// Encode the value if it's a primitive type
+	isPrimitive, err := enc.encodePrimitive(field, nil)
+	if isPrimitive {
+		return err
+	}
 	return nil
 }
 
 type BorshEnum uint8
+
+// EmptyVariant is an empty borsh enum variant.
+type EmptyVariant struct{}
+
+func (_ *EmptyVariant) MarshalWithEncoder(_ *Encoder) error {
+	return nil
+}
+
+func (_ *EmptyVariant) UnmarshalWithEncoder(_ *Encoder) error {
+	return nil
+}
 
 func (e *Encoder) encodeStructBorsh(rt reflect.Type, rv reflect.Value) (err error) {
 	l := rv.NumField()

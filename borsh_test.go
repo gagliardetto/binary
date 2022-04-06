@@ -846,6 +846,20 @@ func TestBorsh_Encode(t *testing.T) {
 							BarB: "this is bar from pointer",
 						},
 					},
+					ComplexEmpty: ComplexEnumEmpty{
+						Enum: 0,
+						Foo:  EmptyVariant{},
+					},
+
+					ComplexPrimitives1: ComplexEnumPrimitives{
+						Enum: 0,
+						Foo:  20,
+					},
+
+					ComplexPrimitives2: ComplexEnumPrimitives{
+						Enum: 1,
+						Bar:  11,
+					},
 
 					Complex2: ComplexEnumPointers{
 						Enum: 1,
@@ -939,6 +953,17 @@ func TestBorsh_Encode(t *testing.T) {
 						[]byte{0, 0, 0, 0},
 						[]byte{0, 0, 0, 0},
 
+						// .ComplexEmpty
+						[]byte{0},
+
+						// .ComplexPrimitives1
+						[]byte{0},
+						[]byte{20, 0, 0, 0},
+
+						// .ComplexPrimitives2
+						[]byte{1},
+						[]byte{11, 0},
+
 						// .Complex2
 						[]byte{1},
 						[]byte{62, 0, 0, 0, 0, 0, 0, 0},
@@ -1024,6 +1049,10 @@ type StructWithEnum struct {
 	ComplexNotSet    ComplexEnum
 	ComplexPtr       *ComplexEnum
 	ComplexPtrNotSet *ComplexEnum
+
+	ComplexEmpty       ComplexEnumEmpty
+	ComplexPrimitives1 ComplexEnumPrimitives
+	ComplexPrimitives2 ComplexEnumPrimitives
 
 	Complex2    ComplexEnumPointers
 	Complex2Ptr *ComplexEnumPointers
@@ -1361,6 +1390,19 @@ type ComplexEnumPointers struct {
 	Foo  *Foo
 	Bar  *Bar
 }
+
+type ComplexEnumEmpty struct {
+	Enum BorshEnum `borsh_enum:"true"`
+	Foo  EmptyVariant
+	Bar  Bar
+}
+
+type ComplexEnumPrimitives struct {
+	Enum BorshEnum `borsh_enum:"true"`
+	Foo  uint32
+	Bar  int16
+}
+
 type Foo struct {
 	FooA int32
 	FooB string
@@ -1401,6 +1443,37 @@ func TestComplexEnum(t *testing.T) {
 		require.NoError(t, err)
 
 		y := new(ComplexEnumPointers)
+		err = UnmarshalBorsh(y, data)
+		require.NoError(t, err)
+
+		require.Equal(t, x, *y)
+	}
+	{
+		x := ComplexEnumEmpty{
+			Enum: 1,
+			Bar: Bar{
+				BarA: 23,
+				BarB: "baz",
+			},
+		}
+		data, err := MarshalBorsh(x)
+		require.NoError(t, err)
+
+		y := new(ComplexEnumEmpty)
+		err = UnmarshalBorsh(y, data)
+		require.NoError(t, err)
+
+		require.Equal(t, x, *y)
+	}
+	{
+		x := ComplexEnumPrimitives{
+			Enum: 1,
+			Bar:  22,
+		}
+		data, err := MarshalBorsh(x)
+		require.NoError(t, err)
+
+		y := new(ComplexEnumPrimitives)
 		err = UnmarshalBorsh(y, data)
 		require.NoError(t, err)
 

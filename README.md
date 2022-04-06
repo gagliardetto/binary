@@ -28,7 +28,7 @@ if err != nil {
 
 ### Optional Types
 
-```
+```golang
 type Person struct {
 	Name string
 	Age  uint8 `bin:"optional"`
@@ -36,7 +36,7 @@ type Person struct {
 ```
 
 Rust equivalent:
-```
+```rust
 struct Person {
     name: String,
     age: Option<u8>
@@ -45,7 +45,7 @@ struct Person {
 
 ### Enum Types
 
-```
+```golang
 type MyEnum struct {
 	Enum  bin.BorshEnum `borsh_enum:"true"`
 	One   bin.EmptyVariant
@@ -55,7 +55,7 @@ type MyEnum struct {
 ```
 
 Rust equivalent:
-```
+```rust
 enum MyEnum {
     One,
     Two(u32),

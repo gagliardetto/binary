@@ -25,3 +25,41 @@ if err != nil {
 }
 // fmt.Print(buf.Bytes())
 ```
+
+### Optional Types
+
+```golang
+type Person struct {
+	Name string
+	Age  uint8 `bin:"optional"`
+}
+```
+
+Rust equivalent:
+```rust
+struct Person {
+    name: String,
+    age: Option<u8>
+}
+```
+
+### Enum Types
+
+```golang
+type MyEnum struct {
+	Enum  bin.BorshEnum `borsh_enum:"true"`
+	One   bin.EmptyVariant
+	Two   uint32
+	Three int16
+}
+```
+
+Rust equivalent:
+```rust
+enum MyEnum {
+    One,
+    Two(u32),
+    Three(i16),
+}
+```
+

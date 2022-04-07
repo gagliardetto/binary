@@ -262,7 +262,7 @@ func (_ *EmptyVariant) MarshalWithEncoder(_ *Encoder) error {
 	return nil
 }
 
-func (_ *EmptyVariant) UnmarshalWithEncoder(_ *Encoder) error {
+func (_ *EmptyVariant) UnmarshalWithDecoder(_ *Decoder) error {
 	return nil
 }
 

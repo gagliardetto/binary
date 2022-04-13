@@ -63,3 +63,25 @@ enum MyEnum {
 }
 ```
 
+### Exported vs Unexported Fields
+
+In this example, the `two` field will be skipped by the encoder/decoder because the
+field is not exported.
+```golang
+type MyStruct struct {
+	One   string
+	two   uint32
+	Three int16
+}
+```
+
+### Skip Decoding/Encoding Attributes
+
+Encoding/Decoding of exported fields can be skipped using the `borsh_skip` tag.
+```golang
+type MyStruct struct {
+	One   string
+	Two   uint32 `borsh_skip:"true"`
+	Three int16
+}
+```

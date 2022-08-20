@@ -24,6 +24,7 @@ import (
 	"io"
 	"math"
 	"reflect"
+	"unsafe"
 
 	"go.uber.org/zap"
 )
@@ -312,14 +313,56 @@ func (e *Encoder) WriteCompactU16Length(ln int) (err error) {
 	return e.toWriter(buf)
 }
 
-// TODO: add rust string.
-// https://github.com/bmresearch/Solnet/blob/7826cc93ec6c997fc997a7a3c6be0f3511ca0c63/src/Solnet.Programs/Utilities/Serialization.cs#L219
-// public static byte[] EncodeRustString(string data)
-// {
-//     byte[] stringBytes = Encoding.ASCII.GetBytes(data);
-//     byte[] encoded = new byte[stringBytes.Length + sizeof(uint)];
+func reflect_writeArrayOfBytes(e *Encoder, l int, rv reflect.Value) error {
+	arr := make([]byte, l)
+	for i := 0; i < l; i++ {
+		arr[i] = byte(rv.Index(i).Uint())
+	}
+	return e.WriteBytes(arr, false)
+}
 
-//     encoded.WriteU32((uint) stringBytes.Length, 0);
-//     encoded.WriteSpan(stringBytes, sizeof(uint));
-//     return encoded;
-// }
+func reflect_writeArrayOfUint16(e *Encoder, l int, rv reflect.Value, order binary.ByteOrder) error {
+	arr := make([]byte, l*2)
+	for i := 0; i < l; i++ {
+		order.PutUint16(arr[i*2:], uint16(rv.Index(i).Uint()))
+	}
+	return e.WriteBytes(arr, false)
+}
+
+func reflect_writeArrayOfUint32(e *Encoder, l int, rv reflect.Value, order binary.ByteOrder) error {
+	arr := make([]byte, l*4)
+	for i := 0; i < l; i++ {
+		order.PutUint32(arr[i*4:], uint32(rv.Index(i).Uint()))
+	}
+	return e.WriteBytes(arr, false)
+}
+
+func reflect_writeArrayOfUint64(e *Encoder, l int, rv reflect.Value, order binary.ByteOrder) error {
+	arr := make([]byte, l*8)
+	for i := 0; i < l; i++ {
+		order.PutUint64(arr[i*8:], uint64(rv.Index(i).Uint()))
+	}
+	return e.WriteBytes(arr, false)
+}
+
+// reflect_writeArrayOfUint is used for writing arrays/slices of uints of any size.
+func reflect_writeArrayOfUint(e *Encoder, l int, k reflect.Kind, rv reflect.Value, order binary.ByteOrder) error {
+	switch k {
+	case reflect.Uint:
+		// switch on system architecture (32 or 64 bit)
+		if unsafe.Sizeof(uintptr(0)) == 4 {
+			return reflect_writeArrayOfUint32(e, l, rv, order)
+		}
+		return reflect_writeArrayOfUint64(e, l, rv, order)
+	case reflect.Uint8:
+		return reflect_writeArrayOfBytes(e, l, rv)
+	case reflect.Uint16:
+		return reflect_writeArrayOfUint16(e, l, rv, order)
+	case reflect.Uint32:
+		return reflect_writeArrayOfUint32(e, l, rv, order)
+	case reflect.Uint64:
+		return reflect_writeArrayOfUint64(e, l, rv, order)
+	default:
+		return fmt.Errorf("unsupported kind: %v", k)
+	}
+}

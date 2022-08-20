@@ -276,6 +276,12 @@ type peekAbleByteReader interface {
 }
 
 func readNBytes(n int, reader peekAbleByteReader) ([]byte, error) {
+	if n == 0 {
+		return make([]byte, 0), nil
+	}
+	if n < 0 || n > 0x7FFF_FFFF {
+		return nil, fmt.Errorf("invalid length n: %v", n)
+	}
 	buf := make([]byte, n)
 	for i := 0; i < n; i++ {
 		b, err := reader.ReadByte()
@@ -284,12 +290,31 @@ func readNBytes(n int, reader peekAbleByteReader) ([]byte, error) {
 		}
 		buf[i] = b
 	}
-
 	return buf, nil
+}
+
+func discardNBytes(n int, reader peekAbleByteReader) error {
+	if n == 0 {
+		return nil
+	}
+	if n < 0 || n > 0x7FFF_FFFF {
+		return fmt.Errorf("invalid length n: %v", n)
+	}
+	for i := 0; i < n; i++ {
+		_, err := reader.ReadByte()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (dec *Decoder) ReadNBytes(n int) (out []byte, err error) {
 	return readNBytes(n, dec)
+}
+
+func (dec *Decoder) Discard(n int) (err error) {
+	return discardNBytes(n, dec)
 }
 
 func (dec *Decoder) ReadTypeID() (out TypeID, err error) {
@@ -550,6 +575,9 @@ func (dec *Decoder) ReadRustString() (out string, err error) {
 	length, err := dec.ReadUint64(binary.LittleEndian)
 	if err != nil {
 		return "", err
+	}
+	if length > 0x7FFF_FFFF {
+		return "", io.ErrUnexpectedEOF
 	}
 	bytes, err := dec.ReadNBytes(int(length))
 	if err != nil {

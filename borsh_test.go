@@ -1486,8 +1486,9 @@ type S struct {
 }
 
 func TestSet(t *testing.T) {
+	emptyStruct := struct{}{}
 	x := S{
-		S: map[int64]struct{}{124: struct{}{}, 214: struct{}{}, 24: struct{}{}, 53: struct{}{}},
+		S: map[int64]struct{}{124: emptyStruct, 214: emptyStruct, 24: emptyStruct, 53: emptyStruct},
 	}
 	data, err := MarshalBorsh(x)
 	require.NoError(t, err)

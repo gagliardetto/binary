@@ -171,13 +171,21 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 	}
 	switch rt.Kind() {
 	case reflect.Array:
-		length := rt.Len()
+		l := rt.Len()
 		if traceEnabled {
-			zlog.Debug("decoding: reading array", zap.Int("length", length))
+			zlog.Debug("decoding: reading array", zap.Int("length", l))
 		}
-		for i := 0; i < length; i++ {
-			if err = dec.decodeBorsh(rv.Index(i), nil); err != nil {
-				return
+
+		switch k := rv.Type().Elem().Kind(); k {
+		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			if err := reflect_readArrayOfUint_(false, dec, l, k, rv, LE); err != nil {
+				return err
+			}
+		default:
+			for i := 0; i < l; i++ {
+				if err = dec.decodeBorsh(rv.Index(i), nil); err != nil {
+					return
+				}
 			}
 		}
 		return
@@ -206,15 +214,22 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 		}
 
 		rv.Set(reflect.MakeSlice(rt, 0, 0))
-		for i := 0; i < l; i++ {
-			// create new element of type rt:
-			element := reflect.New(rt.Elem())
-			// decode into element:
-			if err = dec.decodeBorsh(element, nil); err != nil {
-				return
+		switch k := rv.Type().Elem().Kind(); k {
+		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			if err := reflect_readArrayOfUint_(true, dec, l, k, rv, LE); err != nil {
+				return err
 			}
-			// append to slice:
-			rv.Set(reflect.Append(rv, element.Elem()))
+		default:
+			for i := 0; i < l; i++ {
+				// create new element of type rt:
+				element := reflect.New(rt.Elem())
+				// decode into element:
+				if err = dec.decodeBorsh(element, nil); err != nil {
+					return
+				}
+				// append to slice:
+				rv.Set(reflect.Append(rv, element.Elem()))
+			}
 		}
 
 	case reflect.Struct:

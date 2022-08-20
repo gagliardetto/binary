@@ -293,20 +293,14 @@ func readNBytes(n int, reader peekAbleByteReader) ([]byte, error) {
 	return buf, nil
 }
 
-func discardNBytes(n int, reader peekAbleByteReader) error {
+func discardNBytes(n int, reader *Decoder) error {
 	if n == 0 {
 		return nil
 	}
 	if n < 0 || n > 0x7FFF_FFFF {
 		return fmt.Errorf("invalid length n: %v", n)
 	}
-	for i := 0; i < n; i++ {
-		_, err := reader.ReadByte()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return reader.SkipBytes(uint(n))
 }
 
 func (dec *Decoder) ReadNBytes(n int) (out []byte, err error) {
@@ -700,4 +694,86 @@ func indirect(v reflect.Value, decodingNull bool) (BinaryUnmarshaler, reflect.Va
 		}
 	}
 	return nil, v
+}
+
+func reflect_readArrayOfBytes(append bool, d *Decoder, l int, rv reflect.Value) error {
+	for i := 0; i < l; i++ {
+		n, err := d.ReadByte()
+		if err != nil {
+			return err
+		}
+		if append {
+			rv.Set(reflect.Append(rv, reflect.ValueOf(n)))
+		} else {
+			rv.Index(i).SetUint(uint64(n))
+		}
+	}
+	return nil
+}
+
+func reflect_readArrayOfUint16(append bool, d *Decoder, l int, rv reflect.Value, order binary.ByteOrder) error {
+	for i := 0; i < l; i++ {
+		n, err := d.ReadUint16(order)
+		if err != nil {
+			return err
+		}
+		if append {
+			rv.Set(reflect.Append(rv, reflect.ValueOf(n)))
+		} else {
+			rv.Index(i).SetUint(uint64(n))
+		}
+	}
+	return nil
+}
+
+func reflect_readArrayOfUint32(append bool, d *Decoder, l int, rv reflect.Value, order binary.ByteOrder) error {
+	for i := 0; i < l; i++ {
+		n, err := d.ReadUint32(order)
+		if err != nil {
+			return err
+		}
+		if append {
+			rv.Set(reflect.Append(rv, reflect.ValueOf(n)))
+		} else {
+			rv.Index(i).SetUint(uint64(n))
+		}
+	}
+	return nil
+}
+
+func reflect_readArrayOfUint64(append bool, d *Decoder, l int, rv reflect.Value, order binary.ByteOrder) error {
+	for i := 0; i < l; i++ {
+		n, err := d.ReadUint64(order)
+		if err != nil {
+			return err
+		}
+		if append {
+			rv.Set(reflect.Append(rv, reflect.ValueOf(n)))
+		} else {
+			rv.Index(i).SetUint(n)
+		}
+	}
+	return nil
+}
+
+// reflect_readArrayOfUint_ is used for reading arrays/slices of uints of any size.
+func reflect_readArrayOfUint_(append bool, d *Decoder, l int, k reflect.Kind, rv reflect.Value, order binary.ByteOrder) error {
+	switch k {
+	// case reflect.Uint:
+	// 	// switch on system architecture (32 or 64 bit)
+	// 	if unsafe.Sizeof(uintptr(0)) == 4 {
+	// 		return reflect_readArrayOfUint32(append, d, l, rv, order)
+	// 	}
+	// 	return reflect_readArrayOfUint64(append, d, l, rv, order)
+	case reflect.Uint8:
+		return reflect_readArrayOfBytes(append, d, l, rv)
+	case reflect.Uint16:
+		return reflect_readArrayOfUint16(append, d, l, rv, order)
+	case reflect.Uint32:
+		return reflect_readArrayOfUint32(append, d, l, rv, order)
+	case reflect.Uint64:
+		return reflect_readArrayOfUint64(append, d, l, rv, order)
+	default:
+		return fmt.Errorf("unsupported kind: %v", k)
+	}
 }

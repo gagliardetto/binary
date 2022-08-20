@@ -21,6 +21,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"math"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -763,4 +764,415 @@ func TestDecoder_SkipBytes(t *testing.T) {
 	err = decoder.SkipBytes(5)
 	require.NoError(t, err)
 	require.Equal(t, 0, decoder.Remaining())
+}
+
+func Test_Discard(t *testing.T) {
+	buf := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	decoder := NewBinDecoder(buf)
+	err := decoder.Discard(5)
+	require.NoError(t, err)
+	require.Equal(t, 5, decoder.Remaining())
+	remaining, err := decoder.Peek(decoder.Remaining())
+	require.NoError(t, err)
+	require.Equal(t, []byte{5, 6, 7, 8, 9}, remaining)
+}
+
+func Test_reflect_readArrayOfBytes(t *testing.T) {
+	{
+		{
+			buf := []byte{0, 1, 2, 3, 4, 5, 6, 7}
+			decoder := NewBinDecoder(buf)
+
+			got := make([]byte, 0)
+			err := reflect_readArrayOfBytes(true, decoder, len(buf), reflect.ValueOf(&got).Elem())
+			require.NoError(t, err)
+			require.Equal(t, buf, got)
+		}
+		{
+			buf := []byte{0, 1, 2, 3, 4, 5, 6, 7}
+			decoder := NewBinDecoder(buf)
+
+			got := [8]byte{0, 0, 0, 0, 0, 0, 0, 0}
+			err := reflect_readArrayOfBytes(false, decoder, len(buf), reflect.ValueOf(&got).Elem())
+			require.NoError(t, err)
+			require.Equal(t, buf, got[:])
+		}
+	}
+	{
+		{
+			buf := []byte{0, 1, 2, 3, 4, 5, 6, 7}
+			decoder := NewBorshDecoder(buf)
+
+			got := make([]byte, 0)
+			err := reflect_readArrayOfBytes(true, decoder, len(buf), reflect.ValueOf(&got).Elem())
+			require.NoError(t, err)
+			require.Equal(t, buf, got)
+		}
+		{
+			buf := []byte{0, 1, 2, 3, 4, 5, 6, 7}
+			decoder := NewBorshDecoder(buf)
+
+			got := [8]byte{0, 0, 0, 0, 0, 0, 0, 0}
+			err := reflect_readArrayOfBytes(false, decoder, len(buf), reflect.ValueOf(&got).Elem())
+			require.NoError(t, err)
+			require.Equal(t, buf, got[:])
+		}
+	}
+}
+
+func Test_reflect_readArrayOfUint16(t *testing.T) {
+	{
+		{
+			buf := concatByteSlices(
+				uint16ToBytes(0, LE),
+				uint16ToBytes(1, LE),
+				uint16ToBytes(2, LE),
+				uint16ToBytes(3, LE),
+				uint16ToBytes(4, LE),
+				uint16ToBytes(5, LE),
+				uint16ToBytes(6, LE),
+				uint16ToBytes(7, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			got := make([]uint16, 0)
+			err := reflect_readArrayOfUint16(true, decoder, len(buf)/2, reflect.ValueOf(&got).Elem(), LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint16{0, 1, 2, 3, 4, 5, 6, 7}, got)
+		}
+		{
+			buf := concatByteSlices(
+				uint16ToBytes(0, LE),
+				uint16ToBytes(1, LE),
+				uint16ToBytes(2, LE),
+				uint16ToBytes(3, LE),
+				uint16ToBytes(4, LE),
+				uint16ToBytes(5, LE),
+				uint16ToBytes(6, LE),
+				uint16ToBytes(7, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			got := [8]uint16{0, 0, 0, 0, 0, 0, 0, 0}
+			err := reflect_readArrayOfUint16(false, decoder, len(buf)/2, reflect.ValueOf(&got).Elem(), LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint16{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
+		}
+	}
+	{
+		{
+			buf := concatByteSlices(
+				uint16ToBytes(0, LE),
+				uint16ToBytes(1, LE),
+				uint16ToBytes(2, LE),
+				uint16ToBytes(3, LE),
+				uint16ToBytes(4, LE),
+				uint16ToBytes(5, LE),
+				uint16ToBytes(6, LE),
+				uint16ToBytes(7, LE),
+			)
+			decoder := NewBorshDecoder(buf)
+
+			got := make([]uint16, 0)
+			err := reflect_readArrayOfUint16(true, decoder, len(buf)/2, reflect.ValueOf(&got).Elem(), LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint16{0, 1, 2, 3, 4, 5, 6, 7}, got)
+		}
+		{
+			buf := concatByteSlices(
+				uint16ToBytes(0, LE),
+				uint16ToBytes(1, LE),
+				uint16ToBytes(2, LE),
+				uint16ToBytes(3, LE),
+				uint16ToBytes(4, LE),
+				uint16ToBytes(5, LE),
+				uint16ToBytes(6, LE),
+				uint16ToBytes(7, LE),
+			)
+			decoder := NewBorshDecoder(buf)
+
+			got := [8]uint16{0, 0, 0, 0, 0, 0, 0, 0}
+			err := reflect_readArrayOfUint16(false, decoder, len(buf)/2, reflect.ValueOf(&got).Elem(), LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint16{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
+		}
+	}
+}
+
+func Test_reflect_readArrayOfUint32(t *testing.T) {
+	{
+		{
+			buf := concatByteSlices(
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+				uint32ToBytes(3, LE),
+				uint32ToBytes(4, LE),
+				uint32ToBytes(5, LE),
+				uint32ToBytes(6, LE),
+				uint32ToBytes(7, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			got := make([]uint32, 0)
+			err := reflect_readArrayOfUint32(true, decoder, len(buf)/4, reflect.ValueOf(&got).Elem(), LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got)
+		}
+		{
+			buf := concatByteSlices(
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+				uint32ToBytes(3, LE),
+				uint32ToBytes(4, LE),
+				uint32ToBytes(5, LE),
+				uint32ToBytes(6, LE),
+				uint32ToBytes(7, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			got := [8]uint32{0, 0, 0, 0, 0, 0, 0, 0}
+			err := reflect_readArrayOfUint32(false, decoder, len(buf)/4, reflect.ValueOf(&got).Elem(), LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
+		}
+	}
+	{
+		{
+			buf := concatByteSlices(
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+				uint32ToBytes(3, LE),
+				uint32ToBytes(4, LE),
+				uint32ToBytes(5, LE),
+				uint32ToBytes(6, LE),
+				uint32ToBytes(7, LE),
+			)
+			decoder := NewBorshDecoder(buf)
+
+			got := make([]uint32, 0)
+			err := reflect_readArrayOfUint32(true, decoder, len(buf)/4, reflect.ValueOf(&got).Elem(), LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got)
+		}
+		{
+			buf := concatByteSlices(
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+				uint32ToBytes(3, LE),
+				uint32ToBytes(4, LE),
+				uint32ToBytes(5, LE),
+				uint32ToBytes(6, LE),
+				uint32ToBytes(7, LE),
+			)
+			decoder := NewBorshDecoder(buf)
+
+			got := [8]uint32{0, 0, 0, 0, 0, 0, 0, 0}
+			err := reflect_readArrayOfUint32(false, decoder, len(buf)/4, reflect.ValueOf(&got).Elem(), LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
+		}
+	}
+}
+
+func Test_reflect_readArrayOfUint64(t *testing.T) {
+	{
+		{
+			buf := concatByteSlices(
+				uint64ToBytes(0, LE),
+				uint64ToBytes(1, LE),
+				uint64ToBytes(2, LE),
+				uint64ToBytes(3, LE),
+				uint64ToBytes(4, LE),
+				uint64ToBytes(5, LE),
+				uint64ToBytes(6, LE),
+				uint64ToBytes(7, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			got := make([]uint64, 0)
+			err := reflect_readArrayOfUint64(true, decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint64{0, 1, 2, 3, 4, 5, 6, 7}, got)
+		}
+		{
+			buf := concatByteSlices(
+				uint64ToBytes(0, LE),
+				uint64ToBytes(1, LE),
+				uint64ToBytes(2, LE),
+				uint64ToBytes(3, LE),
+				uint64ToBytes(4, LE),
+				uint64ToBytes(5, LE),
+				uint64ToBytes(6, LE),
+				uint64ToBytes(7, LE),
+			)
+			decoder := NewBinDecoder(buf)
+			got := [8]uint64{0, 0, 0, 0, 0, 0, 0, 0}
+			err := reflect_readArrayOfUint64(false, decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint64{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
+		}
+	}
+	{
+		{
+			buf := concatByteSlices(
+				uint64ToBytes(0, LE),
+				uint64ToBytes(1, LE),
+				uint64ToBytes(2, LE),
+				uint64ToBytes(3, LE),
+				uint64ToBytes(4, LE),
+				uint64ToBytes(5, LE),
+				uint64ToBytes(6, LE),
+				uint64ToBytes(7, LE),
+			)
+			decoder := NewBorshDecoder(buf)
+
+			got := make([]uint64, 0)
+			err := reflect_readArrayOfUint64(true, decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint64{0, 1, 2, 3, 4, 5, 6, 7}, got)
+		}
+		{
+			buf := concatByteSlices(
+				uint64ToBytes(0, LE),
+				uint64ToBytes(1, LE),
+				uint64ToBytes(2, LE),
+				uint64ToBytes(3, LE),
+				uint64ToBytes(4, LE),
+				uint64ToBytes(5, LE),
+				uint64ToBytes(6, LE),
+				uint64ToBytes(7, LE),
+			)
+			decoder := NewBorshDecoder(buf)
+			got := [8]uint64{0, 0, 0, 0, 0, 0, 0, 0}
+			err := reflect_readArrayOfUint64(false, decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint64{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
+		}
+	}
+}
+
+func Test_reflect_readArrayOfUint(t *testing.T) {
+	{
+		{
+			buf := concatByteSlices(
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+				uint32ToBytes(3, LE),
+				uint32ToBytes(4, LE),
+				uint32ToBytes(5, LE),
+				uint32ToBytes(6, LE),
+				uint32ToBytes(7, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			got := make([]uint32, 0)
+			rv := reflect.ValueOf(&got).Elem()
+			k := rv.Type().Elem().Kind()
+			err := reflect_readArrayOfUint_(true, decoder, len(buf)/4, k, rv, LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got)
+		}
+		{
+			buf := concatByteSlices(
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+				uint32ToBytes(3, LE),
+				uint32ToBytes(4, LE),
+				uint32ToBytes(5, LE),
+				uint32ToBytes(6, LE),
+				uint32ToBytes(7, LE),
+			)
+			decoder := NewBinDecoder(buf)
+			got := [8]uint32{0, 0, 0, 0, 0, 0, 0, 0}
+			rv := reflect.ValueOf(&got).Elem()
+			k := rv.Type().Elem().Kind()
+			err := reflect_readArrayOfUint_(false, decoder, len(buf)/4, k, rv, LE)
+			require.NoError(t, err)
+			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
+		}
+	}
+}
+
+func Test_Decode_readArrayOfUint(t *testing.T) {
+	{
+		{
+			buf := concatByteSlices(
+				// length:
+				[]byte{3},
+				// data:
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			got := make([]uint32, 0)
+			err := decoder.Decode(&got)
+			require.NoError(t, err)
+			require.Equal(t, []uint32{0, 1, 2}, got)
+		}
+		{
+			buf := concatByteSlices(
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+				uint32ToBytes(3, LE),
+				uint32ToBytes(4, LE),
+				uint32ToBytes(5, LE),
+				uint32ToBytes(6, LE),
+				uint32ToBytes(7, LE),
+			)
+			decoder := NewBinDecoder(buf)
+			got := [8]uint32{0, 0, 0, 0, 0, 0, 0, 0}
+			err := decoder.Decode(&got)
+			require.NoError(t, err)
+			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
+		}
+	}
+	{
+		{
+			buf := concatByteSlices(
+				// length:
+				uint32ToBytes(8, LE),
+				// data:
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+				uint32ToBytes(3, LE),
+				uint32ToBytes(4, LE),
+				uint32ToBytes(5, LE),
+				uint32ToBytes(6, LE),
+				uint32ToBytes(7, LE),
+			)
+			decoder := NewBorshDecoder(buf)
+
+			got := make([]uint32, 0)
+			err := decoder.Decode(&got)
+			require.NoError(t, err)
+			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got)
+		}
+		{
+			buf := concatByteSlices(
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+				uint32ToBytes(3, LE),
+				uint32ToBytes(4, LE),
+				uint32ToBytes(5, LE),
+				uint32ToBytes(6, LE),
+				uint32ToBytes(7, LE),
+			)
+			decoder := NewBorshDecoder(buf)
+			got := [8]uint32{0, 0, 0, 0, 0, 0, 0, 0}
+			err := decoder.Decode(&got)
+			require.NoError(t, err)
+			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
+		}
+	}
 }

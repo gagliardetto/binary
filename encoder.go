@@ -24,7 +24,6 @@ import (
 	"io"
 	"math"
 	"reflect"
-	"unsafe"
 
 	"go.uber.org/zap"
 )
@@ -345,15 +344,15 @@ func reflect_writeArrayOfUint64(e *Encoder, l int, rv reflect.Value, order binar
 	return e.WriteBytes(arr, false)
 }
 
-// reflect_writeArrayOfUint is used for writing arrays/slices of uints of any size.
-func reflect_writeArrayOfUint(e *Encoder, l int, k reflect.Kind, rv reflect.Value, order binary.ByteOrder) error {
+// reflect_writeArrayOfUint_ is used for writing arrays/slices of uints of any size.
+func reflect_writeArrayOfUint_(e *Encoder, l int, k reflect.Kind, rv reflect.Value, order binary.ByteOrder) error {
 	switch k {
-	case reflect.Uint:
-		// switch on system architecture (32 or 64 bit)
-		if unsafe.Sizeof(uintptr(0)) == 4 {
-			return reflect_writeArrayOfUint32(e, l, rv, order)
-		}
-		return reflect_writeArrayOfUint64(e, l, rv, order)
+	// case reflect.Uint:
+	// 	// switch on system architecture (32 or 64 bit)
+	// 	if unsafe.Sizeof(uintptr(0)) == 4 {
+	// 		return reflect_writeArrayOfUint32(e, l, rv, order)
+	// 	}
+	// 	return reflect_writeArrayOfUint64(e, l, rv, order)
 	case reflect.Uint8:
 		return reflect_writeArrayOfBytes(e, l, rv)
 	case reflect.Uint16:

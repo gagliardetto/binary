@@ -1076,13 +1076,6 @@ type StructWithOptionalFields struct {
 	Hello             string
 }
 
-func concatByteSlices(slices ...[]byte) (out []byte) {
-	for i := range slices {
-		out = append(out, slices[i]...)
-	}
-	return
-}
-
 type Struct struct {
 	Foo string
 	Bar uint32

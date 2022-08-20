@@ -20,6 +20,7 @@ package bin
 import (
 	"errors"
 	"fmt"
+	"io"
 	"reflect"
 
 	"go.uber.org/zap"
@@ -199,6 +200,9 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 		if l == 0 {
 			// Empty slices are left nil
 			return
+		}
+		if l > dec.Remaining() {
+			return io.ErrUnexpectedEOF
 		}
 
 		rv.Set(reflect.MakeSlice(rt, l, l))

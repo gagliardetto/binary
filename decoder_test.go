@@ -599,7 +599,16 @@ func TestDecoder_Slice_Err(t *testing.T) {
 
 	decoder = NewBinDecoder(buf)
 	err = decoder.Decode(&s)
-	assert.EqualError(t, err, "decode: uint64 required [8] bytes, remaining [0]")
+	assert.EqualError(t, err, "unexpected EOF")
+}
+
+func TestDecoder_Slice_InvalidLen(t *testing.T) {
+	buf := []byte{0xd7, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01}
+
+	decoder := NewBinDecoder(buf)
+	var s []string
+	err := decoder.Decode(&s)
+	assert.EqualError(t, err, "unexpected EOF")
 }
 
 func TestDecoder_Int64(t *testing.T) {

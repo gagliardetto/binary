@@ -19,6 +19,7 @@ package bin
 
 import (
 	"fmt"
+	"io"
 	"reflect"
 
 	"go.uber.org/zap"
@@ -177,6 +178,10 @@ func (dec *Decoder) decodeCompactU16(rv reflect.Value, opt *option) (err error) 
 
 		if traceEnabled {
 			zlog.Debug("reading slice", zap.Int("len", l), typeField("type", rv))
+		}
+
+		if l > dec.Remaining() {
+			return io.ErrUnexpectedEOF
 		}
 
 		rv.Set(reflect.MakeSlice(rt, l, l))

@@ -147,10 +147,10 @@ var NoTypeIDDefaultID = TypeIDFromUint8(0)
 
 // NewVariantDefinition creates a variant definition based on the *ordered* provided types.
 //
-// - For anchor instructions, it's the name that defines the binary variant value.
-// - For all other types, it's the ordering that defines the binary variant value just like in native `nodeos` C++
-//   and in Smart Contract via the `std::variant` type. It's important to pass the entries
-//   in the right order!
+//   - For anchor instructions, it's the name that defines the binary variant value.
+//   - For all other types, it's the ordering that defines the binary variant value just like in native `nodeos` C++
+//     and in Smart Contract via the `std::variant` type. It's important to pass the entries
+//     in the right order!
 //
 // This variant definition can now be passed to functions of `BaseVariant` to implement
 // marshal/unmarshaling functionalities for binary & JSON.

@@ -245,11 +245,17 @@ func (dec *Decoder) ReadLength() (length int, err error) {
 		if err != nil {
 			return 0, err
 		}
+		if val > 0x7FFF_FFFF {
+			return 0, io.ErrUnexpectedEOF
+		}
 		length = int(val)
 	case EncodingBorsh:
 		val, err := dec.ReadUint32(LE)
 		if err != nil {
 			return 0, err
+		}
+		if val > 0x7FFF_FFFF {
+			return 0, io.ErrUnexpectedEOF
 		}
 		length = int(val)
 	case EncodingCompactU16:

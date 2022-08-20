@@ -36,33 +36,116 @@ func (e *Example) UnmarshalWithDecoder(decoder *Decoder) (err error) {
 	return nil
 }
 
-func (e *Example) MarshalWithEncoder(encoder *Encoder) error {
+func (e Example) MarshalWithEncoder(encoder *Encoder) error {
 	if err := encoder.WriteByte(e.Prefix); err != nil {
 		return err
 	}
 	return encoder.WriteUint32(e.Value, BE)
 }
 
-func TestMarshalWithEncoder(t *testing.T) {
-	buf := new(bytes.Buffer)
-	e := &Example{Value: 72, Prefix: 0xaa}
-	enc := NewBinEncoder(buf)
-	enc.Encode(e)
+type testCustomCoder struct {
+	val string
+}
 
-	assert.Equal(t, []byte{
-		0xaa, 0x00, 0x00, 0x00, 0x48,
-	}, buf.Bytes())
+func (d *testCustomCoder) UnmarshalWithDecoder(decoder *Decoder) error {
+	d.val = "hello world"
+	return nil
+}
+
+func (d testCustomCoder) MarshalWithEncoder(encoder *Encoder) error {
+	return encoder.WriteBytes([]byte("this is a test"), false)
+}
+
+func TestMarshalWithEncoder(t *testing.T) {
+	{
+		buf := new(bytes.Buffer)
+		e := &Example{Value: 72, Prefix: 0xaa}
+		enc := NewBinEncoder(buf)
+		enc.Encode(e)
+
+		assert.Equal(t, []byte{
+			0xaa, 0x00, 0x00, 0x00, 0x48,
+		}, buf.Bytes())
+	}
+	{
+		// on pointer:
+		{
+			buf := new(bytes.Buffer)
+			e := &testCustomCoder{}
+			enc := NewBinEncoder(buf)
+			err := enc.Encode(e)
+			assert.NoError(t, err)
+
+			assert.Equal(t, []byte("this is a test"), buf.Bytes())
+		}
+		{
+			buf := new(bytes.Buffer)
+			e := &testCustomCoder{}
+			enc := NewBorshEncoder(buf)
+			err := enc.Encode(e)
+			assert.NoError(t, err)
+
+			assert.Equal(t, []byte("this is a test"), buf.Bytes())
+		}
+		// on value:
+		{
+			buf := new(bytes.Buffer)
+			e := testCustomCoder{}
+			enc := NewBinEncoder(buf)
+			err := enc.Encode(e)
+			assert.NoError(t, err)
+
+			assert.Equal(t, []byte("this is a test"), buf.Bytes())
+		}
+		{
+			buf := new(bytes.Buffer)
+			e := testCustomCoder{}
+			enc := NewBorshEncoder(buf)
+			err := enc.Encode(e)
+			assert.NoError(t, err)
+
+			assert.Equal(t, []byte("this is a test"), buf.Bytes())
+		}
+	}
 }
 
 func TestUnmarshalWithDecoder(t *testing.T) {
-	buf := []byte{
-		0xaa, 0x00, 0x00, 0x00, 0x48,
-	}
+	{
+		buf := []byte{
+			0xaa, 0x00, 0x00, 0x00, 0x48,
+		}
 
-	e := &Example{}
-	d := NewBinDecoder(buf)
-	err := d.Decode(e)
-	assert.NoError(t, err)
-	assert.Equal(t, e, &Example{Value: 72, Prefix: 0xaa})
-	assert.Equal(t, 0, d.Remaining())
+		e := &Example{}
+		d := NewBinDecoder(buf)
+		err := d.Decode(e)
+		assert.NoError(t, err)
+		assert.Equal(t, e, &Example{Value: 72, Prefix: 0xaa})
+		assert.Equal(t, 0, d.Remaining())
+	}
+	{
+		{
+			buf := []byte{
+				0xaa, 0x00, 0x00, 0x00, 0x48,
+			}
+
+			e := &testCustomCoder{}
+			d := NewBinDecoder(buf)
+			err := d.Decode(e)
+			assert.NoError(t, err)
+
+			assert.Equal(t, "hello world", e.val)
+		}
+		{
+			buf := []byte{
+				0xaa, 0x00, 0x00, 0x00, 0x48,
+			}
+
+			e := &testCustomCoder{}
+			d := NewBorshDecoder(buf)
+			err := d.Decode(e)
+			assert.NoError(t, err)
+
+			assert.Equal(t, "hello world", e.val)
+		}
+	}
 }

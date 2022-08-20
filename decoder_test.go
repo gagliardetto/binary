@@ -763,5 +763,4 @@ func TestDecoder_SkipBytes(t *testing.T) {
 	err = decoder.SkipBytes(5)
 	require.NoError(t, err)
 	require.Equal(t, 0, decoder.Remaining())
-
 }

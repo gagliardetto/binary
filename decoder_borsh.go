@@ -205,11 +205,16 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 			return io.ErrUnexpectedEOF
 		}
 
-		rv.Set(reflect.MakeSlice(rt, l, l))
+		rv.Set(reflect.MakeSlice(rt, 0, 0))
 		for i := 0; i < l; i++ {
-			if err = dec.decodeBorsh(rv.Index(i), nil); err != nil {
+			// create new element of type rt:
+			element := reflect.New(rt.Elem())
+			// decode into element:
+			if err = dec.decodeBorsh(element, nil); err != nil {
 				return
 			}
+			// append to slice:
+			rv.Set(reflect.Append(rv, element.Elem()))
 		}
 
 	case reflect.Struct:

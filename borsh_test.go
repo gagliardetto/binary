@@ -1653,3 +1653,112 @@ func TestCustomType(t *testing.T) {
 
 	require.Equal(t, x, *y)
 }
+
+func TestStringSlice(t *testing.T) {
+	{
+		// slice:
+		x := []string{"a", "b", "c"}
+		data, err := MarshalBorsh(x)
+		require.NoError(t, err)
+
+		require.Equal(t, concatByteSlices(
+			[]byte{0x3, 0x0, 0x0, 0x0}, // length
+
+			[]byte{0x1, 0x0, 0x0, 0x0}, // length of first string
+			[]byte("a"),
+
+			[]byte{0x1, 0x0, 0x0, 0x0}, // length of second string
+			[]byte("b"),
+
+			[]byte{0x1, 0x0, 0x0, 0x0}, // length of third string
+			[]byte("c"),
+		), data)
+
+		y := new([]string)
+		err = UnmarshalBorsh(y, data)
+		require.NoError(t, err)
+
+		require.Equal(t, x, *y)
+	}
+	{
+		// string slice as field:
+		type S struct {
+			A []string
+		}
+		x := S{
+			A: []string{"a", "b", "c"},
+		}
+		data, err := MarshalBorsh(x)
+		require.NoError(t, err)
+
+		require.Equal(t, concatByteSlices(
+			[]byte{0x3, 0x0, 0x0, 0x0}, // length of A
+
+			[]byte{0x1, 0x0, 0x0, 0x0}, // length of A[0]
+			[]byte("a"),
+
+			[]byte{0x1, 0x0, 0x0, 0x0}, // length of A[1]
+			[]byte("b"),
+
+			[]byte{0x1, 0x0, 0x0, 0x0}, // length of A[2]
+			[]byte("c"),
+		), data)
+
+		y := new(S)
+		err = UnmarshalBorsh(y, data)
+		require.NoError(t, err)
+
+		require.Equal(t, x, *y)
+	}
+	{
+		// string slice as optional field (present):
+		type S struct {
+			A *[]string `bin:"optional"`
+		}
+		slice := []string{"a", "b", "c"}
+		x := S{
+			A: &slice,
+		}
+		data, err := MarshalBorsh(x)
+		require.NoError(t, err)
+
+		require.Equal(t, concatByteSlices(
+			[]byte{0x01},               // optionality
+			[]byte{0x3, 0x0, 0x0, 0x0}, // slice length
+
+			[]byte{0x1, 0x0, 0x0, 0x0}, // slice item length (string)
+			[]byte("a"),
+
+			[]byte{0x1, 0x0, 0x0, 0x0}, // slice item length (string)
+			[]byte("b"),
+
+			[]byte{0x1, 0x0, 0x0, 0x0}, // slice item length (string)
+			[]byte("c"),
+		), data)
+
+		y := new(S)
+		err = UnmarshalBorsh(y, data)
+		require.NoError(t, err)
+
+		require.Equal(t, x, *y)
+	}
+	{
+		// string slice as optional field (absent):
+		type S struct {
+			A *[]string `bin:"optional"`
+		}
+		x := S{}
+		data, err := MarshalBorsh(x)
+		require.NoError(t, err)
+
+		require.Equal(t, concatByteSlices(
+			[]byte{0x0}, // optionality
+		), data)
+
+		y := new(S)
+		err = UnmarshalBorsh(y, data)
+		require.NoError(t, err)
+
+		require.Equal(t, x, *y)
+	}
+}

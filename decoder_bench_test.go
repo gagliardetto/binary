@@ -32,6 +32,9 @@ func Benchmark_uintSlice64_Decode_noMake(b *testing.B) {
 		if err != nil {
 			b.Error(err)
 		}
+		if len(got) != l {
+			b.Errorf("got %d, want %d", len(got), l)
+		}
 	}
 }
 func Benchmark_uintSlice64_Decode_make(b *testing.B) {
@@ -52,6 +55,9 @@ func Benchmark_uintSlice64_Decode_make(b *testing.B) {
 		err := decoder.Decode(&got)
 		if err != nil {
 			b.Error(err)
+		}
+		if len(got) != l {
+			b.Errorf("got %d, want %d", len(got), l)
 		}
 	}
 }
@@ -77,6 +83,9 @@ func Benchmark_uintSlice64_Decode_field_noMake(b *testing.B) {
 		if err != nil {
 			b.Error(err)
 		}
+		if len(got.Field) != l {
+			b.Errorf("got %d, want %d", len(got.Field), l)
+		}
 	}
 }
 
@@ -101,6 +110,9 @@ func Benchmark_uintSlice64_Decode_field_make(b *testing.B) {
 		err := decoder.Decode(&got)
 		if err != nil {
 			b.Error(err)
+		}
+		if len(got.Field) != l {
+			b.Errorf("got %d, want %d", len(got.Field), l)
 		}
 	}
 }
@@ -182,6 +194,9 @@ func Benchmark_uintSlice32_Decode_noMake(b *testing.B) {
 		if err != nil {
 			b.Error(err)
 		}
+		if len(got) != l {
+			b.Errorf("got %d, want %d", len(got), l)
+		}
 	}
 }
 func Benchmark_uintSlice32_Decode_make(b *testing.B) {
@@ -202,6 +217,9 @@ func Benchmark_uintSlice32_Decode_make(b *testing.B) {
 		err := decoder.Decode(&got)
 		if err != nil {
 			b.Error(err)
+		}
+		if len(got) != l {
+			b.Errorf("got %d, want %d", len(got), l)
 		}
 	}
 }
@@ -227,6 +245,9 @@ func Benchmark_uintSlice32_Decode_field_noMake(b *testing.B) {
 		if err != nil {
 			b.Error(err)
 		}
+		if len(got.Field) != l {
+			b.Errorf("got %d, want %d", len(got.Field), l)
+		}
 	}
 }
 
@@ -251,6 +272,9 @@ func Benchmark_uintSlice32_Decode_field_make(b *testing.B) {
 		err := decoder.Decode(&got)
 		if err != nil {
 			b.Error(err)
+		}
+		if len(got.Field) != l {
+			b.Errorf("got %d, want %d", len(got.Field), l)
 		}
 	}
 }

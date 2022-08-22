@@ -40,12 +40,15 @@ func Benchmark_uintSlices_append(b *testing.B) {
 	)
 	b.ReportAllocs()
 	b.ResetTimer()
-	decoder := NewBorshDecoder(buf)
 
 	for i := 0; i < b.N; i++ {
-		decoder.SetPosition(0)
-		got := make([]uint64, 0)
-		err := reflect_readArrayOfUint64(decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
+		decoder := NewBorshDecoder(buf)
+
+		var got []uint64
+		rv := reflect.ValueOf(&got).Elem()
+		k := rv.Type().Elem().Kind()
+
+		err := reflect_readArrayOfUint_(decoder, len(buf)/8, k, rv, LE)
 		if err != nil {
 			b.Error(err)
 		}
@@ -62,12 +65,15 @@ func Benchmark_uintSlices_preallocate(b *testing.B) {
 	)
 	b.ReportAllocs()
 	b.ResetTimer()
-	decoder := NewBorshDecoder(buf)
 
 	for i := 0; i < b.N; i++ {
-		decoder.SetPosition(0)
+		decoder := NewBorshDecoder(buf)
+
 		got := make([]uint64, l)
-		err := reflect_readArrayOfUint64(decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
+		rv := reflect.ValueOf(&got).Elem()
+		k := rv.Type().Elem().Kind()
+
+		err := reflect_readArrayOfUint_(decoder, len(buf)/8, k, rv, LE)
 		if err != nil {
 			b.Error(err)
 		}

@@ -117,7 +117,7 @@ func Benchmark_uintSlice64_Decode_field_make(b *testing.B) {
 	}
 }
 
-func Benchmark_uintSlice64_reflect_noMake(b *testing.B) {
+func Benchmark_uintSlice64_readArray_noMake(b *testing.B) {
 	l := 1024
 	buf := concatByteSlices(
 		newUint64SliceEncoded(l),
@@ -142,7 +142,7 @@ func Benchmark_uintSlice64_reflect_noMake(b *testing.B) {
 	}
 }
 
-func Benchmark_uintSlice64_reflect_make(b *testing.B) {
+func Benchmark_uintSlice64_readArray_make(b *testing.B) {
 	l := 1024
 	buf := concatByteSlices(
 		newUint64SliceEncoded(l),
@@ -158,6 +158,51 @@ func Benchmark_uintSlice64_reflect_make(b *testing.B) {
 		k := rv.Type().Elem().Kind()
 
 		err := reflect_readArrayOfUint_(decoder, len(buf)/8, k, rv, LE)
+		if err != nil {
+			b.Error(err)
+		}
+		if len(got) != l {
+			b.Errorf("got %d, want %d", len(got), l)
+		}
+	}
+}
+
+type sliceUint64WithCustomDecoder []uint64
+
+// UnmarshalWithDecoder
+func (s *sliceUint64WithCustomDecoder) UnmarshalWithDecoder(decoder *Decoder) error {
+	// read length
+	l, err := decoder.ReadUint32(LE)
+	if err != nil {
+		return err
+	}
+	// read data
+	*s = make([]uint64, l)
+	for i := 0; i < int(l); i++ {
+		(*s)[i], err = decoder.ReadUint64(LE)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func Benchmark_uintSlice64_Decode_field_withCustomDecoder(b *testing.B) {
+	l := 1024
+	buf := concatByteSlices(
+		// length:
+		uint32ToBytes(uint32(l), LE),
+		// data:
+		newUint64SliceEncoded(l),
+	)
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		var got sliceUint64WithCustomDecoder
+
+		decoder := NewBorshDecoder(buf)
+		err := got.UnmarshalWithDecoder(decoder)
 		if err != nil {
 			b.Error(err)
 		}
@@ -279,7 +324,7 @@ func Benchmark_uintSlice32_Decode_field_make(b *testing.B) {
 	}
 }
 
-func Benchmark_uintSlice32_reflect_noMake(b *testing.B) {
+func Benchmark_uintSlice32_readArray_noMake(b *testing.B) {
 	l := 1024
 	buf := concatByteSlices(
 		newUint32SliceEncoded(l),
@@ -304,7 +349,7 @@ func Benchmark_uintSlice32_reflect_noMake(b *testing.B) {
 	}
 }
 
-func Benchmark_uintSlice32_reflect_make(b *testing.B) {
+func Benchmark_uintSlice32_readArray_make(b *testing.B) {
 	l := 1024
 	buf := concatByteSlices(
 		newUint32SliceEncoded(l),
@@ -320,6 +365,50 @@ func Benchmark_uintSlice32_reflect_make(b *testing.B) {
 		k := rv.Type().Elem().Kind()
 
 		err := reflect_readArrayOfUint_(decoder, len(buf)/4, k, rv, LE)
+		if err != nil {
+			b.Error(err)
+		}
+		if len(got) != l {
+			b.Errorf("got %d, want %d", len(got), l)
+		}
+	}
+}
+
+type sliceUint32WithCustomDecoder []uint32
+
+// UnmarshalWithDecoder
+func (s *sliceUint32WithCustomDecoder) UnmarshalWithDecoder(decoder *Decoder) error {
+	// read length
+	l, err := decoder.ReadUint32(LE)
+	if err != nil {
+		return err
+	}
+	// read data
+	*s = make([]uint32, l)
+	for i := 0; i < int(l); i++ {
+		(*s)[i], err = decoder.ReadUint32(LE)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func Benchmark_uintSlice32_Decode_field_withCustomDecoder(b *testing.B) {
+	l := 1024
+	buf := concatByteSlices(
+		// length:
+		uint32ToBytes(uint32(l), LE),
+		// data:
+		newUint32SliceEncoded(l),
+	)
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		var got sliceUint32WithCustomDecoder
+
+		decoder := NewBorshDecoder(buf)
+		err := got.UnmarshalWithDecoder(decoder)
 		if err != nil {
 			b.Error(err)
 		}

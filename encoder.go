@@ -87,11 +87,9 @@ func (e *Encoder) Encode(v interface{}) (err error) {
 
 func (e *Encoder) toWriter(bytes []byte) (err error) {
 	e.count += len(bytes)
-
 	if traceEnabled {
 		zlog.Debug("	> encode: appending", zap.Stringer("hex", HexBytes(bytes)), zap.Int("pos", e.count))
 	}
-
 	_, err = e.output.Write(bytes)
 	return
 }
@@ -257,7 +255,7 @@ func (e *Encoder) WriteFloat32(f float32, order binary.ByteOrder) (err error) {
 	}
 
 	if e.IsBorsh() {
-		if float64(f) == math.NaN() {
+		if math.IsNaN(float64(f)) {
 			return errors.New("NaN float value")
 		}
 	}
@@ -268,13 +266,14 @@ func (e *Encoder) WriteFloat32(f float32, order binary.ByteOrder) (err error) {
 
 	return e.toWriter(buf)
 }
+
 func (e *Encoder) WriteFloat64(f float64, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write float64", zap.Float64("val", f))
 	}
 
 	if e.IsBorsh() {
-		if float64(f) == math.NaN() {
+		if math.IsNaN(float64(f)) {
 			return errors.New("NaN float value")
 		}
 	}

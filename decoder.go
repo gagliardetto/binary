@@ -141,7 +141,7 @@ func sizeof(t reflect.Type, v reflect.Value) int {
 		}
 		return n
 	default:
-		panic(fmt.Sprintf("sizeof field "))
+		panic(fmt.Sprintf("sizeof field not implemented for kind %s", t.Kind()))
 	}
 }
 
@@ -184,7 +184,6 @@ func (dec *Decoder) ReadVarint32() (out int32, err error) {
 }
 
 func (dec *Decoder) ReadUvarint32() (out uint32, err error) {
-
 	n, err := dec.ReadUvarint64()
 	if err != nil {
 		return out, err
@@ -195,6 +194,7 @@ func (dec *Decoder) ReadUvarint32() (out uint32, err error) {
 	}
 	return
 }
+
 func (dec *Decoder) ReadVarint16() (out int16, err error) {
 	n, err := dec.ReadVarint64()
 	if err != nil {
@@ -208,7 +208,6 @@ func (dec *Decoder) ReadVarint16() (out int16, err error) {
 }
 
 func (dec *Decoder) ReadUvarint16() (out uint16, err error) {
-
 	n, err := dec.ReadUvarint64()
 	if err != nil {
 		return out, err
@@ -368,7 +367,6 @@ func (dec *Decoder) ReadBool() (out bool, err error) {
 		zlog.Debug("decode: read bool", zap.Bool("val", out))
 	}
 	return
-
 }
 
 func (dec *Decoder) ReadUint8() (out uint8, err error) {
@@ -462,7 +460,6 @@ func (dec *Decoder) ReadInt128(order binary.ByteOrder) (out Int128, err error) {
 	if err != nil {
 		return
 	}
-
 	return Int128(v), nil
 }
 
@@ -536,7 +533,6 @@ func (dec *Decoder) ReadFloat128(order binary.ByteOrder) (out Float128, err erro
 	if err != nil {
 		return out, fmt.Errorf("float128: %s", err)
 	}
-
 	return Float128(value), nil
 }
 

@@ -1176,3 +1176,101 @@ func Test_Decode_readArrayOfUint(t *testing.T) {
 		}
 	}
 }
+
+func Test_reflect_readArrayOfUint16_asField(t *testing.T) {
+	{
+		{
+			buf := concatByteSlices(
+				// length:
+				[]byte{8},
+				// data:
+				uint16ToBytes(0, LE),
+				uint16ToBytes(1, LE),
+				uint16ToBytes(2, LE),
+				uint16ToBytes(3, LE),
+				uint16ToBytes(4, LE),
+				uint16ToBytes(5, LE),
+				uint16ToBytes(6, LE),
+				uint16ToBytes(7, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			type S struct {
+				Val []uint16
+			}
+			var got S
+			err := decoder.Decode(&got)
+			require.NoError(t, err)
+			require.Equal(t, S{[]uint16{0, 1, 2, 3, 4, 5, 6, 7}}, got)
+		}
+		{
+			buf := concatByteSlices(
+				// data:
+				uint16ToBytes(0, LE),
+				uint16ToBytes(1, LE),
+				uint16ToBytes(2, LE),
+				uint16ToBytes(3, LE),
+				uint16ToBytes(4, LE),
+				uint16ToBytes(5, LE),
+				uint16ToBytes(6, LE),
+				uint16ToBytes(7, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			type S struct {
+				Val [8]uint16
+			}
+			var got S
+			err := decoder.Decode(&got)
+			require.NoError(t, err)
+			require.Equal(t, S{[8]uint16{0, 1, 2, 3, 4, 5, 6, 7}}, got)
+		}
+	}
+	{
+		{
+			buf := concatByteSlices(
+				// length:
+				uint32ToBytes(8, LE),
+				// data:
+				uint16ToBytes(0, LE),
+				uint16ToBytes(1, LE),
+				uint16ToBytes(2, LE),
+				uint16ToBytes(3, LE),
+				uint16ToBytes(4, LE),
+				uint16ToBytes(5, LE),
+				uint16ToBytes(6, LE),
+				uint16ToBytes(7, LE),
+			)
+			decoder := NewBorshDecoder(buf)
+
+			type S struct {
+				Val []uint16
+			}
+			var got S
+			err := decoder.Decode(&got)
+			require.NoError(t, err)
+			require.Equal(t, S{[]uint16{0, 1, 2, 3, 4, 5, 6, 7}}, got)
+		}
+		{
+			buf := concatByteSlices(
+				uint16ToBytes(0, LE),
+				uint16ToBytes(1, LE),
+				uint16ToBytes(2, LE),
+				uint16ToBytes(3, LE),
+				uint16ToBytes(4, LE),
+				uint16ToBytes(5, LE),
+				uint16ToBytes(6, LE),
+				uint16ToBytes(7, LE),
+			)
+			decoder := NewBorshDecoder(buf)
+
+			type S struct {
+				Val [8]uint16
+			}
+			var got S
+			err := decoder.Decode(&got)
+			require.NoError(t, err)
+			require.Equal(t, S{[8]uint16{0, 1, 2, 3, 4, 5, 6, 7}}, got)
+		}
+	}
+}

@@ -162,7 +162,7 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 
 		switch k := rv.Type().Elem().Kind(); k {
 		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			if err := reflect_readArrayOfUint_(false, dec, l, k, rv, LE); err != nil {
+			if err := reflect_readArrayOfUint_(dec, l, k, rv, LE); err != nil {
 				return err
 			}
 		default:
@@ -193,13 +193,13 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 			return io.ErrUnexpectedEOF
 		}
 
-		rv.Set(reflect.MakeSlice(rt, 0, 0))
 		switch k := rv.Type().Elem().Kind(); k {
 		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			if err := reflect_readArrayOfUint_(true, dec, l, k, rv, LE); err != nil {
+			if err := reflect_readArrayOfUint_(dec, l, k, rv, LE); err != nil {
 				return err
 			}
 		default:
+			rv.Set(reflect.MakeSlice(rt, 0, 0))
 			for i := 0; i < l; i++ {
 				// create new element of type rt:
 				element := reflect.New(rt.Elem())

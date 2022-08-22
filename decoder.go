@@ -696,83 +696,111 @@ func indirect(v reflect.Value, decodingNull bool) (BinaryUnmarshaler, reflect.Va
 	return nil, v
 }
 
-func reflect_readArrayOfBytes(append bool, d *Decoder, l int, rv reflect.Value) error {
-	for i := 0; i < l; i++ {
-		n, err := d.ReadByte()
-		if err != nil {
-			return err
-		}
-		if append {
-			rv.Set(reflect.Append(rv, reflect.ValueOf(n)))
-		} else {
-			rv.Index(i).SetUint(uint64(n))
-		}
+func reflect_readArrayOfBytes(d *Decoder, l int, rv reflect.Value) error {
+	buf, err := d.ReadNBytes(l)
+	if err != nil {
+		return err
+	}
+	switch rv.Kind() {
+	case reflect.Array:
+		reflect.Copy(rv, reflect.ValueOf(buf))
+	case reflect.Slice:
+		rv.Set(reflect.ValueOf(buf))
+	default:
+		return fmt.Errorf("unsupported kind: %s", rv.Kind())
 	}
 	return nil
 }
 
-func reflect_readArrayOfUint16(append bool, d *Decoder, l int, rv reflect.Value, order binary.ByteOrder) error {
+func reflect_readArrayOfUint16(d *Decoder, l int, rv reflect.Value, order binary.ByteOrder) error {
+	buf := make([]uint16, l)
 	for i := 0; i < l; i++ {
 		n, err := d.ReadUint16(order)
 		if err != nil {
 			return err
 		}
-		if append {
-			rv.Set(reflect.Append(rv, reflect.ValueOf(n)))
-		} else {
-			rv.Index(i).SetUint(uint64(n))
-		}
+		buf[i] = n
+	}
+	switch rv.Kind() {
+	case reflect.Array:
+		reflect.Copy(rv, reflect.ValueOf(buf))
+	case reflect.Slice:
+		rv.Set(reflect.ValueOf(buf))
+	default:
+		return fmt.Errorf("unsupported kind: %s", rv.Kind())
 	}
 	return nil
 }
 
-func reflect_readArrayOfUint32(append bool, d *Decoder, l int, rv reflect.Value, order binary.ByteOrder) error {
+func reflect_readArrayOfUint32(d *Decoder, l int, rv reflect.Value, order binary.ByteOrder) error {
+	buf := make([]uint32, l)
 	for i := 0; i < l; i++ {
 		n, err := d.ReadUint32(order)
 		if err != nil {
 			return err
 		}
-		if append {
-			rv.Set(reflect.Append(rv, reflect.ValueOf(n)))
-		} else {
-			rv.Index(i).SetUint(uint64(n))
-		}
+		buf[i] = n
+	}
+	switch rv.Kind() {
+	case reflect.Array:
+		reflect.Copy(rv, reflect.ValueOf(buf))
+	case reflect.Slice:
+		rv.Set(reflect.ValueOf(buf))
+	default:
+		return fmt.Errorf("unsupported kind: %s", rv.Kind())
 	}
 	return nil
 }
 
-func reflect_readArrayOfUint64(append bool, d *Decoder, l int, rv reflect.Value, order binary.ByteOrder) error {
+func reflect_readArrayOfUint64(d *Decoder, l int, rv reflect.Value, order binary.ByteOrder) error {
+	buf := make([]uint64, l)
 	for i := 0; i < l; i++ {
 		n, err := d.ReadUint64(order)
 		if err != nil {
 			return err
 		}
-		if append {
-			rv.Set(reflect.Append(rv, reflect.ValueOf(n)))
-		} else {
-			rv.Index(i).SetUint(n)
-		}
+		buf[i] = n
+	}
+	switch rv.Kind() {
+	case reflect.Array:
+		reflect.Copy(rv, reflect.ValueOf(buf))
+	case reflect.Slice:
+		rv.Set(reflect.ValueOf(buf))
+	default:
+		return fmt.Errorf("unsupported kind: %s", rv.Kind())
 	}
 	return nil
 }
 
 // reflect_readArrayOfUint_ is used for reading arrays/slices of uints of any size.
-func reflect_readArrayOfUint_(append bool, d *Decoder, l int, k reflect.Kind, rv reflect.Value, order binary.ByteOrder) error {
+func reflect_readArrayOfUint_(d *Decoder, l int, k reflect.Kind, rv reflect.Value, order binary.ByteOrder) error {
 	switch k {
 	// case reflect.Uint:
 	// 	// switch on system architecture (32 or 64 bit)
 	// 	if unsafe.Sizeof(uintptr(0)) == 4 {
-	// 		return reflect_readArrayOfUint32(append, d, l, rv, order)
+	// 		return reflect_readArrayOfUint32(  d, l, rv, order)
 	// 	}
-	// 	return reflect_readArrayOfUint64(append, d, l, rv, order)
+	// 	return reflect_readArrayOfUint64(  d, l, rv, order)
 	case reflect.Uint8:
-		return reflect_readArrayOfBytes(append, d, l, rv)
+		if l > d.Remaining() {
+			return io.ErrUnexpectedEOF
+		}
+		return reflect_readArrayOfBytes(d, l, rv)
 	case reflect.Uint16:
-		return reflect_readArrayOfUint16(append, d, l, rv, order)
+		if l*2 > d.Remaining() {
+			return io.ErrUnexpectedEOF
+		}
+		return reflect_readArrayOfUint16(d, l, rv, order)
 	case reflect.Uint32:
-		return reflect_readArrayOfUint32(append, d, l, rv, order)
+		if l*4 > d.Remaining() {
+			return io.ErrUnexpectedEOF
+		}
+		return reflect_readArrayOfUint32(d, l, rv, order)
 	case reflect.Uint64:
-		return reflect_readArrayOfUint64(append, d, l, rv, order)
+		if l*8 > d.Remaining() {
+			return io.ErrUnexpectedEOF
+		}
+		return reflect_readArrayOfUint64(d, l, rv, order)
 	default:
 		return fmt.Errorf("unsupported kind: %v", k)
 	}

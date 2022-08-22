@@ -1,22 +1,17 @@
 package bin
 
 import (
+	"reflect"
 	"testing"
 )
 
-func BenchmarkDecodeUintSlice(b *testing.B) {
+func Benchmark_uintSlices_Decode(b *testing.B) {
+	l := 1024
 	buf := concatByteSlices(
 		// length:
-		uint32ToBytes(8, LE),
+		uint32ToBytes(uint32(l), LE),
 		// data:
-		uint32ToBytes(0, LE),
-		uint32ToBytes(1, LE),
-		uint32ToBytes(2, LE),
-		uint32ToBytes(3, LE),
-		uint32ToBytes(4, LE),
-		uint32ToBytes(5, LE),
-		uint32ToBytes(6, LE),
-		uint32ToBytes(7, LE),
+		newUint64SliceEncoded(l),
 	)
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -26,6 +21,58 @@ func BenchmarkDecodeUintSlice(b *testing.B) {
 		err := decoder.Decode(&got)
 		if err != nil {
 			b.Error(err)
+		}
+	}
+}
+
+func newUint64SliceEncoded(l int) []byte {
+	buf := make([]byte, 0)
+	for i := 0; i < l; i++ {
+		buf = append(buf, uint64ToBytes(uint64(i), LE)...)
+	}
+	return buf
+}
+
+func Benchmark_uintSlices_append(b *testing.B) {
+	l := 1024
+	buf := concatByteSlices(
+		newUint64SliceEncoded(l),
+	)
+	b.ReportAllocs()
+	b.ResetTimer()
+	decoder := NewBorshDecoder(buf)
+
+	for i := 0; i < b.N; i++ {
+		decoder.SetPosition(0)
+		got := make([]uint64, 0)
+		err := reflect_readArrayOfUint64(decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
+		if err != nil {
+			b.Error(err)
+		}
+		if len(got) != l {
+			b.Errorf("got %d, want %d", len(got), l)
+		}
+	}
+}
+
+func Benchmark_uintSlices_preallocate(b *testing.B) {
+	l := 1024
+	buf := concatByteSlices(
+		newUint64SliceEncoded(l),
+	)
+	b.ReportAllocs()
+	b.ResetTimer()
+	decoder := NewBorshDecoder(buf)
+
+	for i := 0; i < b.N; i++ {
+		decoder.SetPosition(0)
+		got := make([]uint64, l)
+		err := reflect_readArrayOfUint64(decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
+		if err != nil {
+			b.Error(err)
+		}
+		if len(got) != l {
+			b.Errorf("got %d, want %d", len(got), l)
 		}
 	}
 }

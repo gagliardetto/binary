@@ -784,7 +784,7 @@ func Test_reflect_readArrayOfBytes(t *testing.T) {
 			decoder := NewBinDecoder(buf)
 
 			got := make([]byte, 0)
-			err := reflect_readArrayOfBytes(true, decoder, len(buf), reflect.ValueOf(&got).Elem())
+			err := reflect_readArrayOfBytes(decoder, len(buf), reflect.ValueOf(&got).Elem())
 			require.NoError(t, err)
 			require.Equal(t, buf, got)
 		}
@@ -793,7 +793,7 @@ func Test_reflect_readArrayOfBytes(t *testing.T) {
 			decoder := NewBinDecoder(buf)
 
 			got := [8]byte{0, 0, 0, 0, 0, 0, 0, 0}
-			err := reflect_readArrayOfBytes(false, decoder, len(buf), reflect.ValueOf(&got).Elem())
+			err := reflect_readArrayOfBytes(decoder, len(buf), reflect.ValueOf(&got).Elem())
 			require.NoError(t, err)
 			require.Equal(t, buf, got[:])
 		}
@@ -804,7 +804,7 @@ func Test_reflect_readArrayOfBytes(t *testing.T) {
 			decoder := NewBorshDecoder(buf)
 
 			got := make([]byte, 0)
-			err := reflect_readArrayOfBytes(true, decoder, len(buf), reflect.ValueOf(&got).Elem())
+			err := reflect_readArrayOfBytes(decoder, len(buf), reflect.ValueOf(&got).Elem())
 			require.NoError(t, err)
 			require.Equal(t, buf, got)
 		}
@@ -813,7 +813,7 @@ func Test_reflect_readArrayOfBytes(t *testing.T) {
 			decoder := NewBorshDecoder(buf)
 
 			got := [8]byte{0, 0, 0, 0, 0, 0, 0, 0}
-			err := reflect_readArrayOfBytes(false, decoder, len(buf), reflect.ValueOf(&got).Elem())
+			err := reflect_readArrayOfBytes(decoder, len(buf), reflect.ValueOf(&got).Elem())
 			require.NoError(t, err)
 			require.Equal(t, buf, got[:])
 		}
@@ -836,7 +836,7 @@ func Test_reflect_readArrayOfUint16(t *testing.T) {
 			decoder := NewBinDecoder(buf)
 
 			got := make([]uint16, 0)
-			err := reflect_readArrayOfUint16(true, decoder, len(buf)/2, reflect.ValueOf(&got).Elem(), LE)
+			err := reflect_readArrayOfUint16(decoder, len(buf)/2, reflect.ValueOf(&got).Elem(), LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint16{0, 1, 2, 3, 4, 5, 6, 7}, got)
 		}
@@ -854,7 +854,7 @@ func Test_reflect_readArrayOfUint16(t *testing.T) {
 			decoder := NewBinDecoder(buf)
 
 			got := [8]uint16{0, 0, 0, 0, 0, 0, 0, 0}
-			err := reflect_readArrayOfUint16(false, decoder, len(buf)/2, reflect.ValueOf(&got).Elem(), LE)
+			err := reflect_readArrayOfUint16(decoder, len(buf)/2, reflect.ValueOf(&got).Elem(), LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint16{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
 		}
@@ -874,7 +874,7 @@ func Test_reflect_readArrayOfUint16(t *testing.T) {
 			decoder := NewBorshDecoder(buf)
 
 			got := make([]uint16, 0)
-			err := reflect_readArrayOfUint16(true, decoder, len(buf)/2, reflect.ValueOf(&got).Elem(), LE)
+			err := reflect_readArrayOfUint16(decoder, len(buf)/2, reflect.ValueOf(&got).Elem(), LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint16{0, 1, 2, 3, 4, 5, 6, 7}, got)
 		}
@@ -892,7 +892,7 @@ func Test_reflect_readArrayOfUint16(t *testing.T) {
 			decoder := NewBorshDecoder(buf)
 
 			got := [8]uint16{0, 0, 0, 0, 0, 0, 0, 0}
-			err := reflect_readArrayOfUint16(false, decoder, len(buf)/2, reflect.ValueOf(&got).Elem(), LE)
+			err := reflect_readArrayOfUint16(decoder, len(buf)/2, reflect.ValueOf(&got).Elem(), LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint16{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
 		}
@@ -915,7 +915,7 @@ func Test_reflect_readArrayOfUint32(t *testing.T) {
 			decoder := NewBinDecoder(buf)
 
 			got := make([]uint32, 0)
-			err := reflect_readArrayOfUint32(true, decoder, len(buf)/4, reflect.ValueOf(&got).Elem(), LE)
+			err := reflect_readArrayOfUint32(decoder, len(buf)/4, reflect.ValueOf(&got).Elem(), LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got)
 		}
@@ -933,7 +933,7 @@ func Test_reflect_readArrayOfUint32(t *testing.T) {
 			decoder := NewBinDecoder(buf)
 
 			got := [8]uint32{0, 0, 0, 0, 0, 0, 0, 0}
-			err := reflect_readArrayOfUint32(false, decoder, len(buf)/4, reflect.ValueOf(&got).Elem(), LE)
+			err := reflect_readArrayOfUint32(decoder, len(buf)/4, reflect.ValueOf(&got).Elem(), LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
 		}
@@ -953,7 +953,7 @@ func Test_reflect_readArrayOfUint32(t *testing.T) {
 			decoder := NewBorshDecoder(buf)
 
 			got := make([]uint32, 0)
-			err := reflect_readArrayOfUint32(true, decoder, len(buf)/4, reflect.ValueOf(&got).Elem(), LE)
+			err := reflect_readArrayOfUint32(decoder, len(buf)/4, reflect.ValueOf(&got).Elem(), LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got)
 		}
@@ -971,7 +971,7 @@ func Test_reflect_readArrayOfUint32(t *testing.T) {
 			decoder := NewBorshDecoder(buf)
 
 			got := [8]uint32{0, 0, 0, 0, 0, 0, 0, 0}
-			err := reflect_readArrayOfUint32(false, decoder, len(buf)/4, reflect.ValueOf(&got).Elem(), LE)
+			err := reflect_readArrayOfUint32(decoder, len(buf)/4, reflect.ValueOf(&got).Elem(), LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
 		}
@@ -994,7 +994,7 @@ func Test_reflect_readArrayOfUint64(t *testing.T) {
 			decoder := NewBinDecoder(buf)
 
 			got := make([]uint64, 0)
-			err := reflect_readArrayOfUint64(true, decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
+			err := reflect_readArrayOfUint64(decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint64{0, 1, 2, 3, 4, 5, 6, 7}, got)
 		}
@@ -1011,7 +1011,7 @@ func Test_reflect_readArrayOfUint64(t *testing.T) {
 			)
 			decoder := NewBinDecoder(buf)
 			got := [8]uint64{0, 0, 0, 0, 0, 0, 0, 0}
-			err := reflect_readArrayOfUint64(false, decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
+			err := reflect_readArrayOfUint64(decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint64{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
 		}
@@ -1031,7 +1031,7 @@ func Test_reflect_readArrayOfUint64(t *testing.T) {
 			decoder := NewBorshDecoder(buf)
 
 			got := make([]uint64, 0)
-			err := reflect_readArrayOfUint64(true, decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
+			err := reflect_readArrayOfUint64(decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint64{0, 1, 2, 3, 4, 5, 6, 7}, got)
 		}
@@ -1048,7 +1048,7 @@ func Test_reflect_readArrayOfUint64(t *testing.T) {
 			)
 			decoder := NewBorshDecoder(buf)
 			got := [8]uint64{0, 0, 0, 0, 0, 0, 0, 0}
-			err := reflect_readArrayOfUint64(false, decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
+			err := reflect_readArrayOfUint64(decoder, len(buf)/8, reflect.ValueOf(&got).Elem(), LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint64{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
 		}
@@ -1073,7 +1073,7 @@ func Test_reflect_readArrayOfUint(t *testing.T) {
 			got := make([]uint32, 0)
 			rv := reflect.ValueOf(&got).Elem()
 			k := rv.Type().Elem().Kind()
-			err := reflect_readArrayOfUint_(true, decoder, len(buf)/4, k, rv, LE)
+			err := reflect_readArrayOfUint_(decoder, len(buf)/4, k, rv, LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got)
 		}
@@ -1092,7 +1092,7 @@ func Test_reflect_readArrayOfUint(t *testing.T) {
 			got := [8]uint32{0, 0, 0, 0, 0, 0, 0, 0}
 			rv := reflect.ValueOf(&got).Elem()
 			k := rv.Type().Elem().Kind()
-			err := reflect_readArrayOfUint_(false, decoder, len(buf)/4, k, rv, LE)
+			err := reflect_readArrayOfUint_(decoder, len(buf)/4, k, rv, LE)
 			require.NoError(t, err)
 			require.Equal(t, []uint32{0, 1, 2, 3, 4, 5, 6, 7}, got[:])
 		}

@@ -699,9 +699,28 @@ func reflect_readArrayOfBytes(d *Decoder, l int, rv reflect.Value) error {
 	}
 	switch rv.Kind() {
 	case reflect.Array:
-		reflect.Copy(rv, reflect.ValueOf(buf))
+		// if the type of the array is not [n]uint8, but a custom type like [n]CustomUint8:
+		if rv.Type().Elem() != typeOfUint8 {
+			// if the type of the array is not [n]uint8, but a custom type like [n]CustomUint8:
+			// then we need to convert each uint8 to the custom type
+			for i := 0; i < l; i++ {
+				rv.Index(i).Set(reflect.ValueOf(buf[i]).Convert(rv.Index(i).Type()))
+			}
+		} else {
+			reflect.Copy(rv, reflect.ValueOf(buf))
+		}
 	case reflect.Slice:
-		rv.Set(reflect.ValueOf(buf))
+		// if the type of the slice is not []uint8, but a custom type like []CustomUint8:
+		if rv.Type().Elem() != typeOfUint8 {
+			// convert the []uint8 to the custom type
+			customSlice := reflect.MakeSlice(rv.Type(), len(buf), len(buf))
+			for i := 0; i < len(buf); i++ {
+				customSlice.Index(i).SetUint(uint64(buf[i]))
+			}
+			rv.Set(customSlice)
+		} else {
+			rv.Set(reflect.ValueOf(buf))
+		}
 	default:
 		return fmt.Errorf("unsupported kind: %s", rv.Kind())
 	}
@@ -719,9 +738,28 @@ func reflect_readArrayOfUint16(d *Decoder, l int, rv reflect.Value, order binary
 	}
 	switch rv.Kind() {
 	case reflect.Array:
-		reflect.Copy(rv, reflect.ValueOf(buf))
+		// if the type of the array is not [n]uint16, but a custom type like [n]CustomUint16:
+		if rv.Type().Elem() != typeOfUint16 {
+			// if the type of the array is not [n]uint16, but a custom type like [n]CustomUint16:
+			// then we need to convert each uint16 to the custom type
+			for i := 0; i < l; i++ {
+				rv.Index(i).Set(reflect.ValueOf(buf[i]).Convert(rv.Index(i).Type()))
+			}
+		} else {
+			reflect.Copy(rv, reflect.ValueOf(buf))
+		}
 	case reflect.Slice:
-		rv.Set(reflect.ValueOf(buf))
+		// if the type of the slice is not []uint16, but a custom type like []CustomUint16:
+		if rv.Type().Elem() != typeOfUint16 {
+			// convert the []uint16 to the custom type
+			customSlice := reflect.MakeSlice(rv.Type(), len(buf), len(buf))
+			for i := 0; i < len(buf); i++ {
+				customSlice.Index(i).SetUint(uint64(buf[i]))
+			}
+			rv.Set(customSlice)
+		} else {
+			rv.Set(reflect.ValueOf(buf))
+		}
 	default:
 		return fmt.Errorf("unsupported kind: %s", rv.Kind())
 	}
@@ -739,14 +777,47 @@ func reflect_readArrayOfUint32(d *Decoder, l int, rv reflect.Value, order binary
 	}
 	switch rv.Kind() {
 	case reflect.Array:
-		reflect.Copy(rv, reflect.ValueOf(buf))
+		// if the type of the array is not [n]uint32, but a custom type like [n]CustomUint32:
+		if rv.Type().Elem() != typeOfUint32 {
+			// if the type of the array is not [n]uint32, but a custom type like [n]CustomUint32:
+			// then we need to convert each uint32 to the custom type
+			for i := 0; i < l; i++ {
+				rv.Index(i).Set(reflect.ValueOf(buf[i]).Convert(rv.Index(i).Type()))
+			}
+		} else {
+			reflect.Copy(rv, reflect.ValueOf(buf))
+		}
 	case reflect.Slice:
-		rv.Set(reflect.ValueOf(buf))
+		// if the type of the slice is not []uint32, but a custom type like []CustomUint32:
+		if rv.Type().Elem() != typeOfUint32 {
+			// convert the []uint32 to the custom type
+			customSlice := reflect.MakeSlice(rv.Type(), len(buf), len(buf))
+			for i := 0; i < len(buf); i++ {
+				customSlice.Index(i).SetUint(uint64(buf[i]))
+			}
+			rv.Set(customSlice)
+		} else {
+			rv.Set(reflect.ValueOf(buf))
+		}
 	default:
 		return fmt.Errorf("unsupported kind: %s", rv.Kind())
 	}
 	return nil
 }
+
+func init() {
+	if typeOfByte != typeOfUint8 {
+		panic("typeOfByte != typeOfUint8")
+	}
+}
+
+var (
+	typeOfByte   = reflect.TypeOf(byte(0))
+	typeOfUint8  = reflect.TypeOf(uint8(0))
+	typeOfUint16 = reflect.TypeOf(uint16(0))
+	typeOfUint32 = reflect.TypeOf(uint32(0))
+	typeOfUint64 = reflect.TypeOf(uint64(0))
+)
 
 func reflect_readArrayOfUint64(d *Decoder, l int, rv reflect.Value, order binary.ByteOrder) error {
 	buf := make([]uint64, l)
@@ -759,9 +830,28 @@ func reflect_readArrayOfUint64(d *Decoder, l int, rv reflect.Value, order binary
 	}
 	switch rv.Kind() {
 	case reflect.Array:
-		reflect.Copy(rv, reflect.ValueOf(buf))
+		// if the type of the array is not [n]uint64, but a custom type like [n]CustomUint64:
+		if rv.Type().Elem() != typeOfUint64 {
+			// if the type of the array is not [n]uint64, but a custom type like [n]CustomUint64:
+			// then we need to convert each uint64 to the custom type
+			for i := 0; i < l; i++ {
+				rv.Index(i).Set(reflect.ValueOf(buf[i]).Convert(rv.Index(i).Type()))
+			}
+		} else {
+			reflect.Copy(rv, reflect.ValueOf(buf))
+		}
 	case reflect.Slice:
-		rv.Set(reflect.ValueOf(buf))
+		// if the type of the slice is not []uint64, but a custom type like []CustomUint64:
+		if rv.Type().Elem() != typeOfUint64 {
+			// convert the []uint64 to the custom type
+			customSlice := reflect.MakeSlice(rv.Type(), len(buf), len(buf))
+			for i := 0; i < len(buf); i++ {
+				customSlice.Index(i).SetUint(uint64(buf[i]))
+			}
+			rv.Set(customSlice)
+		} else {
+			rv.Set(reflect.ValueOf(buf))
+		}
 	default:
 		return fmt.Errorf("unsupported kind: %s", rv.Kind())
 	}

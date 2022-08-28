@@ -1099,6 +1099,81 @@ func Test_reflect_readArrayOfUint(t *testing.T) {
 	}
 }
 
+func Test_Decode_custom(t *testing.T) {
+	t.Run("custom-type-uint32 slice", func(t *testing.T) {
+		{
+			buf := concatByteSlices(
+				// length:
+				[]byte{3},
+				// data:
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			type CustomUint32 uint32
+			got := make([]CustomUint32, 0)
+			err := decoder.Decode(&got)
+			require.NoError(t, err)
+			require.Equal(t, []CustomUint32{0, 1, 2}, got)
+		}
+	})
+	t.Run("custom-type-uint32 array", func(t *testing.T) {
+		{
+			buf := concatByteSlices(
+				// data:
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			type CustomUint32 uint32
+			got := [3]CustomUint32{0, 0, 0}
+			err := decoder.Decode(&got)
+			require.NoError(t, err)
+			require.Equal(t, [3]CustomUint32{0, 1, 2}, got)
+		}
+	})
+	t.Run("uint32 custom-type-slice", func(t *testing.T) {
+		{
+			buf := concatByteSlices(
+				// length:
+				[]byte{3},
+				// data:
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			type CustomSliceUint32 []uint32
+			got := make(CustomSliceUint32, 0)
+			err := decoder.Decode(&got)
+			require.NoError(t, err)
+			require.Equal(t, CustomSliceUint32{0, 1, 2}, got)
+		}
+	})
+	t.Run("uint32 custom-type-array", func(t *testing.T) {
+		{
+			buf := concatByteSlices(
+				// data:
+				uint32ToBytes(0, LE),
+				uint32ToBytes(1, LE),
+				uint32ToBytes(2, LE),
+			)
+			decoder := NewBinDecoder(buf)
+
+			type CustomArrayUint32 [3]uint32
+			got := CustomArrayUint32{0, 0, 0}
+			err := decoder.Decode(&got)
+			require.NoError(t, err)
+			require.Equal(t, CustomArrayUint32{0, 1, 2}, got)
+		}
+	})
+}
+
 func Test_Decode_readArrayOfUint(t *testing.T) {
 	{
 		{

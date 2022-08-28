@@ -1174,6 +1174,26 @@ func Test_Decode_custom(t *testing.T) {
 	})
 }
 
+func Test_ReadNBytes(t *testing.T) {
+	{
+		b1 := []byte{123, 99, 88, 77, 66, 55, 44, 33, 22, 11}
+		b2 := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+		buf := concatByteSlices(
+			b1,
+			b2,
+		)
+		decoder := NewBinDecoder(buf)
+
+		got, err := decoder.ReadNBytes(10)
+		require.NoError(t, err)
+		require.Equal(t, b1, got)
+
+		got, err = decoder.ReadNBytes(10)
+		require.NoError(t, err)
+		require.Equal(t, b2, got)
+	}
+}
+
 func Test_Decode_readArrayOfUint(t *testing.T) {
 	{
 		{

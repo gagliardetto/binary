@@ -274,22 +274,19 @@ type peekAbleByteReader interface {
 	Peek(n int) ([]byte, error)
 }
 
-func readNBytes(n int, reader peekAbleByteReader) ([]byte, error) {
+func readNBytes(n int, reader *Decoder) ([]byte, error) {
 	if n == 0 {
 		return make([]byte, 0), nil
 	}
 	if n < 0 || n > 0x7FFF_FFFF {
 		return nil, fmt.Errorf("invalid length n: %v", n)
 	}
-	buf := make([]byte, n)
-	for i := 0; i < n; i++ {
-		b, err := reader.ReadByte()
-		if err != nil {
-			return nil, err
-		}
-		buf[i] = b
+	if reader.pos+n > len(reader.data) {
+		return nil, fmt.Errorf("not enough data: %d bytes missing", reader.pos+n-len(reader.data))
 	}
-	return buf, nil
+	out := reader.data[reader.pos : reader.pos+n]
+	reader.pos += n
+	return out, nil
 }
 
 func discardNBytes(n int, reader *Decoder) error {

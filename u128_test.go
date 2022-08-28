@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
 )
@@ -13,11 +12,16 @@ func TestUint128(t *testing.T) {
 	// from bytes:
 	data := []byte{51, 47, 223, 255, 255, 255, 255, 255, 30, 12, 0, 0, 0, 0, 0, 0}
 
-	orderID, err := decimal.NewFromString("57240246860720736513843")
+	numberString := "57240246860720736513843"
+	parsed, err := decimal.NewFromString(numberString)
 	if err != nil {
 		panic(err)
 	}
-	spew.Dump(orderID)
+	{
+		if parsed.String() != numberString {
+			t.Errorf("parsed.String() != numberString")
+		}
+	}
 
 	{
 		u128 := NewUint128LittleEndian()
@@ -25,8 +29,8 @@ func TestUint128(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, uint64(3102), u128.Hi)
 		require.Equal(t, uint64(18446744073707401011), u128.Lo)
-		require.Equal(t, orderID.BigInt(), u128.BigInt())
-		require.Equal(t, orderID.String(), u128.DecimalString())
+		require.Equal(t, parsed.BigInt(), u128.BigInt())
+		require.Equal(t, parsed.String(), u128.DecimalString())
 	}
 	{
 		u128 := NewUint128BigEndian()
@@ -35,8 +39,8 @@ func TestUint128(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, uint64(3102), u128.Hi)
 		require.Equal(t, uint64(18446744073707401011), u128.Lo)
-		require.Equal(t, orderID.BigInt(), u128.BigInt())
-		require.Equal(t, orderID.String(), u128.DecimalString())
+		require.Equal(t, parsed.BigInt(), u128.BigInt())
+		require.Equal(t, parsed.String(), u128.DecimalString())
 	}
 	{
 		j := []byte(`{"i":"57240246860720736513843"}`)
@@ -48,8 +52,8 @@ func TestUint128(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, uint64(3102), object.I.Hi)
 		require.Equal(t, uint64(18446744073707401011), object.I.Lo)
-		require.Equal(t, orderID.BigInt(), object.I.BigInt())
-		require.Equal(t, orderID.String(), object.I.DecimalString())
+		require.Equal(t, parsed.BigInt(), object.I.BigInt())
+		require.Equal(t, parsed.String(), object.I.DecimalString())
 
 		{
 			out, err := json.Marshal(object)

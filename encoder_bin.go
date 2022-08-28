@@ -107,22 +107,20 @@ func (e *Encoder) encodeBin(rv reflect.Value, opt *option) (err error) {
 			zlog.Debug("encode: array", zap.Int("length", l), zap.Stringer("type", rv.Kind()))
 		}
 
-		if rv.Type().Elem().Kind() == reflect.Uint8 {
+		switch k := rv.Type().Elem().Kind(); k {
+		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			// if it's a [n]byte, accumulate and write in one command:
-			arr := make([]byte, l)
-			for i := 0; i < l; i++ {
-				arr[i] = byte(rv.Index(i).Uint())
-			}
-			if err := e.WriteBytes(arr, false); err != nil {
+			if err := reflect_writeArrayOfUint_(e, l, k, rv, LE); err != nil {
 				return err
 			}
-		} else {
+		default:
 			for i := 0; i < l; i++ {
 				if err = e.encodeBin(rv.Index(i), nil); err != nil {
 					return
 				}
 			}
 		}
+
 	case reflect.Slice:
 		var l int
 		if opt.hasSizeOfSlice() {
@@ -144,9 +142,17 @@ func (e *Encoder) encodeBin(rv reflect.Value, opt *option) (err error) {
 
 		// we would want to skip to the correct head_offset
 
-		for i := 0; i < l; i++ {
-			if err = e.encodeBin(rv.Index(i), nil); err != nil {
-				return
+		switch k := rv.Type().Elem().Kind(); k {
+		case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			// if it's a [n]byte, accumulate and write in one command:
+			if err := reflect_writeArrayOfUint_(e, l, k, rv, LE); err != nil {
+				return err
+			}
+		default:
+			for i := 0; i < l; i++ {
+				if err = e.encodeBin(rv.Index(i), nil); err != nil {
+					return
+				}
 			}
 		}
 	case reflect.Struct:

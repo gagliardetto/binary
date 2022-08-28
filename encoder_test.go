@@ -22,6 +22,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"math"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -640,4 +641,637 @@ func TestEncoder_InterfaceNil(t *testing.T) {
 	enc := NewBinEncoder(buf)
 	err := enc.Encode(foo)
 	assert.NoError(t, err)
+}
+
+func TestByteArrays(t *testing.T) {
+	{
+		var buf bytes.Buffer
+		enc := NewBinEncoder(&buf)
+		err := enc.Encode([3]byte{1, 2, 3})
+		assert.NoError(t, err)
+		assert.Equal(t, []byte{1, 2, 3}, buf.Bytes())
+	}
+	{
+		var buf bytes.Buffer
+		enc := NewBorshEncoder(&buf)
+		err := enc.Encode([3]byte{1, 2, 3})
+		assert.NoError(t, err)
+		assert.Equal(t, []byte{1, 2, 3}, buf.Bytes())
+	}
+}
+
+func TestUintArrays(t *testing.T) {
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+			err := enc.Encode([3]uint8{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t, []byte{1, 2, 3}, buf.Bytes())
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+			err := enc.Encode([3]uint8{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t, []byte{1, 2, 3}, buf.Bytes())
+		}
+	}
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+			err := enc.Encode([3]uint16{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t, concatByteSlices(
+				[]byte{1, 0, 2, 0, 3, 0},
+			), buf.Bytes())
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+			err := enc.Encode([3]uint16{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t, concatByteSlices(
+				[]byte{1, 0, 2, 0, 3, 0},
+			), buf.Bytes())
+		}
+	}
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+			err := enc.Encode([3]uint32{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					[]byte{1, 0, 0, 0},
+					[]byte{2, 0, 0, 0},
+					[]byte{3, 0, 0, 0},
+				), buf.Bytes())
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+			err := enc.Encode([3]uint32{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					[]byte{1, 0, 0, 0},
+					[]byte{2, 0, 0, 0},
+					[]byte{3, 0, 0, 0},
+				), buf.Bytes())
+		}
+	}
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+			err := enc.Encode([3]uint64{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					[]byte{1, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{2, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{3, 0, 0, 0, 0, 0, 0, 0},
+				), buf.Bytes())
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+			err := enc.Encode([3]uint64{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					[]byte{1, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{2, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{3, 0, 0, 0, 0, 0, 0, 0},
+				), buf.Bytes())
+		}
+	}
+}
+
+func TestUintSlices(t *testing.T) {
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+			err := enc.Encode([]uint8{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t, concatByteSlices(
+				// length:
+				[]byte{3},
+				// data:
+				[]byte{1, 2, 3},
+			), buf.Bytes())
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+			err := enc.Encode([]uint8{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					// length:
+					[]byte{3, 0, 0, 0},
+					// data:
+					[]byte{1, 2, 3},
+				), buf.Bytes())
+		}
+	}
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+			err := enc.Encode([]uint16{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t, concatByteSlices(
+				// length:
+				[]byte{3},
+				// data:
+				[]byte{1, 0, 2, 0, 3, 0},
+			), buf.Bytes())
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+			err := enc.Encode([]uint16{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t, concatByteSlices(
+				// length:
+				[]byte{3, 0, 0, 0},
+				// data:
+				[]byte{1, 0, 2, 0, 3, 0},
+			), buf.Bytes())
+		}
+	}
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+			err := enc.Encode([]uint32{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					// length:
+					[]byte{3},
+					// data:
+					[]byte{1, 0, 0, 0},
+					[]byte{2, 0, 0, 0},
+					[]byte{3, 0, 0, 0},
+				), buf.Bytes())
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+			err := enc.Encode([]uint32{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					// length:
+					[]byte{3, 0, 0, 0},
+					// data:
+					[]byte{1, 0, 0, 0},
+					[]byte{2, 0, 0, 0},
+					[]byte{3, 0, 0, 0},
+				), buf.Bytes())
+		}
+	}
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+			err := enc.Encode([]uint64{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					// length:
+					[]byte{3},
+					// data:
+					[]byte{1, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{2, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{3, 0, 0, 0, 0, 0, 0, 0},
+				), buf.Bytes())
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+			err := enc.Encode([]uint64{1, 2, 3})
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					// length:
+					[]byte{3, 0, 0, 0},
+					// data:
+					[]byte{1, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{2, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{3, 0, 0, 0, 0, 0, 0, 0},
+				), buf.Bytes())
+		}
+	}
+}
+
+func Test_writeArrayOfBytes(t *testing.T) {
+	{
+		var buf bytes.Buffer
+		enc := NewBinEncoder(&buf)
+
+		arr := [3]byte{1, 2, 3}
+		l := len(arr)
+
+		err := reflect_writeArrayOfBytes(enc, l, reflect.ValueOf(arr))
+		assert.NoError(t, err)
+		assert.Equal(t, arr[:], buf.Bytes())
+	}
+	{
+		var buf bytes.Buffer
+		enc := NewBinEncoder(&buf)
+
+		arr := [10]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+		l := len(arr)
+
+		err := reflect_writeArrayOfBytes(enc, l, reflect.ValueOf(arr))
+		assert.NoError(t, err)
+		assert.Equal(t, arr[:], buf.Bytes())
+	}
+	{
+		var buf bytes.Buffer
+		enc := NewBinEncoder(&buf)
+
+		arr := [32]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32}
+		l := len(arr)
+
+		err := reflect_writeArrayOfBytes(enc, l, reflect.ValueOf(arr))
+		assert.NoError(t, err)
+		assert.Equal(t, arr[:], buf.Bytes())
+	}
+}
+
+func Test_writeArrayOfUint16(t *testing.T) {
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+
+			arr := [3]uint16{1, 2, 3}
+			l := len(arr)
+
+			err := reflect_writeArrayOfUint16(enc, l, reflect.ValueOf(arr), LE)
+			assert.NoError(t, err)
+			assert.Equal(t, concatByteSlices(
+				[]byte{1, 0, 2, 0, 3, 0},
+			), buf.Bytes())
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+
+			arr := [3]uint16{1, 2, 3}
+			l := len(arr)
+
+			err := reflect_writeArrayOfUint16(enc, l, reflect.ValueOf(arr), LE)
+			assert.NoError(t, err)
+			assert.Equal(t, concatByteSlices(
+				[]byte{1, 0, 2, 0, 3, 0},
+			), buf.Bytes())
+		}
+	}
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+
+			arr := []uint16{1, 2, 3}
+			l := len(arr)
+
+			err := reflect_writeArrayOfUint16(enc, l, reflect.ValueOf(arr), LE)
+			assert.NoError(t, err)
+			assert.Equal(t, concatByteSlices(
+				[]byte{1, 0, 2, 0, 3, 0},
+			), buf.Bytes())
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+
+			arr := []uint16{1, 2, 3}
+			l := len(arr)
+
+			err := reflect_writeArrayOfUint16(enc, l, reflect.ValueOf(arr), LE)
+			assert.NoError(t, err)
+			assert.Equal(t, concatByteSlices(
+				[]byte{1, 0, 2, 0, 3, 0},
+			), buf.Bytes())
+		}
+	}
+}
+
+func Test_writeArrayOfUint32(t *testing.T) {
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+
+			arr := [3]uint32{1, 2, 3}
+			l := len(arr)
+
+			err := reflect_writeArrayOfUint32(enc, l, reflect.ValueOf(arr), LE)
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					[]byte{1, 0, 0, 0},
+					[]byte{2, 0, 0, 0},
+					[]byte{3, 0, 0, 0},
+				),
+				buf.Bytes(),
+			)
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+
+			arr := [3]uint32{1, 2, 3}
+			l := len(arr)
+
+			err := reflect_writeArrayOfUint32(enc, l, reflect.ValueOf(arr), LE)
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					[]byte{1, 0, 0, 0},
+					[]byte{2, 0, 0, 0},
+					[]byte{3, 0, 0, 0},
+				),
+				buf.Bytes(),
+			)
+		}
+	}
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+
+			arr := []uint32{1, 2, 3}
+			l := len(arr)
+
+			err := reflect_writeArrayOfUint32(enc, l, reflect.ValueOf(arr), LE)
+			assert.NoError(t, err)
+
+			assert.Equal(t,
+				concatByteSlices(
+					[]byte{1, 0, 0, 0},
+					[]byte{2, 0, 0, 0},
+					[]byte{3, 0, 0, 0},
+				),
+				buf.Bytes(),
+			)
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+
+			arr := []uint32{1, 2, 3}
+			l := len(arr)
+
+			err := reflect_writeArrayOfUint32(enc, l, reflect.ValueOf(arr), LE)
+			assert.NoError(t, err)
+
+			assert.Equal(t,
+				concatByteSlices(
+					[]byte{1, 0, 0, 0},
+					[]byte{2, 0, 0, 0},
+					[]byte{3, 0, 0, 0},
+				),
+				buf.Bytes(),
+			)
+		}
+	}
+	{
+		var buf bytes.Buffer
+		enc := NewBinEncoder(&buf)
+
+		arr := [10]uint32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+		l := len(arr)
+
+		err := reflect_writeArrayOfUint32(enc, l, reflect.ValueOf(arr), LE)
+		assert.NoError(t, err)
+		assert.Equal(t,
+			concatByteSlices(
+				[]byte{1, 0, 0, 0},
+				[]byte{2, 0, 0, 0},
+				[]byte{3, 0, 0, 0},
+				[]byte{4, 0, 0, 0},
+				[]byte{5, 0, 0, 0},
+				[]byte{6, 0, 0, 0},
+				[]byte{7, 0, 0, 0},
+				[]byte{8, 0, 0, 0},
+				[]byte{9, 0, 0, 0},
+				[]byte{10, 0, 0, 0},
+			),
+			buf.Bytes())
+	}
+	{
+		var buf bytes.Buffer
+		enc := NewBinEncoder(&buf)
+
+		arr := [32]uint32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32}
+		l := len(arr)
+
+		err := reflect_writeArrayOfUint32(enc, l, reflect.ValueOf(arr), LE)
+		assert.NoError(t, err)
+		assert.Equal(t,
+			concatByteSlices(
+				[]byte{1, 0, 0, 0},
+				[]byte{2, 0, 0, 0},
+				[]byte{3, 0, 0, 0},
+				[]byte{4, 0, 0, 0},
+				[]byte{5, 0, 0, 0},
+				[]byte{6, 0, 0, 0},
+				[]byte{7, 0, 0, 0},
+				[]byte{8, 0, 0, 0},
+				[]byte{9, 0, 0, 0},
+				[]byte{10, 0, 0, 0},
+				[]byte{11, 0, 0, 0},
+				[]byte{12, 0, 0, 0},
+				[]byte{13, 0, 0, 0},
+				[]byte{14, 0, 0, 0},
+				[]byte{15, 0, 0, 0},
+				[]byte{16, 0, 0, 0},
+				[]byte{17, 0, 0, 0},
+				[]byte{18, 0, 0, 0},
+				[]byte{19, 0, 0, 0},
+				[]byte{20, 0, 0, 0},
+				[]byte{21, 0, 0, 0},
+				[]byte{22, 0, 0, 0},
+				[]byte{23, 0, 0, 0},
+				[]byte{24, 0, 0, 0},
+				[]byte{25, 0, 0, 0},
+				[]byte{26, 0, 0, 0},
+				[]byte{27, 0, 0, 0},
+				[]byte{28, 0, 0, 0},
+				[]byte{29, 0, 0, 0},
+				[]byte{30, 0, 0, 0},
+				[]byte{31, 0, 0, 0},
+				[]byte{32, 0, 0, 0},
+			),
+			buf.Bytes())
+	}
+
+}
+
+func Test_writeArrayOfUint64(t *testing.T) {
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+
+			arr := [3]uint64{1, 2, 3}
+			l := len(arr)
+
+			err := reflect_writeArrayOfUint64(enc, l, reflect.ValueOf(arr), LE)
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					[]byte{1, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{2, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{3, 0, 0, 0, 0, 0, 0, 0},
+				),
+				buf.Bytes(),
+			)
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBinEncoder(&buf)
+
+			arr := []uint64{1, 2, 3}
+			l := len(arr)
+
+			err := reflect_writeArrayOfUint64(enc, l, reflect.ValueOf(arr), LE)
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					[]byte{1, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{2, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{3, 0, 0, 0, 0, 0, 0, 0},
+				),
+				buf.Bytes(),
+			)
+		}
+	}
+	{
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+
+			arr := [3]uint64{1, 2, 3}
+			l := len(arr)
+
+			err := reflect_writeArrayOfUint64(enc, l, reflect.ValueOf(arr), LE)
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					[]byte{1, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{2, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{3, 0, 0, 0, 0, 0, 0, 0},
+				),
+				buf.Bytes(),
+			)
+		}
+		{
+			var buf bytes.Buffer
+			enc := NewBorshEncoder(&buf)
+
+			arr := []uint64{1, 2, 3}
+			l := len(arr)
+
+			err := reflect_writeArrayOfUint64(enc, l, reflect.ValueOf(arr), LE)
+			assert.NoError(t, err)
+			assert.Equal(t,
+				concatByteSlices(
+					[]byte{1, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{2, 0, 0, 0, 0, 0, 0, 0},
+					[]byte{3, 0, 0, 0, 0, 0, 0, 0},
+				),
+				buf.Bytes(),
+			)
+		}
+	}
+	{
+		var buf bytes.Buffer
+
+		enc := NewBinEncoder(&buf)
+		arr := [64]uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64}
+		l := len(arr)
+
+		err := reflect_writeArrayOfUint64(enc, l, reflect.ValueOf(arr), LE)
+		assert.NoError(t, err)
+
+		assert.Equal(t,
+			concatByteSlices(
+				[]byte{1, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{2, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{3, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{4, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{5, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{6, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{7, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{8, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{9, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{10, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{11, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{12, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{13, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{14, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{15, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{16, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{17, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{18, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{19, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{20, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{21, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{22, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{23, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{24, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{25, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{26, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{27, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{28, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{29, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{30, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{31, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{32, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{33, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{34, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{35, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{36, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{37, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{38, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{39, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{40, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{41, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{42, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{43, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{44, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{45, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{46, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{47, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{48, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{49, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{50, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{51, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{52, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{53, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{54, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{55, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{56, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{57, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{58, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{59, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{60, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{61, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{62, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{63, 0, 0, 0, 0, 0, 0, 0},
+				[]byte{64, 0, 0, 0, 0, 0, 0, 0},
+			),
+			buf.Bytes())
+	}
 }

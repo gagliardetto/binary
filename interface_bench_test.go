@@ -15,7 +15,9 @@
 package bin
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"io"
+	mrand "math/rand"
 	"testing"
 )
 
@@ -107,9 +109,9 @@ type benchSubset2 struct {
 func makeUint64List(itemCount int) (out []int64) {
 	out = make([]int64, itemCount)
 	for i := 0; i < itemCount; i++ {
-		out[i] = rand.Int63()
+		// get random int64:
+		out[i] = mrand.Int63()
 	}
-
 	return
 }
 
@@ -117,9 +119,8 @@ func makeStringList(itemCount int) (out []string) {
 	out = make([]string, itemCount)
 	for i := 0; i < itemCount; i++ {
 		data := make([]byte, i>>1)
-		rand.Read(data)
+		io.ReadFull(rand.Reader, data)
 		out[i] = string(data)
 	}
-
 	return
 }

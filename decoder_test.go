@@ -1242,7 +1242,7 @@ func Test_Read(t *testing.T) {
 		{
 			got := make([]byte, 11)
 			_, err := decoder.Read(got)
-			require.EqualError(t, err, "EOF")
+			require.EqualError(t, err, "short buffer")
 		}
 		{
 			got := make([]byte, 0)

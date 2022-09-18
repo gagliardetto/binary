@@ -308,10 +308,14 @@ func discardNBytes(n int, reader *Decoder) error {
 
 func (d *Decoder) Read(buf []byte) (int, error) {
 	if d.pos+len(buf) > len(d.data) {
-		return 0, io.EOF
+		return 0, io.ErrShortBuffer
 	}
-	copy(buf, d.data[d.pos:])
-	d.pos += len(buf)
+	numCopied := copy(buf, d.data[d.pos:])
+	d.pos += numCopied
+	// must read exactly len(buf) bytes
+	if numCopied != len(buf) {
+		return 0, io.ErrUnexpectedEOF
+	}
 	return len(buf), nil
 }
 

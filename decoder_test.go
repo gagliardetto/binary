@@ -1194,6 +1194,66 @@ func Test_ReadNBytes(t *testing.T) {
 	}
 }
 
+func Test_ReadBytes(t *testing.T) {
+	{
+		b1 := []byte{123, 99, 88, 77, 66, 55, 44, 33, 22, 11}
+		b2 := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+		buf := concatByteSlices(
+			b1,
+			b2,
+		)
+		decoder := NewBinDecoder(buf)
+
+		got, err := decoder.ReadBytes(10)
+		require.NoError(t, err)
+		require.Equal(t, b1, got)
+
+		got, err = decoder.ReadBytes(10)
+		require.NoError(t, err)
+		require.Equal(t, b2, got)
+	}
+}
+
+func Test_Read(t *testing.T) {
+	{
+		b1 := []byte{123, 99, 88, 77, 66, 55, 44, 33, 22, 11}
+		b2 := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+		buf := concatByteSlices(
+			b1,
+			b2,
+		)
+		decoder := NewBinDecoder(buf)
+
+		{
+			got := make([]byte, 10)
+			num, err := decoder.Read(got)
+			require.NoError(t, err)
+			require.Equal(t, b1, got)
+			require.Equal(t, 10, num)
+		}
+
+		{
+			got := make([]byte, 10)
+			num, err := decoder.Read(got)
+			require.NoError(t, err)
+			require.Equal(t, b2, got)
+			require.Equal(t, 10, num)
+		}
+		{
+			got := make([]byte, 11)
+			_, err := decoder.Read(got)
+			require.EqualError(t, err, "EOF")
+		}
+		{
+			got := make([]byte, 0)
+			num, err := decoder.Read(got)
+			require.NoError(t, err)
+			require.Equal(t, 0, num)
+			require.Equal(t, []byte{}, got)
+		}
+	}
+}
+
 func Test_Decode_readArrayOfUint(t *testing.T) {
 	{
 		{

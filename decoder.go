@@ -81,6 +81,13 @@ type Decoder struct {
 	encoding Encoding
 }
 
+// Reset resets the decoder to decode a new message.
+func (dec *Decoder) Reset(data []byte) {
+	dec.data = data
+	dec.pos = 0
+	dec.currentFieldOpt = nil
+}
+
 func (dec *Decoder) IsBorsh() bool {
 	return dec.encoding.IsBorsh()
 }
@@ -299,7 +306,21 @@ func discardNBytes(n int, reader *Decoder) error {
 	return reader.SkipBytes(uint(n))
 }
 
+func (d *Decoder) Read(buf []byte) (int, error) {
+	if d.pos+len(buf) > len(d.data) {
+		return 0, io.EOF
+	}
+	copy(buf, d.data[d.pos:])
+	d.pos += len(buf)
+	return len(buf), nil
+}
+
 func (dec *Decoder) ReadNBytes(n int) (out []byte, err error) {
+	return readNBytes(n, dec)
+}
+
+// ReadBytes reads a byte slice of length n.
+func (dec *Decoder) ReadBytes(n int) (out []byte, err error) {
 	return readNBytes(n, dec)
 }
 
@@ -330,6 +351,15 @@ func (dec *Decoder) Peek(n int) (out []byte, err error) {
 	out = dec.data[dec.pos : dec.pos+n]
 	if traceEnabled {
 		zlog.Debug("decode: peek", zap.Int("n", n), zap.Binary("out", out))
+	}
+	return
+}
+
+// ReadCompactU16 reads a compact u16 from the decoder.
+func (dec *Decoder) ReadCompactU16() (out int, err error) {
+	out, err = DecodeCompactU16LengthFromByteReader(dec)
+	if traceEnabled {
+		zlog.Debug("decode: read compact u16", zap.Int("val", out))
 	}
 	return
 }

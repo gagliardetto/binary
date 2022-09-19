@@ -110,6 +110,11 @@ func NewDecoderWithEncoding(data []byte, enc Encoding) *Decoder {
 	}
 }
 
+// Decoder SetEncoding sets the encoding to use for the next decoding.
+func (dec *Decoder) SetEncoding(enc Encoding) {
+	dec.encoding = enc
+}
+
 func NewBinDecoder(data []byte) *Decoder {
 	return NewDecoderWithEncoding(data, EncodingBin)
 }

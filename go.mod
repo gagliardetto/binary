@@ -6,7 +6,6 @@ require github.com/tidwall/gjson v1.9.3
 
 require (
 	github.com/AlekSi/pointer v1.1.0
-	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/logging v0.0.0-20201110202154-26697de88c79
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/shopspring/decimal v1.3.1

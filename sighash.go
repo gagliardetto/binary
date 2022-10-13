@@ -79,7 +79,6 @@ func splitStringByRune(s string) []rune {
 
 func iterateStringAsRunes(s string, callback func(r rune) bool) {
 	for _, rn := range s {
-		//fmt.Printf("%d: %c\n", i, rn)
 		doContinue := callback(rn)
 		if !doContinue {
 			return
@@ -117,20 +116,6 @@ func (r *reader) Move() bool {
 	return false
 }
 
-// #[cfg(feature = "unicode")]
-//
-//	fn get_iterator(s: &str) -> unicode_segmentation::UnicodeWords {
-//	    use unicode_segmentation::UnicodeSegmentation;
-//	    s.unicode_words()
-//	}
-func splitByUnicode(s string) []string {
-	parts := strings.FieldsFunc(s, func(r rune) bool {
-		// TODO: see https://unicode.org/reports/tr29/#Word_Boundaries
-		return !(unicode.IsLetter(r) || unicode.IsDigit(r)) || unicode.Is(unicode.Extender, r)
-	})
-	return parts
-}
-
 // #[cfg(not(feature = "unicode"))]
 func splitIntoWords(s string) []string {
 	parts := strings.FieldsFunc(s, func(r rune) bool {
@@ -152,9 +137,8 @@ const (
 )
 
 // ToRustSnakeCase converts the given string to a snake_case string.
-// Ported from https://github.com/withoutboats/heck/blob/c501fc95db91ce20eaef248a511caec7142208b4/src/lib.rs#L75
+// Ported from https://github.com/withoutboats/heck/blob/c501fc95db91ce20eaef248a511caec7142208b4/src/lib.rs#L75 as used by Anchor.
 func ToRustSnakeCase(s string) string {
-
 	builder := new(strings.Builder)
 
 	first_word := true

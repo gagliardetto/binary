@@ -20,34 +20,42 @@ package bin
 import "encoding/binary"
 
 type option struct {
-	OptionalField bool
-	SizeOfSlice   *int
-	Order         binary.ByteOrder
+	is_OptionalField  bool
+	is_COptionalField bool
+	SizeOfSlice       *int
+	Order             binary.ByteOrder
 }
 
-var LE binary.ByteOrder = binary.LittleEndian
-var BE binary.ByteOrder = binary.BigEndian
+var (
+	LE binary.ByteOrder = binary.LittleEndian
+	BE binary.ByteOrder = binary.BigEndian
+)
 
 var defaultByteOrder = binary.LittleEndian
 
 func newDefaultOption() *option {
 	return &option{
-		OptionalField: false,
-		Order:         defaultByteOrder,
+		is_OptionalField: false,
+		Order:            defaultByteOrder,
 	}
 }
 
 func (o *option) clone() *option {
 	out := &option{
-		OptionalField: o.OptionalField,
-		SizeOfSlice:   o.SizeOfSlice,
-		Order:         o.Order,
+		is_OptionalField:  o.is_OptionalField,
+		is_COptionalField: o.is_COptionalField,
+		SizeOfSlice:       o.SizeOfSlice,
+		Order:             o.Order,
 	}
 	return out
 }
 
-func (o *option) isOptional() bool {
-	return o.OptionalField
+func (o *option) is_Optional() bool {
+	return o.is_OptionalField
+}
+
+func (o *option) is_COptional() bool {
+	return o.is_COptionalField
 }
 
 func (o *option) hasSizeOfSlice() bool {
@@ -62,8 +70,14 @@ func (o *option) setSizeOfSlice(size int) *option {
 	o.SizeOfSlice = &size
 	return o
 }
-func (o *option) setIsOptional(isOptional bool) *option {
-	o.OptionalField = isOptional
+
+func (o *option) set_Optional(isOptional bool) *option {
+	o.is_OptionalField = isOptional
+	return o
+}
+
+func (o *option) set_COptional(isCOptional bool) *option {
+	o.is_COptionalField = isCOptional
 	return o
 }
 

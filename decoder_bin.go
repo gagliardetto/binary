@@ -47,7 +47,7 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 	}
 	dec.currentFieldOpt = opt
 
-	unmarshaler, rv := indirect(rv, opt.isOptional())
+	unmarshaler, rv := indirect(rv, opt.is_Optional())
 
 	if traceEnabled {
 		zlog.Debug("decode: type",
@@ -57,7 +57,7 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 		)
 	}
 
-	if opt.isOptional() {
+	if opt.is_Optional() {
 		isPresent, e := dec.ReadUint32(binary.LittleEndian)
 		if e != nil {
 			err = fmt.Errorf("decode: %s isPresent, %s", rv.Type().String(), e)
@@ -316,8 +316,8 @@ func (dec *Decoder) decodeStructBin(rt reflect.Type, rv reflect.Value) (err erro
 		}
 
 		option := &option{
-			OptionalField: fieldTag.Optional,
-			Order:         fieldTag.Order,
+			is_OptionalField: fieldTag.Option,
+			Order:            fieldTag.Order,
 		}
 
 		if s, ok := sizeOfMap[structField.Name]; ok {

@@ -345,6 +345,10 @@ func (dec *Decoder) ReadTypeID() (out TypeID, err error) {
 	return TypeIDFromBytes(discriminator), nil
 }
 
+func (dec *Decoder) ReadDiscriminator() (out TypeID, err error) {
+	return dec.ReadTypeID()
+}
+
 func (dec *Decoder) Peek(n int) (out []byte, err error) {
 	if n < 0 {
 		err = fmt.Errorf("n not valid: %d", n)
@@ -373,6 +377,33 @@ func (dec *Decoder) ReadCompactU16() (out int, err error) {
 	return
 }
 
+func (dec *Decoder) ReadOption() (out bool, err error) {
+	b, err := dec.ReadByte()
+	if err != nil {
+		return false, fmt.Errorf("decode: read option, %w", err)
+	}
+	out = b != 0
+	if traceEnabled {
+		zlog.Debug("decode: read option", zap.Bool("val", out))
+	}
+	return
+}
+
+func (dec *Decoder) ReadCOption() (out bool, err error) {
+	b, err := dec.ReadUint32(LE)
+	if err != nil {
+		return false, fmt.Errorf("decode: read c-option, %w", err)
+	}
+	if b > 1 {
+		return false, fmt.Errorf("decode: read c-option, invalid value: %d", b)
+	}
+	out = b != 0
+	if traceEnabled {
+		zlog.Debug("decode: read c-option", zap.Bool("val", out))
+	}
+	return
+}
+
 func (dec *Decoder) ReadByte() (out byte, err error) {
 	if dec.Remaining() < TypeSize.Byte {
 		err = fmt.Errorf("required [1] byte, remaining [%d]", dec.Remaining())
@@ -394,7 +425,6 @@ func (dec *Decoder) ReadBool() (out bool, err error) {
 	}
 
 	b, err := dec.ReadByte()
-
 	if err != nil {
 		err = fmt.Errorf("readBool, %s", err)
 	}

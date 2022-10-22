@@ -76,22 +76,36 @@ func (e *Encoder) encodeBorsh(rv reflect.Value, opt *option) (err error) {
 		)
 	}
 
-	if opt.isOptional() {
+	if opt.is_Optional() {
 		if rv.IsZero() {
 			if traceEnabled {
 				zlog.Debug("encode: skipping optional value with", zap.Stringer("type", rv.Kind()))
 			}
-			return e.WriteBool(false)
+			return e.WriteOption(false)
 		}
-		err := e.WriteBool(true)
+		err := e.WriteOption(true)
 		if err != nil {
 			return err
 		}
 		// The optionality has been used; stop its propagation:
-		opt.setIsOptional(false)
+		opt.set_Optional(false)
+	}
+	if opt.is_COptional() {
+		if rv.IsZero() {
+			if traceEnabled {
+				zlog.Debug("encode: skipping optional value with", zap.Stringer("type", rv.Kind()))
+			}
+			return e.WriteCOption(false)
+		}
+		err := e.WriteCOption(true)
+		if err != nil {
+			return err
+		}
+		// The optionality has been used; stop its propagation:
+		opt.set_COptional(false)
 	}
 	// Reset optionality so it won't propagate to child types:
-	opt = opt.clone().setIsOptional(false)
+	opt = opt.clone().set_Optional(false).set_COptional(false)
 
 	if isZero(rv) {
 		return nil
@@ -327,8 +341,9 @@ func (e *Encoder) encodeStructBorsh(rt reflect.Type, rv reflect.Value) (err erro
 		}
 
 		option := &option{
-			OptionalField: fieldTag.Optional,
-			Order:         fieldTag.Order,
+			is_OptionalField:  fieldTag.Option,
+			is_COptionalField: fieldTag.COption,
+			Order:             fieldTag.Order,
 		}
 
 		if s, ok := sizeOfMap[structField.Name]; ok {

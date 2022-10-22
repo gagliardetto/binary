@@ -37,7 +37,7 @@ func (e *Encoder) encodeCompactU16(rv reflect.Value, opt *option) (err error) {
 		)
 	}
 
-	if opt.isOptional() {
+	if opt.is_Optional() {
 		if rv.IsZero() {
 			if traceEnabled {
 				zlog.Debug("encode: skipping optional value with", zap.Stringer("type", rv.Kind()))
@@ -49,7 +49,7 @@ func (e *Encoder) encodeCompactU16(rv reflect.Value, opt *option) (err error) {
 			return err
 		}
 		// The optionality has been used; stop its propagation:
-		opt.setIsOptional(false)
+		opt.set_Optional(false)
 	}
 
 	if isZero(rv) {
@@ -235,8 +235,8 @@ func (e *Encoder) encodeStructCompactU16(rt reflect.Type, rv reflect.Value) (err
 		}
 
 		option := &option{
-			OptionalField: fieldTag.Optional,
-			Order:         fieldTag.Order,
+			is_OptionalField: fieldTag.Option,
+			Order:            fieldTag.Order,
 		}
 
 		if s, ok := sizeOfMap[structField.Name]; ok {

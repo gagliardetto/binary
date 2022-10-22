@@ -260,8 +260,10 @@ func (d *VariantDefinition) TypeID(name string) TypeID {
 	return id
 }
 
-type VariantImplFactory = func() interface{}
-type OnVariant = func(impl interface{}) error
+type (
+	VariantImplFactory = func() interface{}
+	OnVariant          = func(impl interface{}) error
+)
 
 type BaseVariant struct {
 	TypeID TypeID
@@ -279,7 +281,7 @@ func (a *BaseVariant) Obtain(def *VariantDefinition) (typeID TypeID, typeName st
 	return a.TypeID, def.typeIDToName[a.TypeID], a.Impl
 }
 
-func (a *BaseVariant) MarshalJSON(def *VariantDefinition) ([]byte, error) {
+func (a BaseVariant) MarshalJSON(def *VariantDefinition) ([]byte, error) {
 	typeName, found := def.typeIDToName[a.TypeID]
 	if !found {
 		return nil, fmt.Errorf("type %d is not know by variant definition", a.TypeID)

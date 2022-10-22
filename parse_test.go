@@ -55,17 +55,17 @@ func Test_parseFieldTag(t *testing.T) {
 			name: "with a optional",
 			tag:  `bin:"optional"`,
 			expectValue: &fieldTag{
-				Order:    binary.LittleEndian,
-				Optional: true,
+				Order:  binary.LittleEndian,
+				Option: true,
 			},
 		},
 		{
 			name: "with a optional and size of",
 			tag:  `bin:"optional sizeof=Nodes"`,
 			expectValue: &fieldTag{
-				Order:    binary.LittleEndian,
-				Optional: true,
-				SizeOf:   "Nodes",
+				Order:  binary.LittleEndian,
+				Option: true,
+				SizeOf: "Nodes",
 			},
 		},
 	}
@@ -75,5 +75,4 @@ func Test_parseFieldTag(t *testing.T) {
 			assert.Equal(t, test.expectValue, parseFieldTag(reflect.StructTag(test.tag)))
 		})
 	}
-
 }

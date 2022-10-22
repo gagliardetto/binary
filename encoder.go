@@ -166,6 +166,24 @@ func (e *Encoder) WriteByte(b byte) (err error) {
 	return e.toWriter([]byte{b})
 }
 
+func (e *Encoder) WriteOption(b bool) (err error) {
+	if traceEnabled {
+		zlog.Debug("encode: write option", zap.Bool("val", b))
+	}
+	return e.WriteBool(b)
+}
+
+func (e *Encoder) WriteCOption(b bool) (err error) {
+	if traceEnabled {
+		zlog.Debug("encode: write c-option", zap.Bool("val", b))
+	}
+	var num uint32
+	if b {
+		num = 1
+	}
+	return e.WriteUint32(num, LE)
+}
+
 func (e *Encoder) WriteBool(b bool) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write bool", zap.Bool("val", b))

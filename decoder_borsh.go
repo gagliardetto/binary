@@ -47,7 +47,7 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 	}
 	dec.currentFieldOpt = opt
 
-	unmarshaler, rv := indirect(rv, opt.isOptional())
+	unmarshaler, rv := indirect(rv, opt.is_Optional() || opt.is_COptional())
 
 	if traceEnabled {
 		zlog.Debug("decode: type",
@@ -57,14 +57,33 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 		)
 	}
 
-	if opt.isOptional() {
-		isPresent, e := dec.ReadByte()
+	if opt.is_Optional() {
+		isPresent, e := dec.ReadOption()
 		if e != nil {
 			err = fmt.Errorf("decode: %t isPresent, %s", rv.Type(), e)
 			return
 		}
 
-		if isPresent == 0 {
+		if !isPresent {
+			if traceEnabled {
+				zlog.Debug("decode: skipping optional value", zap.Stringer("type", rv.Kind()))
+			}
+
+			rv.Set(reflect.Zero(rv.Type()))
+			return
+		}
+
+		// we have ptr here we should not go get the element
+		unmarshaler, rv = indirect(rv, false)
+	}
+	if opt.is_COptional() {
+		isPresent, e := dec.ReadCOption()
+		if e != nil {
+			err = fmt.Errorf("decode: %t isPresent, %s", rv.Type(), e)
+			return
+		}
+
+		if !isPresent {
 			if traceEnabled {
 				zlog.Debug("decode: skipping optional value", zap.Stringer("type", rv.Kind()))
 			}
@@ -77,7 +96,7 @@ func (dec *Decoder) decodeBorsh(rv reflect.Value, opt *option) (err error) {
 		unmarshaler, rv = indirect(rv, false)
 	}
 	// Reset optionality so it won't propagate to child types:
-	opt = opt.clone().setIsOptional(false)
+	opt = opt.clone().set_Optional(false).set_COptional(false)
 
 	if unmarshaler != nil {
 		if traceEnabled {
@@ -371,8 +390,9 @@ func (dec *Decoder) decodeStructBorsh(rt reflect.Type, rv reflect.Value) (err er
 		}
 
 		option := &option{
-			OptionalField: fieldTag.Optional,
-			Order:         fieldTag.Order,
+			is_OptionalField:  fieldTag.Option,
+			is_COptionalField: fieldTag.COption,
+			Order:             fieldTag.Order,
 		}
 
 		if s, ok := sizeOfMap[structField.Name]; ok {

@@ -27,10 +27,20 @@ type fieldTag struct {
 	SizeOf          string
 	Skip            bool
 	Order           binary.ByteOrder
-	Optional        bool
+	Option          bool
+	COption         bool
 	BinaryExtension bool
 
 	IsBorshEnum bool
+}
+
+func isIn(s string, candidates ...string) bool {
+	for _, c := range candidates {
+		if s == c {
+			return true
+		}
+	}
+	return false
 }
 
 func parseFieldTag(tag reflect.StructTag) *fieldTag {
@@ -46,12 +56,16 @@ func parseFieldTag(tag reflect.StructTag) *fieldTag {
 			t.Order = binary.BigEndian
 		} else if s == "little" {
 			t.Order = binary.LittleEndian
-		} else if s == "optional" {
-			t.Optional = true
+		} else if isIn(s, "optional", "option") {
+			t.Option = true
+		} else if isIn(s, "coption") {
+			t.COption = true
 		} else if s == "binary_extension" {
 			t.BinaryExtension = true
-		} else if s == "-" {
+		} else if isIn(s, "-", "skip") {
 			t.Skip = true
+		} else if isIn(s, "enum") {
+			t.IsBorshEnum = true
 		}
 	}
 

@@ -46,7 +46,7 @@ func (dec *Decoder) decodeCompactU16(rv reflect.Value, opt *option) (err error) 
 	}
 	dec.currentFieldOpt = opt
 
-	unmarshaler, rv := indirect(rv, opt.isOptional())
+	unmarshaler, rv := indirect(rv, opt.is_Optional())
 
 	if traceEnabled {
 		zlog.Debug("decode: type",
@@ -56,7 +56,7 @@ func (dec *Decoder) decodeCompactU16(rv reflect.Value, opt *option) (err error) 
 		)
 	}
 
-	if opt.isOptional() {
+	if opt.is_Optional() {
 		isPresent, e := dec.ReadByte()
 		if e != nil {
 			err = fmt.Errorf("decode: %t isPresent, %s", rv.Type(), e)
@@ -315,8 +315,8 @@ func (dec *Decoder) decodeStructCompactU16(rt reflect.Type, rv reflect.Value) (e
 		}
 
 		option := &option{
-			OptionalField: fieldTag.Optional,
-			Order:         fieldTag.Order,
+			is_OptionalField: fieldTag.Option,
+			Order:            fieldTag.Order,
 		}
 
 		if s, ok := sizeOfMap[structField.Name]; ok {

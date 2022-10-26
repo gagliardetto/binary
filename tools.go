@@ -27,7 +27,15 @@ func FormatByteSlice(buf []byte) string {
 		elems = append(elems, strconv.Itoa(int(v)))
 	}
 
-	return "[" + strings.Join(elems, ", ") + "]" + fmt.Sprintf("(len=%v)", len(elems))
+	return "{" + strings.Join(elems, ", ") + "}" + fmt.Sprintf("(len=%v)", len(elems))
+}
+
+func FormatDiscriminator(disc [8]byte) string {
+	elems := make([]string, 0)
+	for _, v := range disc {
+		elems = append(elems, strconv.Itoa(int(v)))
+	}
+	return "[8]{" + strings.Join(elems, ", ") + "}"
 }
 
 type WriteByWrite struct {

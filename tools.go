@@ -35,7 +35,7 @@ func FormatDiscriminator(disc [8]byte) string {
 	for _, v := range disc {
 		elems = append(elems, strconv.Itoa(int(v)))
 	}
-	return "[8]{" + strings.Join(elems, ", ") + "}"
+	return "{" + strings.Join(elems, ", ") + "}"
 }
 
 type WriteByWrite struct {

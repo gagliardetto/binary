@@ -349,6 +349,14 @@ func (dec *Decoder) ReadDiscriminator() (out TypeID, err error) {
 	return dec.ReadTypeID()
 }
 
+func (dec *Decoder) PeekDiscriminator() (out TypeID, err error) {
+	discriminator, err := dec.Peek(8)
+	if err != nil {
+		return TypeID{}, err
+	}
+	return TypeIDFromBytes(discriminator), nil
+}
+
 func (dec *Decoder) Peek(n int) (out []byte, err error) {
 	if n < 0 {
 		err = fmt.Errorf("n not valid: %d", n)

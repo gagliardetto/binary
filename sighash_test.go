@@ -23,9 +23,13 @@ import (
 
 func TestSighash(t *testing.T) {
 	{
-		name := "hello"
-		got := Sighash(SIGHASH_GLOBAL_NAMESPACE, ToSnakeForSighash(name))
+		ixName := "hello"
+		got := Sighash(SIGHASH_GLOBAL_NAMESPACE, ToSnakeForSighash(ixName))
 		require.NotEmpty(t, got)
+		require.Equal(t,
+			got,
+			SighashInstruction(ixName),
+		)
 
 		expected := []byte{149, 118, 59, 220, 196, 127, 161, 179}
 		require.Equal(t,
@@ -34,9 +38,13 @@ func TestSighash(t *testing.T) {
 		)
 	}
 	{
-		name := "serumSwap"
-		got := Sighash(SIGHASH_GLOBAL_NAMESPACE, ToSnakeForSighash(name))
+		ixName := "serumSwap"
+		got := Sighash(SIGHASH_GLOBAL_NAMESPACE, ToSnakeForSighash(ixName))
 		require.NotEmpty(t, got)
+		require.Equal(t,
+			got,
+			SighashInstruction(ixName),
+		)
 
 		expected := []byte{88, 183, 70, 249, 214, 118, 82, 210}
 		require.Equal(t,
@@ -45,13 +53,17 @@ func TestSighash(t *testing.T) {
 		)
 		require.Equal(t,
 			expected,
-			SighashInstruction(name),
+			SighashInstruction(ixName),
 		)
 	}
 	{
-		name := "aldrinV2Swap"
-		got := Sighash(SIGHASH_GLOBAL_NAMESPACE, ToSnakeForSighash(name))
+		ixName := "aldrinV2Swap"
+		got := Sighash(SIGHASH_GLOBAL_NAMESPACE, ToSnakeForSighash(ixName))
 		require.NotEmpty(t, got)
+		require.Equal(t,
+			got,
+			SighashInstruction(ixName),
+		)
 
 		expected := []byte{190, 166, 89, 139, 33, 152, 16, 10}
 		require.Equal(t,
@@ -60,13 +72,17 @@ func TestSighash(t *testing.T) {
 		)
 		require.Equal(t,
 			expected,
-			SighashInstruction(name),
+			SighashInstruction(ixName),
 		)
 	}
 	{
-		name := "raydiumSwapV2"
-		got := Sighash(SIGHASH_GLOBAL_NAMESPACE, ToSnakeForSighash(name))
+		ixName := "raydiumSwapV2"
+		got := Sighash(SIGHASH_GLOBAL_NAMESPACE, ToSnakeForSighash(ixName))
 		require.NotEmpty(t, got)
+		require.Equal(t,
+			got,
+			SighashInstruction(ixName),
+		)
 
 		expected := []byte{69, 227, 98, 93, 237, 202, 223, 140}
 		require.Equal(t,
@@ -75,7 +91,26 @@ func TestSighash(t *testing.T) {
 		)
 		require.Equal(t,
 			expected,
-			SighashInstruction(name),
+			SighashInstruction(ixName),
+		)
+	}
+	{
+		accountName := "DialectAccount"
+		got := Sighash(SIGHASH_ACCOUNT_NAMESPACE, (accountName))
+		require.NotEmpty(t, got)
+		require.Equal(t,
+			got,
+			SighashAccount(accountName),
+		)
+
+		expected := []byte{157, 38, 120, 189, 93, 204, 119, 18}
+		require.Equal(t,
+			expected,
+			got,
+		)
+		require.Equal(t,
+			expected,
+			SighashAccount(accountName),
 		)
 	}
 }
@@ -160,5 +195,4 @@ func TestToSnakeForSighash(t *testing.T) {
 					})
 			}
 		})
-
 }

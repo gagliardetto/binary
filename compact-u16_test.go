@@ -86,7 +86,10 @@ func BenchmarkCompactU16Reader(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		reader.ReadCompactU16()
+		out, _ := reader.ReadCompactU16()
+		if out != math.MaxUint16 {
+			panic("not equal")
+		}
 		reader.SetPosition(0)
 	}
 }

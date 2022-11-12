@@ -36,9 +36,17 @@ func EncodeCompactU16Length(bytes *[]byte, ln int) {
 
 // DecodeCompactU16Length decodes a "Compact-u16" length from the provided byte slice.
 func DecodeCompactU16Length(bytes []byte) int {
+	v, _, _ := DecodeCompactU16(bytes)
+	return v
+}
+
+func DecodeCompactU16(bytes []byte) (int, int, error) {
 	ln := 0
 	size := 0
 	for {
+		if len(bytes) == 0 {
+			return 0, 0, io.ErrUnexpectedEOF
+		}
 		elem := int(bytes[0])
 		bytes = bytes[1:]
 		ln |= (elem & 0x7f) << (size * 7)
@@ -47,7 +55,7 @@ func DecodeCompactU16Length(bytes []byte) int {
 			break
 		}
 	}
-	return ln
+	return ln, size, nil
 }
 
 // DecodeCompactU16LengthFromByteReader decodes a "Compact-u16" length from the provided io.ByteReader.

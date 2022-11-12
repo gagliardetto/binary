@@ -16,6 +16,7 @@ package bin
 
 import (
 	"bytes"
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -37,11 +38,55 @@ func TestCompactU16(t *testing.T) {
 		EncodeCompactU16Length(&buf, val)
 
 		buf = append(buf, []byte("hello world")...)
-		decoded, err := DecodeCompactU16LengthFromByteReader(bytes.NewReader(buf))
-		if err != nil {
-			panic(err)
+		{
+			decoded, err := DecodeCompactU16LengthFromByteReader(bytes.NewReader(buf))
+			if err != nil {
+				panic(err)
+			}
+			require.Equal(t, val, decoded)
 		}
+		{
+			decoded, _, err := DecodeCompactU16(buf)
+			if err != nil {
+				panic(err)
+			}
+			require.Equal(t, val, decoded)
+		}
+	}
+}
 
-		require.Equal(t, val, decoded)
+func BenchmarkCompactU16(b *testing.B) {
+	// generate 1000 random values
+	candidates := make([]int, 1000)
+	for i := 0; i < 1000; i++ {
+		candidates[i] = i
+	}
+
+	buf := make([]byte, 0)
+	EncodeCompactU16Length(&buf, math.MaxUint16)
+
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_, _, _ = DecodeCompactU16(buf)
+	}
+}
+
+func BenchmarkCompactU16Reader(b *testing.B) {
+	// generate 1000 random values
+	candidates := make([]int, 1000)
+	for i := 0; i < 1000; i++ {
+		candidates[i] = i
+	}
+
+	buf := make([]byte, 0)
+	EncodeCompactU16Length(&buf, math.MaxUint16)
+
+	reader := NewBorshDecoder(buf)
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		reader.ReadCompactU16()
+		reader.SetPosition(0)
 	}
 }

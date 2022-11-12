@@ -270,7 +270,7 @@ func (dec *Decoder) ReadLength() (length int, err error) {
 		}
 		length = int(val)
 	case EncodingCompactU16:
-		val, err := DecodeCompactU16LengthFromByteReader(dec)
+		val, err := dec.ReadCompactU16()
 		if err != nil {
 			return 0, err
 		}
@@ -378,11 +378,12 @@ func (dec *Decoder) Peek(n int) (out []byte, err error) {
 
 // ReadCompactU16 reads a compact u16 from the decoder.
 func (dec *Decoder) ReadCompactU16() (out int, err error) {
-	out, err = DecodeCompactU16LengthFromByteReader(dec)
+	out, size, err := DecodeCompactU16(dec.data[dec.pos:])
 	if traceEnabled {
 		zlog.Debug("decode: read compact u16", zap.Int("val", out))
 	}
-	return
+	dec.pos += size
+	return out, err
 }
 
 func (dec *Decoder) ReadOption() (out bool, err error) {
@@ -655,11 +656,7 @@ func (dec *Decoder) ReadRustString() (out string, err error) {
 }
 
 func (dec *Decoder) ReadCompactU16Length() (int, error) {
-	val, err := DecodeCompactU16LengthFromByteReader(dec)
-	if traceEnabled {
-		zlog.Debug("read compact-u16 length", zap.Int("val", val))
-	}
-	return val, err
+	return dec.ReadCompactU16()
 }
 
 func (dec *Decoder) SkipBytes(count uint) error {

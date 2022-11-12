@@ -14,7 +14,9 @@
 
 package bin
 
-import "io"
+import (
+	"io"
+)
 
 // EncodeCompactU16Length encodes a "Compact-u16" length into the provided slice pointer.
 // See https://docs.solana.com/developing/programming-model/transactions#compact-u16-format

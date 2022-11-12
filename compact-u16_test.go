@@ -72,6 +72,15 @@ func BenchmarkCompactU16(b *testing.B) {
 	}
 }
 
+func BenchmarkCompactU16Encode(b *testing.B) {
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		buf := make([]byte, 0)
+		EncodeCompactU16Length(&buf, math.MaxUint16)
+	}
+}
+
 func BenchmarkCompactU16Reader(b *testing.B) {
 	// generate 1000 random values
 	candidates := make([]int, 1000)

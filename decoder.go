@@ -683,6 +683,10 @@ func (dec *Decoder) Remaining() int {
 	return len(dec.data) - dec.pos
 }
 
+func (dec *Decoder) Len() int {
+	return len(dec.data)
+}
+
 func (dec *Decoder) HasRemaining() bool {
 	return dec.Remaining() > 0
 }

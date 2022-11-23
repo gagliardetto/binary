@@ -114,6 +114,14 @@ func (e *Encoder) WriteBytes(b []byte, writeLength bool) error {
 	return e.toWriter(b)
 }
 
+func (e *Encoder) Write(b []byte) (n int, err error) {
+	e.count += len(b)
+	if traceEnabled {
+		zlog.Debug("	> encode: appending", zap.Stringer("hex", HexBytes(b)), zap.Int("pos", e.count))
+	}
+	return e.output.Write(b)
+}
+
 func (e *Encoder) WriteLength(length int) error {
 	if traceEnabled {
 		zlog.Debug("encode: write length", zap.Int("len", length))

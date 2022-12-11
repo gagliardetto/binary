@@ -547,8 +547,8 @@ func (dec *Decoder) ReadUint128(order binary.ByteOrder) (out Uint128, err error)
 	data := dec.data[dec.pos : dec.pos+TypeSize.Uint128]
 
 	if order == binary.LittleEndian {
-		out.Lo = order.Uint64(data[:8])
 		out.Hi = order.Uint64(data[8:])
+		out.Lo = order.Uint64(data[:8])
 	} else {
 		// TODO: is this correct?
 		out.Hi = order.Uint64(data[:8])

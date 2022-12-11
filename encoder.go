@@ -207,6 +207,10 @@ func (e *Encoder) WriteUint8(i uint8) (err error) {
 	return e.WriteByte(i)
 }
 
+func (e *Encoder) WriteInt8(i int8) (err error) {
+	return e.WriteByte(uint8(i))
+}
+
 func (e *Encoder) WriteUint16(i uint16, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write uint16", zap.Uint16("val", i))
@@ -260,8 +264,13 @@ func (e *Encoder) WriteUint128(i Uint128, order binary.ByteOrder) (err error) {
 		zlog.Debug("encode: write uint128", zap.Stringer("hex", i), zap.Uint64("lo", i.Lo), zap.Uint64("hi", i.Hi))
 	}
 	buf := make([]byte, TypeSize.Uint128)
-	order.PutUint64(buf, i.Lo)
-	order.PutUint64(buf[TypeSize.Uint64:], i.Hi)
+	if order == binary.BigEndian {
+		order.PutUint64(buf, i.Hi)
+		order.PutUint64(buf[TypeSize.Uint64:], i.Lo)
+	} else {
+		order.PutUint64(buf, i.Lo)
+		order.PutUint64(buf[TypeSize.Uint64:], i.Hi)
+	}
 	return e.toWriter(buf)
 }
 
@@ -270,8 +279,13 @@ func (e *Encoder) WriteInt128(i Int128, order binary.ByteOrder) (err error) {
 		zlog.Debug("encode: write int128", zap.Stringer("hex", i), zap.Uint64("lo", i.Lo), zap.Uint64("hi", i.Hi))
 	}
 	buf := make([]byte, TypeSize.Uint128)
-	order.PutUint64(buf, i.Lo)
-	order.PutUint64(buf[TypeSize.Uint64:], i.Hi)
+	if order == binary.BigEndian {
+		order.PutUint64(buf, i.Hi)
+		order.PutUint64(buf[TypeSize.Uint64:], i.Lo)
+	} else {
+		order.PutUint64(buf, i.Lo)
+		order.PutUint64(buf[TypeSize.Uint64:], i.Hi)
+	}
 	return e.toWriter(buf)
 }
 

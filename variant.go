@@ -20,12 +20,9 @@ package bin
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
-
-	"github.com/tidwall/gjson"
 )
 
 //
@@ -279,74 +276,6 @@ func (a *BaseVariant) Assign(typeID TypeID, impl interface{}) {
 
 func (a *BaseVariant) Obtain(def *VariantDefinition) (typeID TypeID, typeName string, impl interface{}) {
 	return a.TypeID, def.typeIDToName[a.TypeID], a.Impl
-}
-
-func (a BaseVariant) MarshalJSON(def *VariantDefinition) ([]byte, error) {
-	typeName, found := def.typeIDToName[a.TypeID]
-	if !found {
-		return nil, fmt.Errorf("type %d is not know by variant definition", a.TypeID)
-	}
-
-	return json.Marshal([]interface{}{typeName, a.Impl})
-}
-
-func (a *BaseVariant) UnmarshalJSON(data []byte, def *VariantDefinition) error {
-	typeResult := gjson.GetBytes(data, "0")
-	implResult := gjson.GetBytes(data, "1")
-
-	if !typeResult.Exists() || !implResult.Exists() {
-		return fmt.Errorf("invalid format, expected '[<type>, <impl>]' pair, got %q", string(data))
-	}
-
-	typeName := typeResult.String()
-	typeID, found := def.typeNameToID[typeName]
-	if !found {
-		return fmt.Errorf("type %q is not know by variant definition", typeName)
-	}
-
-	typeGo := def.typeIDToType[typeID]
-	if typeGo == nil {
-		return fmt.Errorf("no known type for %q", typeName)
-	}
-
-	a.TypeID = typeID
-
-	if typeGo.Kind() == reflect.Ptr {
-		a.Impl = reflect.New(typeGo.Elem()).Interface()
-		if err := json.Unmarshal([]byte(implResult.Raw), a.Impl); err != nil {
-			return err
-		}
-	} else {
-		// This is not the most optimal way of doing things for "value"
-		// types (over "pointer" types) as we always allocate a new pointer
-		// element, unmarshal it and then either keep the pointer type or turn
-		// it into a value type.
-		//
-		// However, in non-reflection based code, one would do like this and
-		// avoid an `new` memory allocation:
-		//
-		// ```
-		// name := eos.Name("")
-		// json.Unmarshal(data, &name)
-		// ```
-		//
-		// This would work without a problem. In reflection code however, I
-		// did not find how one can go from `reflect.Zero(typeGo)` (which is
-		// the equivalence of doing `name := eos.Name("")`) and take the
-		// pointer to it so it can be unmarshalled correctly.
-		//
-		// A played with various iteration, and nothing got it working. Maybe
-		// the next step would be to explore the `unsafe` package and obtain
-		// an unsafe pointer and play with it.
-		value := reflect.New(typeGo)
-		if err := json.Unmarshal([]byte(implResult.Raw), value.Interface()); err != nil {
-			return err
-		}
-
-		a.Impl = value.Elem().Interface()
-	}
-
-	return nil
 }
 
 func (a *BaseVariant) UnmarshalBinaryVariant(decoder *Decoder, def *VariantDefinition) (err error) {

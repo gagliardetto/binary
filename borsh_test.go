@@ -23,7 +23,6 @@ import (
 	strings2 "strings"
 	"testing"
 
-	"github.com/AlekSi/pointer"
 	"github.com/stretchr/testify/require"
 )
 
@@ -696,13 +695,15 @@ func TestBorsh_Encode(t *testing.T) {
 		}
 		{
 			// with fields that are pointers
+			hello := "hello"
+			bar := uint32(33)
 			{
 				// by value:
 				buf := new(bytes.Buffer)
 				enc := NewBorshEncoder(buf)
 				val := StructWithPointerFields{
-					Foo: pointer.ToString("hello"),
-					Bar: pointer.ToUint32(33),
+					Foo: &hello,
+					Bar: &bar,
 				}
 				require.NoError(t, enc.Encode(val))
 				require.Equal(t,
@@ -725,8 +726,8 @@ func TestBorsh_Encode(t *testing.T) {
 				buf := new(bytes.Buffer)
 				enc := NewBorshEncoder(buf)
 				val := &StructWithPointerFields{
-					Foo: pointer.ToString("hello"),
-					Bar: pointer.ToUint32(33),
+					Foo: &hello,
+					Bar: &bar,
 				}
 				require.NoError(t, enc.Encode(val))
 				require.Equal(t,
@@ -749,12 +750,15 @@ func TestBorsh_Encode(t *testing.T) {
 			// with optional fields
 			{
 				// buf := new(bytes.Buffer)
+				fooRequired := "hello"
+				fooOptional := "-world"
+				barPointer := uint32(33)
 				buf := NewWriteByWrite("")
 				enc := NewBorshEncoder(buf)
 				val := StructWithOptionalFields{
-					FooRequired: pointer.ToString("hello"),
-					FooPointer:  pointer.ToString("-world"),
-					BarPointer:  pointer.ToUint32(33),
+					FooRequired: &fooRequired,
+					FooPointer:  &fooOptional,
+					BarPointer:  &barPointer,
 					FooValue:    "hi",
 				}
 				require.NoError(t, enc.Encode(val))
@@ -816,7 +820,8 @@ func TestBorsh_Encode(t *testing.T) {
 						// .BarRequiredNotSet is NOT an optiona field,
 						// which means that it was encoded as zero,
 						// and will be decoded as zero.
-						val.BarRequiredNotSet = pointer.ToUint32(0)
+						zero := uint32(0)
+						val.BarRequiredNotSet = &zero
 					}
 					require.Equal(t, val, got)
 				}
@@ -1140,7 +1145,6 @@ func (e *CustomEncoding) UnmarshalWithDecoder(decoder *Decoder) (err error) {
 var _ EncoderDecoder = &CustomEncoding{}
 
 func TestBorsh_kitchenSink(t *testing.T) {
-
 	boolTrue := true
 	uint64Num := uint64(25464132585)
 	x := AA{
@@ -1594,7 +1598,7 @@ func TestUint128_old(t *testing.T) {
 		in Int128
 	}{
 		{func() Int128 {
-			var v = Int128{
+			v := Int128{
 				Hi: math.MaxInt16,
 				Lo: math.MaxInt16,
 			}
@@ -1607,14 +1611,16 @@ func TestUint128_old(t *testing.T) {
 	}
 }
 
-type Myu8 uint8
-type Myu16 uint16
-type Myu32 uint32
-type Myu64 uint64
-type Myi8 int8
-type Myi16 int16
-type Myi32 int32
-type Myi64 int64
+type (
+	Myu8  uint8
+	Myu16 uint16
+	Myu32 uint32
+	Myu64 uint64
+	Myi8  int8
+	Myi16 int16
+	Myi32 int32
+	Myi64 int64
+)
 
 type CustomType struct {
 	U8  Myu8

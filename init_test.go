@@ -16,20 +16,11 @@ package bin
 
 import (
 	"testing"
-
-	"github.com/dfuse-io/logging"
 )
-
-func init() {
-	logging.TestingOverride()
-	//traceEnabled = true
-	//zlog, _ = zap.NewDevelopment()
-}
 
 type aliasTestType uint64
 
-type unknownType struct {
-}
+type unknownType struct{}
 
 type binaryTestStruct struct {
 	F1  string

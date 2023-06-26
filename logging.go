@@ -20,17 +20,20 @@ package bin
 import (
 	"fmt"
 
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 )
 
-var zlog = zap.NewNop()
+var (
+	zlog         = zap.NewNop()
+	traceEnabled = false
+)
 
 func init() {
-	logging.Register("github.com/gagliardetto/binary", &zlog)
+	zlog_, tracer := logging.PackageLogger("binary", "github.com/gagliardetto/binary")
+	traceEnabled = tracer.Enabled()
+	zlog = zlog_
 }
-
-var traceEnabled = logging.IsTraceEnabled("binary", "github.com/gagliardetto/binary")
 
 type logStringerFunc func() string
 

@@ -29,12 +29,12 @@ import (
 )
 
 type Encoder struct {
-	output io.Writer
-	count  int
+	count int
 
 	currentFieldOpt *option
+	encoding        Encoding
 
-	encoding Encoding
+	output io.Writer
 }
 
 func (enc *Encoder) IsBorsh() bool {
@@ -227,13 +227,6 @@ func (e *Encoder) WriteInt16(i int16, order binary.ByteOrder) (err error) {
 	return e.WriteUint16(uint16(i), order)
 }
 
-func (e *Encoder) WriteInt32(i int32, order binary.ByteOrder) (err error) {
-	if traceEnabled {
-		zlog.Debug("encode: write int32", zap.Int32("val", i))
-	}
-	return e.WriteUint32(uint32(i), order)
-}
-
 func (e *Encoder) WriteUint32(i uint32, order binary.ByteOrder) (err error) {
 	if traceEnabled {
 		zlog.Debug("encode: write uint32", zap.Uint32("val", i))
@@ -243,11 +236,11 @@ func (e *Encoder) WriteUint32(i uint32, order binary.ByteOrder) (err error) {
 	return e.toWriter(buf)
 }
 
-func (e *Encoder) WriteInt64(i int64, order binary.ByteOrder) (err error) {
+func (e *Encoder) WriteInt32(i int32, order binary.ByteOrder) (err error) {
 	if traceEnabled {
-		zlog.Debug("encode: write int64", zap.Int64("val", i))
+		zlog.Debug("encode: write int32", zap.Int32("val", i))
 	}
-	return e.WriteUint64(uint64(i), order)
+	return e.WriteUint32(uint32(i), order)
 }
 
 func (e *Encoder) WriteUint64(i uint64, order binary.ByteOrder) (err error) {
@@ -257,6 +250,13 @@ func (e *Encoder) WriteUint64(i uint64, order binary.ByteOrder) (err error) {
 	buf := make([]byte, TypeSize.Uint64)
 	order.PutUint64(buf, i)
 	return e.toWriter(buf)
+}
+
+func (e *Encoder) WriteInt64(i int64, order binary.ByteOrder) (err error) {
+	if traceEnabled {
+		zlog.Debug("encode: write int64", zap.Int64("val", i))
+	}
+	return e.WriteUint64(uint64(i), order)
 }
 
 func (e *Encoder) WriteUint128(i Uint128, order binary.ByteOrder) (err error) {
@@ -348,13 +348,17 @@ func (e *Encoder) WriteRustString(s string) (err error) {
 	return e.WriteBytes([]byte(s), false)
 }
 
-func (e *Encoder) WriteCompactU16Length(ln int) (err error) {
+func (e *Encoder) WriteCompactU16(ln int) (err error) {
 	if traceEnabled {
-		zlog.Debug("encode: write compact-u16 length", zap.Int("val", ln))
+		zlog.Debug("encode: write compact-u16", zap.Int("val", ln))
 	}
 	buf := make([]byte, 0)
 	EncodeCompactU16Length(&buf, ln)
 	return e.toWriter(buf)
+}
+
+func (e *Encoder) WriteCompactU16Length(ln int) (err error) {
+	return e.WriteCompactU16(ln)
 }
 
 func reflect_writeArrayOfBytes(e *Encoder, l int, rv reflect.Value) error {

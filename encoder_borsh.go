@@ -278,11 +278,11 @@ type BorshEnum uint8
 // EmptyVariant is an empty borsh enum variant.
 type EmptyVariant struct{}
 
-func (_ *EmptyVariant) MarshalWithEncoder(_ *Encoder) error {
+func (*EmptyVariant) MarshalWithEncoder(_ *Encoder) error {
 	return nil
 }
 
-func (_ *EmptyVariant) UnmarshalWithDecoder(_ *Decoder) error {
+func (*EmptyVariant) UnmarshalWithDecoder(_ *Decoder) error {
 	return nil
 }
 

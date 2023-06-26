@@ -49,11 +49,6 @@ var TypeSize = struct {
 
 	PublicKey int
 	Signature int
-
-	Tstamp         int
-	BlockTimestamp int
-
-	CurrencyName int
 }{
 	Byte: 1,
 	Bool: 1,
@@ -69,9 +64,11 @@ var TypeSize = struct {
 
 	Float32: 4,
 	Float64: 8,
+
+	PublicKey: 32,
+	Signature: 64,
 }
 
-// Decoder implements the EOS unpacking, similar to FC_BUFFER
 type Decoder struct {
 	data []byte
 	pos  int
@@ -281,11 +278,6 @@ func (dec *Decoder) ReadLength() (length int, err error) {
 	return
 }
 
-type peekAbleByteReader interface {
-	io.ByteReader
-	Peek(n int) ([]byte, error)
-}
-
 func readNBytes(n int, reader *Decoder) ([]byte, error) {
 	if n == 0 {
 		return make([]byte, 0), nil
@@ -481,15 +473,6 @@ func (dec *Decoder) ReadInt16(order binary.ByteOrder) (out int16, err error) {
 	return
 }
 
-func (dec *Decoder) ReadInt64(order binary.ByteOrder) (out int64, err error) {
-	n, err := dec.ReadUint64(order)
-	out = int64(n)
-	if traceEnabled {
-		zlog.Debug("decode: read int64", zap.Int64("val", out))
-	}
-	return
-}
-
 func (dec *Decoder) ReadUint32(order binary.ByteOrder) (out uint32, err error) {
 	if dec.Remaining() < TypeSize.Uint32 {
 		err = fmt.Errorf("uint32 required [%d] bytes, remaining [%d]", TypeSize.Uint32, dec.Remaining())
@@ -530,12 +513,13 @@ func (dec *Decoder) ReadUint64(order binary.ByteOrder) (out uint64, err error) {
 	return
 }
 
-func (dec *Decoder) ReadInt128(order binary.ByteOrder) (out Int128, err error) {
-	v, err := dec.ReadUint128(order)
-	if err != nil {
-		return
+func (dec *Decoder) ReadInt64(order binary.ByteOrder) (out int64, err error) {
+	n, err := dec.ReadUint64(order)
+	out = int64(n)
+	if traceEnabled {
+		zlog.Debug("decode: read int64", zap.Int64("val", out))
 	}
-	return Int128(v), nil
+	return
 }
 
 func (dec *Decoder) ReadUint128(order binary.ByteOrder) (out Uint128, err error) {
@@ -560,6 +544,14 @@ func (dec *Decoder) ReadUint128(order binary.ByteOrder) (out Uint128, err error)
 		zlog.Debug("decode: read uint128", zap.Stringer("hex", out), zap.Uint64("hi", out.Hi), zap.Uint64("lo", out.Lo))
 	}
 	return
+}
+
+func (dec *Decoder) ReadInt128(order binary.ByteOrder) (out Int128, err error) {
+	v, err := dec.ReadUint128(order)
+	if err != nil {
+		return
+	}
+	return Int128(v), nil
 }
 
 func (dec *Decoder) ReadFloat32(order binary.ByteOrder) (out float32, err error) {

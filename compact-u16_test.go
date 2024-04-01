@@ -23,13 +23,17 @@ import (
 )
 
 func TestCompactU16(t *testing.T) {
-	candidates := []int{3, 0x7f, 0x7f + 1, 0x3fff, 0x3fff + 1}
+	candidates := []int{0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 100, 1000, 10000, math.MaxUint16 - 1, math.MaxUint16}
 	for _, val := range candidates {
+		if val < 0 || val > math.MaxUint16 {
+			panic("value too large")
+		}
 		buf := make([]byte, 0)
-		EncodeCompactU16Length(&buf, val)
+		require.NoError(t, EncodeCompactU16Length(&buf, val))
 
 		buf = append(buf, []byte("hello world")...)
-		decoded := DecodeCompactU16Length(buf)
+		decoded, _, err := DecodeCompactU16(buf)
+		require.NoError(t, err)
 
 		require.Equal(t, val, decoded)
 	}
@@ -40,17 +44,32 @@ func TestCompactU16(t *testing.T) {
 		buf = append(buf, []byte("hello world")...)
 		{
 			decoded, err := DecodeCompactU16LengthFromByteReader(bytes.NewReader(buf))
-			if err != nil {
-				panic(err)
-			}
+			require.NoError(t, err)
 			require.Equal(t, val, decoded)
 		}
 		{
 			decoded, _, err := DecodeCompactU16(buf)
-			if err != nil {
-				panic(err)
-			}
+			require.NoError(t, err)
 			require.Equal(t, val, decoded)
+		}
+	}
+	{
+		// now test all from 0 to 0xffff
+		for i := 0; i < math.MaxUint16; i++ {
+			buf := make([]byte, 0)
+			EncodeCompactU16Length(&buf, i)
+
+			buf = append(buf, []byte("hello world")...)
+			{
+				decoded, err := DecodeCompactU16LengthFromByteReader(bytes.NewReader(buf))
+				require.NoError(t, err)
+				require.Equal(t, i, decoded)
+			}
+			{
+				decoded, _, err := DecodeCompactU16(buf)
+				require.NoError(t, err)
+				require.Equal(t, i, decoded)
+			}
 		}
 	}
 }
@@ -101,4 +120,102 @@ func BenchmarkCompactU16Reader(b *testing.B) {
 		}
 		reader.SetPosition(0)
 	}
+}
+
+func encode_len(len uint16) []byte {
+	buf := make([]byte, 0)
+	err := EncodeCompactU16Length(&buf, int(len))
+	if err != nil {
+		panic(err)
+	}
+	return buf
+}
+
+func assert_len_encoding(t *testing.T, len uint16, buf []byte) {
+	require.Equal(t, encode_len(len), buf, "unexpected usize encoding")
+	decoded, _, err := DecodeCompactU16(buf)
+	require.NoError(t, err)
+	require.Equal(t, int(len), decoded)
+	{
+		// now try with a reader
+		reader := bytes.NewReader(buf)
+		out, _ := DecodeCompactU16LengthFromByteReader(reader)
+		require.Equal(t, int(len), out)
+	}
+}
+
+func TestShortVecEncodeLen(t *testing.T) {
+	assert_len_encoding(t, 0x0, []byte{0x0})
+	assert_len_encoding(t, 0x7f, []byte{0x7f})
+	assert_len_encoding(t, 0x80, []byte{0x80, 0x01})
+	assert_len_encoding(t, 0xff, []byte{0xff, 0x01})
+	assert_len_encoding(t, 0x100, []byte{0x80, 0x02})
+	assert_len_encoding(t, 0x7fff, []byte{0xff, 0xff, 0x01})
+	assert_len_encoding(t, 0xffff, []byte{0xff, 0xff, 0x03})
+}
+
+func assert_good_deserialized_value(t *testing.T, value uint16, buf []byte) {
+	decoded, _, err := DecodeCompactU16(buf)
+	require.NoError(t, err)
+	require.Equal(t, int(value), decoded)
+	{
+		// now try with a reader
+		reader := bytes.NewReader(buf)
+		out, _ := DecodeCompactU16LengthFromByteReader(reader)
+		require.Equal(t, int(value), out)
+	}
+}
+
+func assert_bad_deserialized_value(t *testing.T, buf []byte) {
+	_, _, err := DecodeCompactU16(buf)
+	require.Error(t, err, "expected an error for bytes: %v", buf)
+	{
+		// now try with a reader
+		reader := bytes.NewReader(buf)
+		_, err := DecodeCompactU16LengthFromByteReader(reader)
+		require.Error(t, err, "expected an error for bytes: %v", buf)
+	}
+}
+
+func TestDeserialize(t *testing.T) {
+	assert_good_deserialized_value(t, 0x0000, []byte{0x00})
+	assert_good_deserialized_value(t, 0x007f, []byte{0x7f})
+	assert_good_deserialized_value(t, 0x0080, []byte{0x80, 0x01})
+	assert_good_deserialized_value(t, 0x00ff, []byte{0xff, 0x01})
+	assert_good_deserialized_value(t, 0x0100, []byte{0x80, 0x02})
+	assert_good_deserialized_value(t, 0x07ff, []byte{0xff, 0x0f})
+	assert_good_deserialized_value(t, 0x3fff, []byte{0xff, 0x7f})
+	assert_good_deserialized_value(t, 0x4000, []byte{0x80, 0x80, 0x01})
+	assert_good_deserialized_value(t, 0xffff, []byte{0xff, 0xff, 0x03})
+
+	// aliases
+	// 0x0000
+	assert_bad_deserialized_value(t, []byte{0x80, 0x00})
+	assert_bad_deserialized_value(t, []byte{0x80, 0x80, 0x00})
+	// 0x007f
+	assert_bad_deserialized_value(t, []byte{0xff, 0x00})
+	assert_bad_deserialized_value(t, []byte{0xff, 0x80, 0x00})
+	// 0x0080
+	assert_bad_deserialized_value(t, []byte{0x80, 0x81, 0x00})
+	// 0x00ff
+	assert_bad_deserialized_value(t, []byte{0xff, 0x81, 0x00})
+	// 0x0100
+	assert_bad_deserialized_value(t, []byte{0x80, 0x82, 0x00})
+	// 0x07ff
+	assert_bad_deserialized_value(t, []byte{0xff, 0x8f, 0x00})
+	// 0x3fff
+	assert_bad_deserialized_value(t, []byte{0xff, 0xff, 0x00})
+
+	// too short
+	assert_bad_deserialized_value(t, []byte{})
+	assert_bad_deserialized_value(t, []byte{0x80})
+
+	// too long
+	assert_bad_deserialized_value(t, []byte{0x80, 0x80, 0x80, 0x00})
+
+	// too large
+	// 0x0001_0000
+	assert_bad_deserialized_value(t, []byte{0x80, 0x80, 0x04})
+	// 0x0001_8000
+	assert_bad_deserialized_value(t, []byte{0x80, 0x80, 0x06})
 }

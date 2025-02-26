@@ -412,6 +412,40 @@ func (dec *Decoder) decodeStructBorsh(rt reflect.Type, rv reflect.Value) (err er
 		ptrImplements := reflect.PtrTo(rt).Implements(unmarshalableType)
 		vImplements := rt.Implements(unmarshalableType)
 		if ptrImplements || vImplements {
+			if option.is_Optional() {
+				isPresent, e := dec.ReadOption()
+				if e != nil {
+					err = fmt.Errorf("decode: %t isPresent, %s", v.Type(), e)
+					return
+				}
+
+				if !isPresent {
+					if traceEnabled {
+						zlog.Debug("decode: skipping optional value", zap.Stringer("type", v.Kind()))
+					}
+
+					v.Set(reflect.Zero(v.Type()))
+					return
+				}
+
+			}
+			if option.is_COptional() {
+				isPresent, e := dec.ReadCOption()
+				if e != nil {
+					err = fmt.Errorf("decode: %t isPresent, %s", v.Type(), e)
+					return
+				}
+
+				if !isPresent {
+					if traceEnabled {
+						zlog.Debug("decode: skipping optional value", zap.Stringer("type", v.Kind()))
+					}
+
+					v.Set(reflect.Zero(v.Type()))
+					return
+				}
+			}
+
 			switch {
 			case ptrImplements:
 				m := reflect.New(rt)

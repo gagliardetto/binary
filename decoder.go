@@ -31,43 +31,25 @@ import (
 	"go.uber.org/zap"
 )
 
-var TypeSize = struct {
-	Bool int
-	Byte int
+const (
+	TypeSizeByte = 1
+	TypeSizeBool = 1
 
-	Int8  int
-	Int16 int
+	TypeSizeInt8  = 1
+	TypeSizeInt16 = 2
 
-	Uint8   int
-	Uint16  int
-	Uint32  int
-	Uint64  int
-	Uint128 int
+	TypeSizeUint8   = 1
+	TypeSizeUint16  = 2
+	TypeSizeUint32  = 4
+	TypeSizeUint64  = 8
+	TypeSizeUint128 = 16
 
-	Float32 int
-	Float64 int
+	TypeSizeFloat32 = 4
+	TypeSizeFloat64 = 8
 
-	PublicKey int
-	Signature int
-}{
-	Byte: 1,
-	Bool: 1,
-
-	Int8:  1,
-	Int16: 2,
-
-	Uint8:   1,
-	Uint16:  2,
-	Uint32:  4,
-	Uint64:  8,
-	Uint128: 16,
-
-	Float32: 4,
-	Float64: 8,
-
-	PublicKey: 32,
-	Signature: 64,
-}
+	TypeSizePublicKey = 32
+	TypeSizeSignature = 64
+)
 
 type Decoder struct {
 	data []byte
@@ -355,7 +337,7 @@ func (dec *Decoder) Peek(n int) (out []byte, err error) {
 		return
 	}
 
-	requiredSize := TypeSize.Byte * n
+	requiredSize := TypeSizeByte * n
 	if dec.Remaining() < requiredSize {
 		err = fmt.Errorf("required [%d] bytes, remaining [%d]", requiredSize, dec.Remaining())
 		return
@@ -406,7 +388,7 @@ func (dec *Decoder) ReadCOption() (out bool, err error) {
 }
 
 func (dec *Decoder) ReadByte() (out byte, err error) {
-	if dec.Remaining() < TypeSize.Byte {
+	if dec.Remaining() < TypeSizeByte {
 		err = fmt.Errorf("required [1] byte, remaining [%d]", dec.Remaining())
 		return
 	}
@@ -420,8 +402,8 @@ func (dec *Decoder) ReadByte() (out byte, err error) {
 }
 
 func (dec *Decoder) ReadBool() (out bool, err error) {
-	if dec.Remaining() < TypeSize.Bool {
-		err = fmt.Errorf("bool required [%d] byte, remaining [%d]", TypeSize.Bool, dec.Remaining())
+	if dec.Remaining() < TypeSizeBool {
+		err = fmt.Errorf("bool required [%d] byte, remaining [%d]", TypeSizeBool, dec.Remaining())
 		return
 	}
 
@@ -451,13 +433,13 @@ func (dec *Decoder) ReadInt8() (out int8, err error) {
 }
 
 func (dec *Decoder) ReadUint16(order binary.ByteOrder) (out uint16, err error) {
-	if dec.Remaining() < TypeSize.Uint16 {
-		err = fmt.Errorf("uint16 required [%d] bytes, remaining [%d]", TypeSize.Uint16, dec.Remaining())
+	if dec.Remaining() < TypeSizeUint16 {
+		err = fmt.Errorf("uint16 required [%d] bytes, remaining [%d]", TypeSizeUint16, dec.Remaining())
 		return
 	}
 
 	out = order.Uint16(dec.data[dec.pos:])
-	dec.pos += TypeSize.Uint16
+	dec.pos += TypeSizeUint16
 	if traceEnabled {
 		zlog.Debug("decode: read uint16", zap.Uint16("val", out))
 	}
@@ -474,13 +456,13 @@ func (dec *Decoder) ReadInt16(order binary.ByteOrder) (out int16, err error) {
 }
 
 func (dec *Decoder) ReadUint32(order binary.ByteOrder) (out uint32, err error) {
-	if dec.Remaining() < TypeSize.Uint32 {
-		err = fmt.Errorf("uint32 required [%d] bytes, remaining [%d]", TypeSize.Uint32, dec.Remaining())
+	if dec.Remaining() < TypeSizeUint32 {
+		err = fmt.Errorf("uint32 required [%d] bytes, remaining [%d]", TypeSizeUint32, dec.Remaining())
 		return
 	}
 
 	out = order.Uint32(dec.data[dec.pos:])
-	dec.pos += TypeSize.Uint32
+	dec.pos += TypeSizeUint32
 	if traceEnabled {
 		zlog.Debug("decode: read uint32", zap.Uint32("val", out))
 	}
@@ -497,12 +479,12 @@ func (dec *Decoder) ReadInt32(order binary.ByteOrder) (out int32, err error) {
 }
 
 func (dec *Decoder) ReadUint64(order binary.ByteOrder) (out uint64, err error) {
-	if dec.Remaining() < TypeSize.Uint64 {
-		err = fmt.Errorf("decode: uint64 required [%d] bytes, remaining [%d]", TypeSize.Uint64, dec.Remaining())
+	if dec.Remaining() < TypeSizeUint64 {
+		err = fmt.Errorf("decode: uint64 required [%d] bytes, remaining [%d]", TypeSizeUint64, dec.Remaining())
 		return
 	}
 
-	data, err := dec.ReadNBytes(TypeSize.Uint64)
+	data, err := dec.ReadNBytes(TypeSizeUint64)
 	if err != nil {
 		return 0, err
 	}
@@ -523,12 +505,12 @@ func (dec *Decoder) ReadInt64(order binary.ByteOrder) (out int64, err error) {
 }
 
 func (dec *Decoder) ReadUint128(order binary.ByteOrder) (out Uint128, err error) {
-	if dec.Remaining() < TypeSize.Uint128 {
-		err = fmt.Errorf("uint128 required [%d] bytes, remaining [%d]", TypeSize.Uint128, dec.Remaining())
+	if dec.Remaining() < TypeSizeUint128 {
+		err = fmt.Errorf("uint128 required [%d] bytes, remaining [%d]", TypeSizeUint128, dec.Remaining())
 		return
 	}
 
-	data := dec.data[dec.pos : dec.pos+TypeSize.Uint128]
+	data := dec.data[dec.pos : dec.pos+TypeSizeUint128]
 
 	if order == binary.LittleEndian {
 		out.Hi = order.Uint64(data[8:])
@@ -539,7 +521,7 @@ func (dec *Decoder) ReadUint128(order binary.ByteOrder) (out Uint128, err error)
 		out.Lo = order.Uint64(data[8:])
 	}
 
-	dec.pos += TypeSize.Uint128
+	dec.pos += TypeSizeUint128
 	if traceEnabled {
 		zlog.Debug("decode: read uint128", zap.Stringer("hex", out), zap.Uint64("hi", out.Hi), zap.Uint64("lo", out.Lo))
 	}
@@ -555,14 +537,14 @@ func (dec *Decoder) ReadInt128(order binary.ByteOrder) (out Int128, err error) {
 }
 
 func (dec *Decoder) ReadFloat32(order binary.ByteOrder) (out float32, err error) {
-	if dec.Remaining() < TypeSize.Float32 {
-		err = fmt.Errorf("float32 required [%d] bytes, remaining [%d]", TypeSize.Float32, dec.Remaining())
+	if dec.Remaining() < TypeSizeFloat32 {
+		err = fmt.Errorf("float32 required [%d] bytes, remaining [%d]", TypeSizeFloat32, dec.Remaining())
 		return
 	}
 
 	n := order.Uint32(dec.data[dec.pos:])
 	out = math.Float32frombits(n)
-	dec.pos += TypeSize.Float32
+	dec.pos += TypeSizeFloat32
 	if traceEnabled {
 		zlog.Debug("decode: read float32", zap.Float32("val", out))
 	}
@@ -576,14 +558,14 @@ func (dec *Decoder) ReadFloat32(order binary.ByteOrder) (out float32, err error)
 }
 
 func (dec *Decoder) ReadFloat64(order binary.ByteOrder) (out float64, err error) {
-	if dec.Remaining() < TypeSize.Float64 {
-		err = fmt.Errorf("float64 required [%d] bytes, remaining [%d]", TypeSize.Float64, dec.Remaining())
+	if dec.Remaining() < TypeSizeFloat64 {
+		err = fmt.Errorf("float64 required [%d] bytes, remaining [%d]", TypeSizeFloat64, dec.Remaining())
 		return
 	}
 
 	n := order.Uint64(dec.data[dec.pos:])
 	out = math.Float64frombits(n)
-	dec.pos += TypeSize.Float64
+	dec.pos += TypeSizeFloat64
 	if traceEnabled {
 		zlog.Debug("decode: read Float64", zap.Float64("val", out))
 	}

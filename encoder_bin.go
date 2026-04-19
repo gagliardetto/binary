@@ -18,7 +18,6 @@
 package bin
 
 import (
-	"encoding/binary"
 	"fmt"
 	"reflect"
 
@@ -43,9 +42,9 @@ func (e *Encoder) encodeBin(rv reflect.Value, opt *option) (err error) {
 			if traceEnabled {
 				zlog.Debug("encode: skipping optional value with", zap.Stringer("type", rv.Kind()))
 			}
-			return e.WriteUint32(0, binary.LittleEndian)
+			return e.WriteOption(false)
 		}
-		err := e.WriteUint32(1, binary.LittleEndian)
+		err := e.WriteOption(true)
 		if err != nil {
 			return err
 		}

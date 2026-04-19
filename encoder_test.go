@@ -396,8 +396,8 @@ func Test_OptionalPointerToPrimitiveType(t *testing.T) {
 	type test struct {
 		ID *Uint64 `bin:"optional"`
 	}
-
-	expect := []byte{0x00, 0x00, 0x00, 0x00}
+	
+	expect := []byte{0x00}
 
 	out, err := MarshalBin(test{ID: nil})
 	require.NoError(t, err)
@@ -406,13 +406,12 @@ func Test_OptionalPointerToPrimitiveType(t *testing.T) {
 	id := Uint64(0)
 	out, err = MarshalBin(test{ID: &id})
 	require.NoError(t, err)
-	assert.Equal(t, []byte{0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, out)
+	assert.Equal(t, []byte{0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, out)
 
 	id = Uint64(10)
 	out, err = MarshalBin(test{ID: &id})
 	require.NoError(t, err)
-
-	assert.Equal(t, []byte{0x1, 0x0, 0x0, 0x0, 0xa, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, out)
+	assert.Equal(t, []byte{0x1, 0xa, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}, out)
 }
 
 func TestEncoder_Uint128(t *testing.T) {
@@ -519,11 +518,11 @@ func TestEncoder_BinaryTestStructWithTags(t *testing.T) {
 		1, // F10
 
 		0, 0, 0, 0, // F11 is optional, and NOT SET (meaning uint32(0))
-
-		1, 0, 0, 0, // F12 is optional, and IS SET (meaning uint32(1))
+		1, // F12 is optional, and IS SET (meaning uint8(1))
 		2, // F12 is a slice, and the len is encoded as WriteUVarInt)
 		99, 0, 0, 0, 0, 0, 0, 0,
 		33, 0, 0, 0, 0, 0, 0, 0,
+
 	}
 	{
 		buf := new(bytes.Buffer)
@@ -583,13 +582,13 @@ func TestEncoder_BinaryTestStructWithTags(t *testing.T) {
 			}
 		}
 		{
-			err := enc.WriteUint32(0, binary.LittleEndian) // [0, 0, 0, 0](len=4)
+			err := enc.WriteOption(false) // 0
 			if err != nil {
 				panic(err)
 			}
 		}
 		{
-			err := enc.WriteUint32(1, binary.LittleEndian) // [1, 0, 0, 0](len=4)
+			err := enc.WriteOption(true) // 1
 			if err != nil {
 				panic(err)
 			}

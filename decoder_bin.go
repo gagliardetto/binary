@@ -18,7 +18,6 @@
 package bin
 
 import (
-	"encoding/binary"
 	"fmt"
 	"io"
 	"reflect"
@@ -58,13 +57,13 @@ func (dec *Decoder) decodeBin(rv reflect.Value, opt *option) (err error) {
 	}
 
 	if opt.is_Optional() {
-		isPresent, e := dec.ReadUint32(binary.LittleEndian)
+		isPresent, e := dec.ReadOption()
 		if e != nil {
 			err = fmt.Errorf("decode: %s isPresent, %s", rv.Type().String(), e)
 			return
 		}
 
-		if isPresent == 0 {
+		if !isPresent {
 			if traceEnabled {
 				zlog.Debug("decode: skipping optional value", zap.Stringer("type", rv.Kind()))
 			}
